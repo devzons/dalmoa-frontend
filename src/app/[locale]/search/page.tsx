@@ -1,5 +1,8 @@
 import { Container } from "@/components/base/Container";
-import { SearchBar } from "@/features/search/components/SearchBar";
+import {
+  SearchFilters,
+  type SearchFilterValues,
+} from "@/features/search/components/SearchFilters";
 import { SearchEmpty } from "@/features/search/components/SearchEmpty";
 import { SearchResults } from "@/features/search/components/SearchResults";
 import { searchAll } from "@/features/search/api";
@@ -12,8 +15,29 @@ type Props = {
   }>;
   searchParams: Promise<{
     q?: string;
+    featured?: string;
+    region?: string;
+    price_min?: string;
+    price_max?: string;
+    page?: string;
   }>;
 };
+
+function normalizeFilterValues(searchParams: {
+  q?: string;
+  featured?: string;
+  region?: string;
+  price_min?: string;
+  price_max?: string;
+}): SearchFilterValues {
+  return {
+    q: normalizeSearchQuery(searchParams.q),
+    featured: searchParams.featured === "1",
+    region: (searchParams.region ?? "").trim(),
+    price_min: (searchParams.price_min ?? "").replace(/[^\d]/g, ""),
+    price_max: (searchParams.price_max ?? "").replace(/[^\d]/g, ""),
+  };
+}
 
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
@@ -31,21 +55,20 @@ export async function generateMetadata({ params }: Props) {
 
 export const revalidate = 120;
 
-export default async function SearchPage({
-  params,
-  searchParams,
-}: Props) {
+export default async function SearchPage({ params, searchParams }: Props) {
   const { locale } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
   const resolvedSearchParams = await searchParams;
-  const q = normalizeSearchQuery(resolvedSearchParams.q);
+
+  const filters = normalizeFilterValues(resolvedSearchParams);
+  const q = filters.q;
 
   const data = q
     ? await searchAll(q, normalizedLocale)
     : { q: "", total: 0, results: [] };
 
   return (
-    <Container className="py-10 space-y-8">
+    <Container className="space-y-8 py-10">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
           {normalizedLocale === "en" ? "Search" : "검색"}
@@ -57,7 +80,7 @@ export default async function SearchPage({
         </p>
       </div>
 
-      <SearchBar locale={normalizedLocale} />
+      <SearchFilters locale={normalizedLocale} initialValues={filters} />
 
       {q ? (
         <div className="text-sm text-neutral-500">
