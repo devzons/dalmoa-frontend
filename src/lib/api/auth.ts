@@ -35,7 +35,6 @@ export async function getSessionUser(): Promise<SessionUser | null> {
           }
         : undefined,
       cache: "no-store",
-      credentials: "include",
     });
 
     if (!response.ok) {
@@ -54,7 +53,10 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   }
 }
 
-export async function requireSessionUser(locale: "ko" | "en", nextPath: string) {
+export async function requireSessionUser(
+  locale: "ko" | "en",
+  nextPath: string,
+) {
   const user = await getSessionUser();
 
   if (!user) {
