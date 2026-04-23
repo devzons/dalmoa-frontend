@@ -2,10 +2,12 @@ import { Container } from "@/components/base/Container";
 import { getLoanItems } from "@/features/loan/api";
 import { LoanGrid } from "@/features/loan/components/LoanGrid";
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
+import ListingEmptyState from "@/features/search/components/ListingEmptyState";
 import ListingFilters from "@/features/search/components/ListingFilters";
+import ListingPagination from "@/features/search/components/ListingPagination";
+import ListingResultSummary from "@/features/search/components/ListingResultSummary";
 import { parseListingSearchParams } from "@/features/search/url";
 import { buildMetadata } from "@/lib/seo/metadata";
-import ListingPagination from "@/features/search/components/ListingPagination";
 
 type Props = {
   params: Promise<{
@@ -39,7 +41,9 @@ export default async function LoanPage({ params, searchParams }: Props) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filters = parseListingSearchParams(resolvedSearchParams);
 
-  const items = await getLoanItems(normalizedLocale, filters);
+  const result = await getLoanItems(normalizedLocale, filters);
+  const items = result.items;
+  const hasNextPage = result.page < result.totalPages;
 
   return (
     <Container className="py-10">
@@ -65,8 +69,24 @@ export default async function LoanPage({ params, searchParams }: Props) {
         <ListingActiveFilters filters={filters} />
       </div>
 
-      <LoanGrid items={items} locale={normalizedLocale} />
-      <ListingPagination currentPage={filters.page} />
+      <ListingResultSummary
+        total={result.total}
+        currentPage={result.page}
+        totalPages={result.totalPages}
+        locale={normalizedLocale}
+      />
+
+      {items.length > 0 ? (
+        <>
+          <LoanGrid items={items} locale={normalizedLocale} />
+          <ListingPagination
+            currentPage={filters.page}
+            hasNextPage={hasNextPage}
+          />
+        </>
+      ) : (
+        <ListingEmptyState locale={normalizedLocale} />
+      )}
     </Container>
   );
 }

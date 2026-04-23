@@ -1,10 +1,13 @@
 import type { BusinessSaleItem } from "@/features/business-sale/types";
-import type { ListingSearchFilters } from "@/features/search/types";
+import type {
+  ListingSearchFilters,
+  PaginatedListResponse,
+} from "@/features/search/types";
 import { apiFetch } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 
-export async function getBusinessSaleItems(
-  locale: "ko" | "en" = "ko",
+function buildBusinessSaleSearchParams(
+  locale: "ko" | "en",
   filters?: ListingSearchFilters
 ) {
   const searchParams = new URLSearchParams();
@@ -34,13 +37,49 @@ export async function getBusinessSaleItems(
     searchParams.set("page", String(filters.page));
   }
 
-  return apiFetch<BusinessSaleItem[]>(
-    `${endpoints.businessSaleList}?${searchParams.toString()}`,
-    {
-      revalidate: 120,
-      tags: ["business-sale-list"],
-    }
-  );
+  return searchParams;
+}
+
+export async function getBusinessSaleItems(
+  locale: "ko" | "en" = "ko",
+  filters?: ListingSearchFilters
+) {
+  const searchParams = buildBusinessSaleSearchParams(locale, filters);
+
+  const result = await apiFetch<
+    BusinessSaleItem[] | PaginatedListResponse<BusinessSaleItem>
+  >(`${endpoints.businessSaleList}?${searchParams.toString()}`, {
+    revalidate: 120,
+    tags: ["business-sale-list"],
+  });
+
+  return Array.isArray(result) ? result : result.items;
+}
+
+export async function getBusinessSaleItemsPage(
+  locale: "ko" | "en" = "ko",
+  filters?: ListingSearchFilters
+) {
+  const searchParams = buildBusinessSaleSearchParams(locale, filters);
+
+  const result = await apiFetch<
+    BusinessSaleItem[] | PaginatedListResponse<BusinessSaleItem>
+  >(`${endpoints.businessSaleList}?${searchParams.toString()}`, {
+    revalidate: 120,
+    tags: ["business-sale-list"],
+  });
+
+  if (Array.isArray(result)) {
+    return {
+      items: result,
+      total: result.length,
+      page: filters?.page && filters.page > 0 ? filters.page : 1,
+      perPage: result.length || 12,
+      totalPages: 1,
+    };
+  }
+
+  return result;
 }
 
 export async function getBusinessSaleItemBySlug(

@@ -3,10 +3,12 @@ import { CreateListingEntry } from "@/components/common/CreateListingEntry";
 import { getJobs } from "@/features/jobs/api";
 import { JobGrid } from "@/features/jobs/components/JobGrid";
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
+import ListingEmptyState from "@/features/search/components/ListingEmptyState";
 import ListingFilters from "@/features/search/components/ListingFilters";
+import ListingPagination from "@/features/search/components/ListingPagination";
+import ListingResultSummary from "@/features/search/components/ListingResultSummary";
 import { parseListingSearchParams } from "@/features/search/url";
 import { buildMetadata } from "@/lib/seo/metadata";
-import ListingPagination from "@/features/search/components/ListingPagination";
 
 type Props = {
   params: Promise<{
@@ -16,7 +18,6 @@ type Props = {
     [key: string]: string | string[] | undefined;
   }>;
 };
-
 
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
@@ -39,7 +40,10 @@ export default async function JobsPage({ params, searchParams }: Props) {
   const normalizedLocale = locale === "en" ? "en" : "ko";
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filters = parseListingSearchParams(resolvedSearchParams);
-  const items = await getJobs(normalizedLocale, filters);
+
+  const result = await getJobs(normalizedLocale, filters);
+  const items = result.items;
+  const hasNextPage = result.page < result.totalPages;
 
   return (
     <Container className="py-10">
@@ -59,18 +63,31 @@ export default async function JobsPage({ params, searchParams }: Props) {
       </div>
 
       <div className="mb-6">
-        <ListingFilters
-          domain="jobs"
-          initialFilters={filters}
-        />
+        <ListingFilters domain="jobs" initialFilters={filters} />
       </div>
 
       <div className="mb-6">
         <ListingActiveFilters filters={filters} />
       </div>
 
-      <JobGrid items={items} locale={normalizedLocale} />
-      <ListingPagination currentPage={filters.page} />
+      <ListingResultSummary
+        total={result.total}
+        currentPage={result.page}
+        totalPages={result.totalPages}
+        locale={normalizedLocale}
+      />
+
+      {items.length > 0 ? (
+        <>
+          <JobGrid items={items} locale={normalizedLocale} />
+          <ListingPagination
+            currentPage={filters.page}
+            hasNextPage={hasNextPage}
+          />
+        </>
+      ) : (
+        <ListingEmptyState locale={normalizedLocale} />
+      )}
     </Container>
   );
 }

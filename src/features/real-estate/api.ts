@@ -1,5 +1,8 @@
 import type { RealEstateItem } from "@/features/real-estate/types";
-import type { ListingSearchFilters } from "@/features/search/types";
+import type {
+  ListingSearchFilters,
+  PaginatedListResponse,
+} from "@/features/search/types";
 import { apiFetch } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { cacheTags } from "@/lib/cache/tags";
@@ -35,7 +38,7 @@ export async function getRealEstateItems(
     searchParams.set("page", String(filters.page));
   }
 
-  return apiFetch<RealEstateItem[]>(
+  return apiFetch<PaginatedListResponse<RealEstateItem>>(
     `${endpoints.realEstateList}?${searchParams.toString()}`,
     {
       revalidate: 120,

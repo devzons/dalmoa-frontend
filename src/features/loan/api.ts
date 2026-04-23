@@ -1,5 +1,8 @@
 import type { LoanItem } from "@/features/loan/types";
-import type { ListingSearchFilters } from "@/features/search/types";
+import type {
+  ListingSearchFilters,
+  PaginatedListResponse,
+} from "@/features/search/types";
 import { apiFetch } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 
@@ -34,7 +37,7 @@ export async function getLoanItems(
     searchParams.set("page", String(filters.page));
   }
 
-  return apiFetch<LoanItem[]>(
+  return apiFetch<PaginatedListResponse<LoanItem>>(
     `${endpoints.loanList}?${searchParams.toString()}`,
     {
       revalidate: 120,
