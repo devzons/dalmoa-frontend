@@ -65,3 +65,24 @@ export type SearchResponse = {
   total: number;
   results: SearchResultItem[];
 };
+
+export type ListingSearchFilters = {
+  q: string;
+  featured: boolean;
+  region: string;
+  priceMin: string;
+  priceMax: string;
+  page: number;
+};
+
+export type ListingSearchDomain =
+  | 'business-sale'
+  | 'jobs'
+  | 'marketplace'
+  | 'real-estate'
+  | 'cars'
+  | 'loan';
+
+export type ListingSearchParamsInput = {
+  [key: string]: string | string[] | undefined;
+};

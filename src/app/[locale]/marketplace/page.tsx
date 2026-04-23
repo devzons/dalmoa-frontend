@@ -1,11 +1,18 @@
 import { Container } from "@/components/base/Container";
-import { MarketplaceGrid } from "@/features/marketplace/components/MarketplaceGrid";
 import { getMarketplaceItems } from "@/features/marketplace/api";
+import { MarketplaceGrid } from "@/features/marketplace/components/MarketplaceGrid";
+import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
+import ListingFilters from "@/features/search/components/ListingFilters";
+import { parseListingSearchParams } from "@/features/search/url";
 import { buildMetadata } from "@/lib/seo/metadata";
+import ListingPagination from "@/features/search/components/ListingPagination";
 
 type Props = {
   params: Promise<{
     locale: string;
+  }>;
+  searchParams?: Promise<{
+    [key: string]: string | string[] | undefined;
   }>;
 };
 
@@ -25,10 +32,17 @@ export async function generateMetadata({ params }: Props) {
 
 export const revalidate = 120;
 
-export default async function MarketplacePage({ params }: Props) {
+export default async function MarketplacePage({
+  params,
+  searchParams,
+}: Props) {
   const { locale } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
-  const items = await getMarketplaceItems(normalizedLocale);
+
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const filters = parseListingSearchParams(resolvedSearchParams);
+
+  const items = await getMarketplaceItems(normalizedLocale, filters);
 
   return (
     <Container className="py-10">
@@ -43,7 +57,19 @@ export default async function MarketplacePage({ params }: Props) {
         </p>
       </div>
 
+      <div className="mb-6">
+        <ListingFilters
+          domain="marketplace"
+          initialFilters={filters}
+        />
+      </div>
+
+      <div className="mb-6">
+        <ListingActiveFilters filters={filters} />
+      </div>
+
       <MarketplaceGrid items={items} locale={normalizedLocale} />
+      <ListingPagination currentPage={filters.page} />
     </Container>
   );
 }

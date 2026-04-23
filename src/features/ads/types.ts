@@ -13,3 +13,12 @@ export type AdsResponse = {
   featured: AdItem[];
   standard: AdItem[];
 };
+
+export type AdPlacement = 'top' | 'inline' | 'bottom' | 'sidebar';
+
+export type AdSectionItem = {
+  id: string;
+  title: string;
+  placement: AdPlacement;
+  items: AdItem[];
+};
