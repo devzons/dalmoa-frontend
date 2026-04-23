@@ -4,6 +4,7 @@ import { AuthButtons } from "@/components/common/AuthButtons";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { MainNav } from "@/components/layout/MainNav";
 import { MobileNav } from "@/components/layout/MobileNav";
+import GlobalSearchBar from "@/features/search/components/GlobalSearchBar";
 
 type Props = {
   locale: string;
@@ -14,26 +15,36 @@ export function SiteHeader({ locale }: Props) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/95 backdrop-blur">
-      <Container className="relative flex h-16 items-center justify-between gap-4">
-        <Link
-          href={`/${normalizedLocale}`}
-          className="text-lg font-bold text-neutral-900"
-        >
-          Dalmoa
-        </Link>
+      <Container className="flex flex-col gap-3 py-3">
+        
+        {/* TOP ROW */}
+        <div className="flex items-center justify-between gap-4">
+          <Link
+            href={`/${normalizedLocale}`}
+            className="text-lg font-bold text-neutral-900"
+          >
+            Dalmoa
+          </Link>
 
-        <MainNav locale={normalizedLocale} />
+          <MainNav locale={normalizedLocale} />
 
-        <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-3 md:flex">
-            <LocaleSwitcher locale={normalizedLocale} />
-            <AuthButtons locale={normalizedLocale} />
-          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-3 md:flex">
+              <LocaleSwitcher locale={normalizedLocale} />
+              <AuthButtons locale={normalizedLocale} />
+            </div>
 
-          <div className="md:hidden">
-            <MobileNav locale={normalizedLocale} />
+            <div className="md:hidden">
+              <MobileNav locale={normalizedLocale} />
+            </div>
           </div>
         </div>
+
+        {/* SEARCH BAR */}
+        <div>
+          <GlobalSearchBar locale={normalizedLocale} />
+        </div>
+
       </Container>
     </header>
   );

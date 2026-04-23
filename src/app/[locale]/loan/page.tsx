@@ -1,5 +1,5 @@
 import { Container } from "@/components/base/Container";
-import { getLoanItems } from "@/features/loan/api";
+import { getPaginatedLoanItems } from "@/features/loan/api";
 import { LoanGrid } from "@/features/loan/components/LoanGrid";
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
 import ListingEmptyState from "@/features/search/components/ListingEmptyState";
@@ -41,7 +41,7 @@ export default async function LoanPage({ params, searchParams }: Props) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filters = parseListingSearchParams(resolvedSearchParams);
 
-  const result = await getLoanItems(normalizedLocale, filters);
+  const result = await getPaginatedLoanItems(normalizedLocale, filters);
   const items = result.items;
   const hasNextPage = result.page < result.totalPages;
 

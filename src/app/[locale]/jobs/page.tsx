@@ -1,6 +1,6 @@
 import { Container } from "@/components/base/Container";
 import { CreateListingEntry } from "@/components/common/CreateListingEntry";
-import { getJobs } from "@/features/jobs/api";
+import { getPaginatedJobs } from "@/features/jobs/api";
 import { JobGrid } from "@/features/jobs/components/JobGrid";
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
 import ListingEmptyState from "@/features/search/components/ListingEmptyState";
@@ -41,7 +41,7 @@ export default async function JobsPage({ params, searchParams }: Props) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filters = parseListingSearchParams(resolvedSearchParams);
 
-  const result = await getJobs(normalizedLocale, filters);
+  const result = await getPaginatedJobs(normalizedLocale, filters);
   const items = result.items;
   const hasNextPage = result.page < result.totalPages;
 

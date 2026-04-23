@@ -3,6 +3,16 @@ import { endpoints } from "@/lib/api/endpoints";
 import { cacheTags } from "@/lib/cache/tags";
 import type { HomeCardItem, HomeData, HomeLocale } from "@/features/home/types";
 
+type PaginatedApiResponse<T> = {
+  items?: T[];
+  total?: number;
+  page?: number;
+  perPage?: number;
+  totalPages?: number;
+};
+
+type MaybePaginated<T> = T[] | PaginatedApiResponse<T>;
+
 type DirectoryApiItem = {
   id: number;
   slug: string;
@@ -110,6 +120,12 @@ type TownBoardApiItem = {
   publishedAt?: string | null;
 };
 
+function unwrapItems<T>(data: MaybePaginated<T> | null | undefined): T[] {
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.items)) return data.items;
+  return [];
+}
+
 function listUrl(basePath: string, locale: HomeLocale) {
   const searchParams = new URLSearchParams();
   searchParams.set("locale", locale);
@@ -120,8 +136,11 @@ function take<T>(items: T[], count: number) {
   return items.slice(0, count);
 }
 
-function mapDirectory(items: DirectoryApiItem[], locale: HomeLocale): HomeCardItem[] {
-  return items.map((item) => ({
+function mapDirectory(
+  data: MaybePaginated<DirectoryApiItem>,
+  locale: HomeLocale
+): HomeCardItem[] {
+  return unwrapItems(data).map((item) => ({
     id: item.id,
     slug: item.slug,
     title: item.title,
@@ -132,8 +151,11 @@ function mapDirectory(items: DirectoryApiItem[], locale: HomeLocale): HomeCardIt
   }));
 }
 
-function mapAds(items: AdApiItem[], locale: HomeLocale): HomeCardItem[] {
-  return items.map((item) => ({
+function mapAds(
+  data: MaybePaginated<AdApiItem>,
+  locale: HomeLocale
+): HomeCardItem[] {
+  return unwrapItems(data).map((item) => ({
     id: item.id,
     slug: item.slug,
     title: item.title,
@@ -147,8 +169,11 @@ function mapAds(items: AdApiItem[], locale: HomeLocale): HomeCardItem[] {
   }));
 }
 
-function mapNews(items: NewsApiItem[], locale: HomeLocale): HomeCardItem[] {
-  return items.map((item) => ({
+function mapNews(
+  data: MaybePaginated<NewsApiItem>,
+  locale: HomeLocale
+): HomeCardItem[] {
+  return unwrapItems(data).map((item) => ({
     id: item.id,
     slug: item.slug,
     title: item.title,
@@ -160,8 +185,11 @@ function mapNews(items: NewsApiItem[], locale: HomeLocale): HomeCardItem[] {
   }));
 }
 
-function mapJobs(items: JobApiItem[], locale: HomeLocale): HomeCardItem[] {
-  return items.map((item) => ({
+function mapJobs(
+  data: MaybePaginated<JobApiItem>,
+  locale: HomeLocale
+): HomeCardItem[] {
+  return unwrapItems(data).map((item) => ({
     id: item.id,
     slug: item.slug,
     title: item.title,
@@ -173,8 +201,11 @@ function mapJobs(items: JobApiItem[], locale: HomeLocale): HomeCardItem[] {
   }));
 }
 
-function mapBusinessSale(items: BusinessSaleApiItem[], locale: HomeLocale): HomeCardItem[] {
-  return items.map((item) => ({
+function mapBusinessSale(
+  data: MaybePaginated<BusinessSaleApiItem>,
+  locale: HomeLocale
+): HomeCardItem[] {
+  return unwrapItems(data).map((item) => ({
     id: item.id,
     slug: item.slug,
     title: item.title,
@@ -186,8 +217,11 @@ function mapBusinessSale(items: BusinessSaleApiItem[], locale: HomeLocale): Home
   }));
 }
 
-function mapLoan(items: LoanApiItem[], locale: HomeLocale): HomeCardItem[] {
-  return items.map((item) => ({
+function mapLoan(
+  data: MaybePaginated<LoanApiItem>,
+  locale: HomeLocale
+): HomeCardItem[] {
+  return unwrapItems(data).map((item) => ({
     id: item.id,
     slug: item.slug,
     title: item.title,
@@ -199,8 +233,11 @@ function mapLoan(items: LoanApiItem[], locale: HomeLocale): HomeCardItem[] {
   }));
 }
 
-function mapMarketplace(items: MarketplaceApiItem[], locale: HomeLocale): HomeCardItem[] {
-  return items.map((item) => ({
+function mapMarketplace(
+  data: MaybePaginated<MarketplaceApiItem>,
+  locale: HomeLocale
+): HomeCardItem[] {
+  return unwrapItems(data).map((item) => ({
     id: item.id,
     slug: item.slug,
     title: item.title,
@@ -212,8 +249,11 @@ function mapMarketplace(items: MarketplaceApiItem[], locale: HomeLocale): HomeCa
   }));
 }
 
-function mapRealEstate(items: RealEstateApiItem[], locale: HomeLocale): HomeCardItem[] {
-  return items.map((item) => ({
+function mapRealEstate(
+  data: MaybePaginated<RealEstateApiItem>,
+  locale: HomeLocale
+): HomeCardItem[] {
+  return unwrapItems(data).map((item) => ({
     id: item.id,
     slug: item.slug,
     title: item.title,
@@ -225,8 +265,11 @@ function mapRealEstate(items: RealEstateApiItem[], locale: HomeLocale): HomeCard
   }));
 }
 
-function mapCars(items: CarApiItem[], locale: HomeLocale): HomeCardItem[] {
-  return items.map((item) => ({
+function mapCars(
+  data: MaybePaginated<CarApiItem>,
+  locale: HomeLocale
+): HomeCardItem[] {
+  return unwrapItems(data).map((item) => ({
     id: item.id,
     slug: item.slug,
     title: item.title,
@@ -238,8 +281,11 @@ function mapCars(items: CarApiItem[], locale: HomeLocale): HomeCardItem[] {
   }));
 }
 
-function mapTownBoard(items: TownBoardApiItem[], locale: HomeLocale): HomeCardItem[] {
-  return items.map((item) => ({
+function mapTownBoard(
+  data: MaybePaginated<TownBoardApiItem>,
+  locale: HomeLocale
+): HomeCardItem[] {
+  return unwrapItems(data).map((item) => ({
     id: item.id,
     slug: item.slug,
     title: item.title,
@@ -264,54 +310,55 @@ export async function getHomeData(locale: HomeLocale): Promise<HomeData> {
     cars,
     townBoard,
   ] = await Promise.all([
-    apiFetch<AdApiItem[]>(`${endpoints.adsFeatured}?locale=${locale}`, {
+    apiFetch<MaybePaginated<AdApiItem>>(`${endpoints.adsFeatured}?locale=${locale}`, {
       revalidate: 120,
       tags: [cacheTags.adsFeatured],
     }),
-    apiFetch<DirectoryApiItem[]>(listUrl(endpoints.directoryList, locale), {
+    apiFetch<MaybePaginated<DirectoryApiItem>>(listUrl(endpoints.directoryList, locale), {
       revalidate: 120,
       tags: [cacheTags.directoryList],
     }),
-    apiFetch<NewsApiItem[]>(listUrl(endpoints.newsList, locale), {
+    apiFetch<MaybePaginated<NewsApiItem>>(listUrl(endpoints.newsList, locale), {
       revalidate: 120,
       tags: [cacheTags.newsList],
     }),
-    apiFetch<JobApiItem[]>(listUrl(endpoints.jobsList, locale), {
+    apiFetch<MaybePaginated<JobApiItem>>(listUrl(endpoints.jobsList, locale), {
       revalidate: 120,
       tags: [cacheTags.jobsList],
     }),
-    apiFetch<BusinessSaleApiItem[]>(listUrl(endpoints.businessSaleList, locale), {
+    apiFetch<MaybePaginated<BusinessSaleApiItem>>(listUrl(endpoints.businessSaleList, locale), {
       revalidate: 120,
       tags: ["business-sale-list"],
     }),
-    apiFetch<LoanApiItem[]>(listUrl(endpoints.loanList, locale), {
+    apiFetch<MaybePaginated<LoanApiItem>>(listUrl(endpoints.loanList, locale), {
       revalidate: 120,
       tags: ["loan-list"],
     }),
-    apiFetch<MarketplaceApiItem[]>(listUrl(endpoints.marketplaceList, locale), {
+    apiFetch<MaybePaginated<MarketplaceApiItem>>(listUrl(endpoints.marketplaceList, locale), {
       revalidate: 120,
       tags: [cacheTags.marketplaceList],
     }),
-    apiFetch<RealEstateApiItem[]>(listUrl(endpoints.realEstateList, locale), {
+    apiFetch<MaybePaginated<RealEstateApiItem>>(listUrl(endpoints.realEstateList, locale), {
       revalidate: 120,
       tags: [cacheTags.realEstateList],
     }),
-    apiFetch<CarApiItem[]>(listUrl(endpoints.carsList, locale), {
+    apiFetch<MaybePaginated<CarApiItem>>(listUrl(endpoints.carsList, locale), {
       revalidate: 120,
       tags: [cacheTags.carsList],
     }),
-    apiFetch<TownBoardApiItem[]>(listUrl(endpoints.townBoardList, locale), {
+    apiFetch<MaybePaginated<TownBoardApiItem>>(listUrl(endpoints.townBoardList, locale), {
       revalidate: 120,
       tags: [cacheTags.townBoardList],
     }),
   ]);
 
-  const featuredDirectory = directory.filter((item) => item.isFeatured);
+  const directoryItems = unwrapItems(directory);
+  const featuredDirectory = directoryItems.filter((item) => item.isFeatured);
 
   return {
     featuredAds: take(mapAds(ads, locale), 4),
     featuredDirectory: take(
-      mapDirectory(featuredDirectory.length > 0 ? featuredDirectory : directory, locale),
+      mapDirectory(featuredDirectory.length > 0 ? featuredDirectory : directoryItems, locale),
       6
     ),
     latestNews: take(mapNews(news, locale), 4),

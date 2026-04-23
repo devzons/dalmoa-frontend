@@ -1,6 +1,6 @@
 import { Container } from "@/components/base/Container";
 import { CreateListingEntry } from "@/components/common/CreateListingEntry";
-import { getBusinessSaleItems } from "@/features/business-sale/api";
+import { getPaginatedBusinessSaleItems } from "@/features/business-sale/api";
 import { BusinessSaleGrid } from "@/features/business-sale/components/BusinessSaleGrid";
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
 import ListingEmptyState from "@/features/search/components/ListingEmptyState";
@@ -45,7 +45,7 @@ export default async function BusinessSalePage({
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filters = parseListingSearchParams(resolvedSearchParams);
 
-  const result = await getBusinessSaleItems(normalizedLocale, filters);
+  const result = await getPaginatedBusinessSaleItems(normalizedLocale, filters);
   const items = result.items;
   const hasNextPage = result.page < result.totalPages;
 

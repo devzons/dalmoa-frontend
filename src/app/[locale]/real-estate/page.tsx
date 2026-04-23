@@ -1,5 +1,5 @@
 import { Container } from "@/components/base/Container";
-import { getRealEstateItems } from "@/features/real-estate/api";
+import { getPaginatedRealEstateItems } from "@/features/real-estate/api";
 import { RealEstateGrid } from "@/features/real-estate/components/RealEstateGrid";
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
 import ListingEmptyState from "@/features/search/components/ListingEmptyState";
@@ -44,7 +44,7 @@ export default async function RealEstatePage({
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filters = parseListingSearchParams(resolvedSearchParams);
 
-  const result = await getRealEstateItems(normalizedLocale, filters);
+  const result = await getPaginatedRealEstateItems(normalizedLocale, filters);
   const items = result.items;
   const hasNextPage = result.page < result.totalPages;
 

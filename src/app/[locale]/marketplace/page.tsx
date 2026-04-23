@@ -1,5 +1,5 @@
 import { Container } from "@/components/base/Container";
-import { getMarketplaceItems } from "@/features/marketplace/api";
+import { getPaginatedMarketplaceItems } from "@/features/marketplace/api";
 import { MarketplaceGrid } from "@/features/marketplace/components/MarketplaceGrid";
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
 import ListingEmptyState from "@/features/search/components/ListingEmptyState";
@@ -44,7 +44,7 @@ export default async function MarketplacePage({
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filters = parseListingSearchParams(resolvedSearchParams);
 
-  const result = await getMarketplaceItems(normalizedLocale, filters);
+  const result = await getPaginatedMarketplaceItems(normalizedLocale, filters);
   const items = result.items;
   const hasNextPage = result.page < result.totalPages;
 

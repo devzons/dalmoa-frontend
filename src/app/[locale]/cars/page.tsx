@@ -1,5 +1,5 @@
 import { Container } from "@/components/base/Container";
-import { getCars } from "@/features/cars/api";
+import { getPaginatedCars } from "@/features/cars/api";
 import { CarGrid } from "@/features/cars/components/CarGrid";
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
 import ListingEmptyState from "@/features/search/components/ListingEmptyState";
@@ -41,7 +41,7 @@ export default async function CarsPage({ params, searchParams }: Props) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filters = parseListingSearchParams(resolvedSearchParams);
 
-  const result = await getCars(normalizedLocale, filters);
+  const result = await getPaginatedCars(normalizedLocale, filters);
   const items = result.items;
   const hasNextPage = result.page < result.totalPages;
 
