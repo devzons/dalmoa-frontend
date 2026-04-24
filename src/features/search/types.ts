@@ -10,18 +10,9 @@ import type { RealEstateItem } from "@/features/real-estate/types";
 import type { TownBoardItem } from "@/features/town-board/types";
 
 export type SearchResultItem =
-  | {
-      type: "directory";
-      item: DirectoryItem;
-    }
-  | {
-      type: "ad";
-      item: AdItem;
-    }
-  | {
-      type: "business";
-      item: BusinessPage;
-    }
+  | { type: "directory"; item: DirectoryItem }
+  | { type: "ad"; item: AdItem }
+  | { type: "business"; item: BusinessPage }
   | {
       type: "news";
       item: {
@@ -31,34 +22,13 @@ export type SearchResultItem =
         excerpt?: string | null;
       };
     }
-  | {
-      type: "jobs";
-      item: JobItem;
-    }
-  | {
-      type: "marketplace";
-      item: MarketplaceItem;
-    }
-  | {
-      type: "real-estate";
-      item: RealEstateItem;
-    }
-  | {
-      type: "cars";
-      item: CarItem;
-    }
-  | {
-      type: "town-board";
-      item: TownBoardItem;
-    }
-  | {
-      type: "business-sale";
-      item: BusinessSaleItem;
-    }
-  | {
-      type: "loan";
-      item: LoanItem;
-    };
+  | { type: "jobs"; item: JobItem }
+  | { type: "marketplace"; item: MarketplaceItem }
+  | { type: "real-estate"; item: RealEstateItem }
+  | { type: "cars"; item: CarItem }
+  | { type: "town-board"; item: TownBoardItem }
+  | { type: "business-sale"; item: BusinessSaleItem }
+  | { type: "loan"; item: LoanItem };
 
 export type SearchResponse = {
   q: string;
@@ -70,18 +40,19 @@ export type ListingSearchFilters = {
   q: string;
   featured: boolean;
   region: string;
+  category: string;
   priceMin: string;
   priceMax: string;
   page: number;
 };
 
 export type ListingSearchDomain =
-  | 'business-sale'
-  | 'jobs'
-  | 'marketplace'
-  | 'real-estate'
-  | 'cars'
-  | 'loan';
+  | "business-sale"
+  | "jobs"
+  | "marketplace"
+  | "real-estate"
+  | "cars"
+  | "loan";
 
 export type ListingSearchParamsInput = {
   [key: string]: string | string[] | undefined;

@@ -17,6 +17,7 @@ function buildSearchParams(
   if (filters?.q) searchParams.set("q", filters.q);
   if (filters?.featured) searchParams.set("featured", "1");
   if (filters?.region) searchParams.set("region", filters.region);
+  if (filters?.category) searchParams.set("category", filters.category);
   if (filters?.priceMin) searchParams.set("price_min", filters.priceMin);
   if (filters?.priceMax) searchParams.set("price_max", filters.priceMax);
   if (filters?.page && filters.page > 1) {
@@ -75,7 +76,7 @@ export async function getPaginatedCars(
   const raw = await apiFetch<CarItem[] | PaginatedListResponse<CarItem>>(
     `${endpoints.carsList}?${searchParams.toString()}`,
     {
-      revalidate: 120,
+      revalidate: 0,
       tags: [cacheTags.carsList],
     }
   );

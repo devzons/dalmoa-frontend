@@ -1,4 +1,4 @@
-import type { ListingSearchFilters } from '../types';
+import type { ListingSearchFilters } from "../types";
 
 type ListingActiveFiltersProps = {
   filters: ListingSearchFilters;
@@ -7,8 +7,9 @@ type ListingActiveFiltersProps = {
 export default function ListingActiveFilters({ filters }: ListingActiveFiltersProps) {
   const items = [
     filters.q ? `q=${filters.q}` : null,
-    filters.featured ? 'featured=1' : null,
+    filters.featured ? "featured=1" : null,
     filters.region ? `region=${filters.region}` : null,
+    filters.category ? `category=${filters.category}` : null,
     filters.priceMin ? `price_min=${filters.priceMin}` : null,
     filters.priceMax ? `price_max=${filters.priceMax}` : null,
     filters.page > 1 ? `page=${filters.page}` : null,

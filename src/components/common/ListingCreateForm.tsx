@@ -12,47 +12,6 @@ type Props = {
   category: SubmitCategory;
 };
 
-const copy = {
-  ko: {
-    title: "제목",
-    titlePlaceholder: "제목을 입력하세요",
-    region: "지역",
-    regionPlaceholder: "예: Dallas, Carrollton",
-    price: "가격",
-    pricePlaceholder: "숫자만 입력",
-    image: "대표 이미지",
-    imageHelp: "JPG, PNG, WebP 이미지를 업로드하세요.",
-    featured: "추천 등록",
-    description: "설명",
-    descriptionPlaceholder: "상세 내용을 입력하세요",
-    contactName: "연락 담당자",
-    contactPhone: "전화번호",
-    contactEmail: "이메일",
-    submit: "등록 완료",
-    submitting: "등록 중...",
-    errorDefault: "등록에 실패했습니다.",
-  },
-  en: {
-    title: "Title",
-    titlePlaceholder: "Enter title",
-    region: "Region",
-    regionPlaceholder: "e.g. Dallas, Carrollton",
-    price: "Price",
-    pricePlaceholder: "Numbers only",
-    image: "Featured Image",
-    imageHelp: "Upload a JPG, PNG, or WebP image.",
-    featured: "Featured",
-    description: "Description",
-    descriptionPlaceholder: "Enter description",
-    contactName: "Contact Name",
-    contactPhone: "Phone",
-    contactEmail: "Email",
-    submit: "Submit",
-    submitting: "Submitting...",
-    errorDefault: "Failed to create item.",
-  },
-} as const;
-
 const pathMap: Record<SubmitCategory, string> = {
   "business-sale": "business-sale",
   loan: "loan",
@@ -62,8 +21,85 @@ const pathMap: Record<SubmitCategory, string> = {
   jobs: "jobs",
 };
 
+const labels = {
+  ko: {
+    title: "제목",
+    region: "지역",
+    price: "가격",
+    image: "대표 이미지",
+    imageHelp: "JPG, PNG, WebP 이미지를 업로드하세요.",
+    featured: "추천 등록",
+    description: "설명",
+    contactName: "연락 담당자",
+    contactPhone: "전화번호",
+    contactEmail: "이메일",
+    submit: "등록 완료",
+    submitting: "등록 중...",
+    errorDefault: "등록에 실패했습니다.",
+  },
+  en: {
+    title: "Title",
+    region: "Region",
+    price: "Price",
+    image: "Featured Image",
+    imageHelp: "Upload a JPG, PNG, or WebP image.",
+    featured: "Featured",
+    description: "Description",
+    contactName: "Contact Name",
+    contactPhone: "Phone",
+    contactEmail: "Email",
+    submit: "Submit",
+    submitting: "Submitting...",
+    errorDefault: "Failed to create item.",
+  },
+} as const;
+
+const categoryFields: Record<
+  SubmitCategory,
+  {
+    name: string;
+    ko: string;
+    en: string;
+    placeholderKo?: string;
+    placeholderEn?: string;
+    type?: string;
+  }[]
+> = {
+  jobs: [
+    { name: "companyName", ko: "회사명", en: "Company Name" },
+    { name: "salaryLabel", ko: "급여", en: "Salary", placeholderKo: "예: 시급 $18", placeholderEn: "e.g. $18/hour" },
+    { name: "jobType", ko: "근무 형태", en: "Job Type", placeholderKo: "예: 풀타임", placeholderEn: "e.g. Full-time" },
+  ],
+  "business-sale": [
+    { name: "businessCategory", ko: "업종", en: "Business Category" },
+    { name: "salePriceLabel", ko: "매매가", en: "Sale Price", placeholderKo: "예: $250,000", placeholderEn: "e.g. $250,000" },
+    { name: "monthlyRevenueLabel", ko: "월매출", en: "Monthly Revenue" },
+  ],
+  loan: [
+    { name: "loanType", ko: "융자 종류", en: "Loan Type" },
+    { name: "interestRateLabel", ko: "이자율", en: "Interest Rate" },
+    { name: "loanAmountLabel", ko: "대출 가능 금액", en: "Loan Amount" },
+  ],
+  marketplace: [
+    { name: "itemCondition", ko: "상품 상태", en: "Item Condition" },
+    { name: "priceLabel", ko: "가격 표시", en: "Price Label", placeholderKo: "예: $100", placeholderEn: "e.g. $100" },
+  ],
+  "real-estate": [
+    { name: "propertyType", ko: "매물 유형", en: "Property Type" },
+    { name: "bedrooms", ko: "방 수", en: "Bedrooms", type: "number" },
+    { name: "bathrooms", ko: "화장실 수", en: "Bathrooms", type: "number" },
+    { name: "sizeLabel", ko: "면적", en: "Size", placeholderKo: "예: 1,200 sqft", placeholderEn: "e.g. 1,200 sqft" },
+  ],
+  cars: [
+    { name: "carMake", ko: "제조사", en: "Make" },
+    { name: "carModel", ko: "모델", en: "Model" },
+    { name: "carYear", ko: "연식", en: "Year", type: "number" },
+    { name: "mileageLabel", ko: "마일리지", en: "Mileage" },
+  ],
+};
+
 export function ListingCreateForm({ locale, category }: Props) {
-  const labels = copy[locale];
+  const t = labels[locale];
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -74,7 +110,7 @@ export function ListingCreateForm({ locale, category }: Props) {
     const title = String(formData.get("title") ?? "").trim();
 
     if (!title) {
-      setError(labels.errorDefault);
+      setError(t.errorDefault);
       return;
     }
 
@@ -84,19 +120,15 @@ export function ListingCreateForm({ locale, category }: Props) {
       try {
         const res = await createListing(category, formData);
 
-        if (res.slug) {
-          router.push(`/${locale}/${pathMap[category]}/${encodeURIComponent(res.slug)}`);
-        } else {
-          router.push(`/${locale}/${pathMap[category]}`);
-        }
+        router.push(
+          res.slug
+            ? `/${locale}/${pathMap[category]}/${encodeURIComponent(res.slug)}`
+            : `/${locale}/${pathMap[category]}`
+        );
 
         router.refresh();
       } catch (err) {
-        setError(
-          err instanceof Error && err.message
-            ? err.message
-            : labels.errorDefault,
-        );
+        setError(err instanceof Error && err.message ? err.message : t.errorDefault);
       }
     });
   };
@@ -108,50 +140,31 @@ export function ListingCreateForm({ locale, category }: Props) {
     >
       <div>
         <label htmlFor="title" className="mb-1.5 block text-sm font-medium text-neutral-700">
-          {labels.title}
+          {t.title}
         </label>
-        <input
-          id="title"
-          name="title"
-          type="text"
-          required
-          placeholder={labels.titlePlaceholder}
-          className="h-11 w-full rounded-xl border border-neutral-300 px-3 text-sm outline-none transition focus:border-neutral-900"
-        />
+        <input id="title" name="title" type="text" required className="h-11 w-full rounded-xl border border-neutral-300 px-3 text-sm outline-none transition focus:border-neutral-900" />
       </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-        <div>
-          <label htmlFor="region" className="mb-1.5 block text-sm font-medium text-neutral-700">
-            {labels.region}
-          </label>
-          <input
-            id="region"
-            name="region"
-            type="text"
-            placeholder={labels.regionPlaceholder}
-            className="h-11 w-full rounded-xl border border-neutral-300 px-3 text-sm outline-none transition focus:border-neutral-900"
-          />
-        </div>
+        <Input name="region" label={t.region} />
+        <Input name="price" label={t.price} inputMode="numeric" />
+      </div>
 
-        <div>
-          <label htmlFor="price" className="mb-1.5 block text-sm font-medium text-neutral-700">
-            {labels.price}
-          </label>
-          <input
-            id="price"
-            name="price"
-            type="text"
-            inputMode="numeric"
-            placeholder={labels.pricePlaceholder}
-            className="h-11 w-full rounded-xl border border-neutral-300 px-3 text-sm outline-none transition focus:border-neutral-900"
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        {categoryFields[category].map((field) => (
+          <Input
+            key={field.name}
+            name={field.name}
+            label={locale === "en" ? field.en : field.ko}
+            type={field.type ?? "text"}
+            placeholder={locale === "en" ? field.placeholderEn : field.placeholderKo}
           />
-        </div>
+        ))}
       </div>
 
       <div>
         <label htmlFor="image" className="mb-1.5 block text-sm font-medium text-neutral-700">
-          {labels.image}
+          {t.image}
         </label>
         <input
           id="image"
@@ -160,48 +173,25 @@ export function ListingCreateForm({ locale, category }: Props) {
           accept="image/jpeg,image/png,image/webp"
           className="block w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-neutral-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
         />
-        <p className="mt-1 text-xs text-neutral-500">{labels.imageHelp}</p>
+        <p className="mt-1 text-xs text-neutral-500">{t.imageHelp}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-        <div>
-          <label htmlFor="contactName" className="mb-1.5 block text-sm font-medium text-neutral-700">
-            {labels.contactName}
-          </label>
-          <input id="contactName" name="contactName" type="text" className="h-11 w-full rounded-xl border border-neutral-300 px-3 text-sm outline-none transition focus:border-neutral-900" />
-        </div>
-
-        <div>
-          <label htmlFor="contactPhone" className="mb-1.5 block text-sm font-medium text-neutral-700">
-            {labels.contactPhone}
-          </label>
-          <input id="contactPhone" name="contactPhone" type="tel" className="h-11 w-full rounded-xl border border-neutral-300 px-3 text-sm outline-none transition focus:border-neutral-900" />
-        </div>
-
-        <div>
-          <label htmlFor="contactEmail" className="mb-1.5 block text-sm font-medium text-neutral-700">
-            {labels.contactEmail}
-          </label>
-          <input id="contactEmail" name="contactEmail" type="email" className="h-11 w-full rounded-xl border border-neutral-300 px-3 text-sm outline-none transition focus:border-neutral-900" />
-        </div>
+        <Input name="contactName" label={t.contactName} />
+        <Input name="contactPhone" label={t.contactPhone} type="tel" />
+        <Input name="contactEmail" label={t.contactEmail} type="email" />
       </div>
 
       <label className="inline-flex items-center gap-2 text-sm text-neutral-700">
         <input name="featured" type="checkbox" value="1" className="h-4 w-4 rounded border-neutral-300" />
-        <span>{labels.featured}</span>
+        <span>{t.featured}</span>
       </label>
 
       <div>
         <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-neutral-700">
-          {labels.description}
+          {t.description}
         </label>
-        <textarea
-          id="description"
-          name="description"
-          rows={8}
-          placeholder={labels.descriptionPlaceholder}
-          className="w-full rounded-xl border border-neutral-300 px-3 py-3 text-sm outline-none transition focus:border-neutral-900"
-        />
+        <textarea id="description" name="description" rows={8} className="w-full rounded-xl border border-neutral-300 px-3 py-3 text-sm outline-none transition focus:border-neutral-900" />
       </div>
 
       {error ? (
@@ -215,8 +205,38 @@ export function ListingCreateForm({ locale, category }: Props) {
         disabled={isPending}
         className="inline-flex h-11 items-center justify-center rounded-xl bg-neutral-900 px-5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isPending ? labels.submitting : labels.submit}
+        {isPending ? t.submitting : t.submit}
       </button>
     </form>
+  );
+}
+
+function Input({
+  name,
+  label,
+  type = "text",
+  placeholder,
+  inputMode,
+}: {
+  name: string;
+  label: string;
+  type?: string;
+  placeholder?: string;
+  inputMode?: "numeric";
+}) {
+  return (
+    <div>
+      <label htmlFor={name} className="mb-1.5 block text-sm font-medium text-neutral-700">
+        {label}
+      </label>
+      <input
+        id={name}
+        name={name}
+        type={type}
+        placeholder={placeholder}
+        inputMode={inputMode}
+        className="h-11 w-full rounded-xl border border-neutral-300 px-3 text-sm outline-none transition focus:border-neutral-900"
+      />
+    </div>
   );
 }

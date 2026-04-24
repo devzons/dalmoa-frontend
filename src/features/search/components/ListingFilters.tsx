@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useMemo, useState, useTransition } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import type { ListingSearchDomain, ListingSearchFilters } from '../types';
-import { buildListingSearchHref } from '../url';
+import { useMemo, useState, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import type { ListingSearchDomain, ListingSearchFilters } from "../types";
+import { buildListingSearchHref } from "../url";
 
 type ListingFiltersProps = {
   domain: ListingSearchDomain;
@@ -12,18 +12,27 @@ type ListingFiltersProps = {
 };
 
 const domainLabels: Record<ListingSearchDomain, string> = {
-  'business-sale': 'Business Sale',
-  jobs: 'Jobs',
-  marketplace: 'Marketplace',
-  'real-estate': 'Real Estate',
-  cars: 'Cars',
-  loan: 'Loan',
+  "business-sale": "Business Sale",
+  jobs: "Jobs",
+  marketplace: "Marketplace",
+  "real-estate": "Real Estate",
+  cars: "Cars",
+  loan: "Loan",
+};
+
+const categoryOptions: Record<ListingSearchDomain, string[]> = {
+  jobs: ["restaurant", "office", "retail", "beauty", "delivery", "other"],
+  "business-sale": ["restaurant", "beauty", "retail", "laundry", "gas-station", "other"],
+  loan: ["business-loan", "mortgage", "personal-loan", "sba", "other"],
+  marketplace: ["furniture", "electronics", "appliance", "baby", "fashion", "other"],
+  "real-estate": ["rent", "sale", "commercial", "room", "office", "other"],
+  cars: ["sedan", "suv", "truck", "van", "luxury", "other"],
 };
 
 export default function ListingFilters({
   domain,
   initialFilters,
-  regionOptions = ['Dallas', 'Plano', 'Carrollton', 'Frisco', 'Irving', 'Arlington'],
+  regionOptions = ["Dallas", "Plano", "Carrollton", "Frisco", "Irving", "Arlington"],
 }: ListingFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -32,18 +41,21 @@ export default function ListingFilters({
   const [q, setQ] = useState(initialFilters.q);
   const [featured, setFeatured] = useState(initialFilters.featured);
   const [region, setRegion] = useState(initialFilters.region);
+  const [category, setCategory] = useState(initialFilters.category);
   const [priceMin, setPriceMin] = useState(initialFilters.priceMin);
   const [priceMax, setPriceMax] = useState(initialFilters.priceMax);
 
   const currentLabel = useMemo(() => domainLabels[domain], [domain]);
+  const categories = categoryOptions[domain];
 
   const applyFilters = () => {
     const href = buildListingSearchHref(pathname, {
       q: q.trim(),
       featured,
       region,
-      priceMin: priceMin.replace(/[^\d]/g, ''),
-      priceMax: priceMax.replace(/[^\d]/g, ''),
+      category,
+      priceMin: priceMin.replace(/[^\d]/g, ""),
+      priceMax: priceMax.replace(/[^\d]/g, ""),
       page: 1,
     });
 
@@ -53,11 +65,12 @@ export default function ListingFilters({
   };
 
   const resetFilters = () => {
-    setQ('');
+    setQ("");
     setFeatured(false);
-    setRegion('');
-    setPriceMin('');
-    setPriceMax('');
+    setRegion("");
+    setCategory("");
+    setPriceMin("");
+    setPriceMax("");
 
     startTransition(() => {
       router.push(pathname);
@@ -73,11 +86,11 @@ export default function ListingFilters({
         </div>
 
         <div className="text-sm text-gray-500">
-          {isPending ? 'Updating...' : 'URL-based filter state enabled'}
+          {isPending ? "Updating..." : "URL-based filter state enabled"}
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <div className="xl:col-span-2">
           <label htmlFor={`${domain}-q`} className="mb-2 block text-sm font-medium text-gray-700">
             Search
@@ -90,6 +103,25 @@ export default function ListingFilters({
             placeholder={`Search ${currentLabel.toLowerCase()}...`}
             className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-gray-900"
           />
+        </div>
+
+        <div>
+          <label htmlFor={`${domain}-category`} className="mb-2 block text-sm font-medium text-gray-700">
+            Category
+          </label>
+          <select
+            id={`${domain}-category`}
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-gray-900"
+          >
+            <option value="">All Categories</option>
+            {categories.map((item) => (
+              <option key={item} value={item}>
+                {item.replaceAll("-", " ")}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -120,7 +152,7 @@ export default function ListingFilters({
             type="text"
             inputMode="numeric"
             value={priceMin}
-            onChange={(e) => setPriceMin(e.target.value.replace(/[^\d]/g, ''))}
+            onChange={(e) => setPriceMin(e.target.value.replace(/[^\d]/g, ""))}
             placeholder="0"
             className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-gray-900"
           />
@@ -135,7 +167,7 @@ export default function ListingFilters({
             type="text"
             inputMode="numeric"
             value={priceMax}
-            onChange={(e) => setPriceMax(e.target.value.replace(/[^\d]/g, ''))}
+            onChange={(e) => setPriceMax(e.target.value.replace(/[^\d]/g, ""))}
             placeholder="100000"
             className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-gray-900"
           />
