@@ -1,24 +1,27 @@
-import { getAuthorizationHeader } from "@/features/auth/token";
+import { env } from "@/lib/config/env";
 
-function getApiBaseUrl() {
-  return process.env.NEXT_PUBLIC_API_BASE_URL || "";
-}
+export type SubmitCategory =
+  | "business-sale"
+  | "loan"
+  | "marketplace"
+  | "real-estate"
+  | "cars"
+  | "jobs";
 
-export async function createListing(path: string, payload: unknown) {
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    ...getAuthorizationHeader(),
-  };
-
-  const res = await fetch(`${getApiBaseUrl()}${path}`, {
+export async function createListing(
+  category: SubmitCategory,
+  formData: FormData
+): Promise<{ id: number; slug?: string; thumbnailId?: number; thumbnailUrl?: string }> {
+  const response = await fetch(`${env.NEXT_PUBLIC_API_URL}/submit/${category}`, {
     method: "POST",
-    headers,
-    body: JSON.stringify(payload),
+    body: formData,
+    cache: "no-store",
+    credentials: "include",
   });
 
-  if (!res.ok) {
-    throw new Error("failed");
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.status}`);
   }
 
-  return res.json();
+  return response.json();
 }

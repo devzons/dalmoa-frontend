@@ -75,7 +75,7 @@ export async function getPaginatedJobs(
   const raw = await apiFetch<JobItem[] | PaginatedListResponse<JobItem>>(
     `${endpoints.jobsList}?${searchParams.toString()}`,
     {
-      revalidate: 120,
+      revalidate: 0,
       tags: [cacheTags.jobsList],
     }
   );
