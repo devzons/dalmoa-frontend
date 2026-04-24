@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition, FormEvent, KeyboardEvent } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { trackClick } from "@/lib/tracking/trackClick";
 
 type Props = {
   locale: "ko" | "en";
@@ -126,6 +127,8 @@ export default function GlobalSearchBar({
 
   const goResult = (result: AutocompleteResult) => {
     const path = typePathMap[result.type] ?? result.type;
+
+    trackClick(result.type, result.item.id);
 
     startTransition(() => {
       setIsOpen(false);
