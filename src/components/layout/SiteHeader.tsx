@@ -6,6 +6,7 @@ import { MainNav } from "@/components/layout/MainNav";
 import { MobileNav } from "@/components/layout/MobileNav";
 import GlobalSearchBar from "@/features/search/components/GlobalSearchBar";
 
+
 type Props = {
   locale: string;
 };
