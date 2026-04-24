@@ -36,7 +36,8 @@ const copy = {
     priceMinPlaceholder: "0",
     priceMax: "최대 금액",
     priceMaxPlaceholder: "1000000",
-    apply: "적용",
+    apply: "검색",
+    applying: "검색 중...",
     reset: "초기화",
   },
   en: {
@@ -49,7 +50,8 @@ const copy = {
     priceMinPlaceholder: "0",
     priceMax: "Max price",
     priceMaxPlaceholder: "1000000",
-    apply: "Apply",
+    apply: "Search",
+    applying: "Searching...",
     reset: "Reset",
   },
 } as const;
@@ -109,11 +111,8 @@ export function SearchFilters({
     setOrDelete(next, "price_min", priceMin);
     setOrDelete(next, "price_max", priceMax);
 
-    if (featured) {
-      next.set("featured", "1");
-    } else {
-      next.delete("featured");
-    }
+    if (featured) next.set("featured", "1");
+    else next.delete("featured");
 
     next.delete("page");
 
@@ -149,33 +148,27 @@ export function SearchFilters({
     <form
       action={submit}
       className={[
-        "rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm",
+        "rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm md:p-5",
         className ?? "",
       ].join(" ")}
     >
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-5">
         <div className="xl:col-span-2">
-          <label
-            htmlFor="search-q"
-            className="mb-1.5 block text-sm font-medium text-neutral-700"
-          >
+          <label htmlFor="search-q" className="mb-1.5 block text-sm font-medium text-neutral-700">
             {labels.keyword}
           </label>
           <input
             id="search-q"
             name="q"
-            type="text"
+            type="search"
             defaultValue={values.q}
             placeholder={labels.keywordPlaceholder}
-            className="h-11 w-full rounded-xl border border-neutral-300 px-3 text-sm outline-none transition focus:border-neutral-900"
+            className="h-12 w-full rounded-xl border border-neutral-300 px-3 text-base outline-none transition focus:border-neutral-900 md:h-11 md:text-sm"
           />
         </div>
 
         <div>
-          <label
-            htmlFor="search-region"
-            className="mb-1.5 block text-sm font-medium text-neutral-700"
-          >
+          <label htmlFor="search-region" className="mb-1.5 block text-sm font-medium text-neutral-700">
             {labels.region}
           </label>
 
@@ -184,7 +177,7 @@ export function SearchFilters({
               id="search-region"
               name="region"
               defaultValue={values.region}
-              className="h-11 w-full rounded-xl border border-neutral-300 bg-white px-3 text-sm outline-none transition focus:border-neutral-900"
+              className="h-12 w-full rounded-xl border border-neutral-300 bg-white px-3 text-base outline-none transition focus:border-neutral-900 md:h-11 md:text-sm"
             >
               <option value="">{labels.regionPlaceholder}</option>
               {regionOptions.map((option) => (
@@ -200,45 +193,41 @@ export function SearchFilters({
               type="text"
               defaultValue={values.region}
               placeholder={labels.regionPlaceholder}
-              className="h-11 w-full rounded-xl border border-neutral-300 px-3 text-sm outline-none transition focus:border-neutral-900"
+              className="h-12 w-full rounded-xl border border-neutral-300 px-3 text-base outline-none transition focus:border-neutral-900 md:h-11 md:text-sm"
             />
           )}
         </div>
 
-        <div>
-          <label
-            htmlFor="search-price-min"
-            className="mb-1.5 block text-sm font-medium text-neutral-700"
-          >
-            {labels.priceMin}
-          </label>
-          <input
-            id="search-price-min"
-            name="price_min"
-            type="text"
-            inputMode="numeric"
-            defaultValue={values.price_min}
-            placeholder={labels.priceMinPlaceholder}
-            className="h-11 w-full rounded-xl border border-neutral-300 px-3 text-sm outline-none transition focus:border-neutral-900"
-          />
-        </div>
+        <div className="grid grid-cols-2 gap-3 md:contents">
+          <div>
+            <label htmlFor="search-price-min" className="mb-1.5 block text-sm font-medium text-neutral-700">
+              {labels.priceMin}
+            </label>
+            <input
+              id="search-price-min"
+              name="price_min"
+              type="text"
+              inputMode="numeric"
+              defaultValue={values.price_min}
+              placeholder={labels.priceMinPlaceholder}
+              className="h-12 w-full rounded-xl border border-neutral-300 px-3 text-base outline-none transition focus:border-neutral-900 md:h-11 md:text-sm"
+            />
+          </div>
 
-        <div>
-          <label
-            htmlFor="search-price-max"
-            className="mb-1.5 block text-sm font-medium text-neutral-700"
-          >
-            {labels.priceMax}
-          </label>
-          <input
-            id="search-price-max"
-            name="price_max"
-            type="text"
-            inputMode="numeric"
-            defaultValue={values.price_max}
-            placeholder={labels.priceMaxPlaceholder}
-            className="h-11 w-full rounded-xl border border-neutral-300 px-3 text-sm outline-none transition focus:border-neutral-900"
-          />
+          <div>
+            <label htmlFor="search-price-max" className="mb-1.5 block text-sm font-medium text-neutral-700">
+              {labels.priceMax}
+            </label>
+            <input
+              id="search-price-max"
+              name="price_max"
+              type="text"
+              inputMode="numeric"
+              defaultValue={values.price_max}
+              placeholder={labels.priceMaxPlaceholder}
+              className="h-12 w-full rounded-xl border border-neutral-300 px-3 text-base outline-none transition focus:border-neutral-900 md:h-11 md:text-sm"
+            />
+          </div>
         </div>
       </div>
 
@@ -254,21 +243,21 @@ export function SearchFilters({
           <span>{labels.featured}</span>
         </label>
 
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex">
           <button
             type="button"
             onClick={reset}
             disabled={isPending}
-            className="inline-flex h-11 items-center justify-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-12 items-center justify-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60 sm:h-11"
           >
             {labels.reset}
           </button>
           <button
             type="submit"
             disabled={isPending}
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-neutral-900 px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-12 items-center justify-center rounded-xl bg-neutral-900 px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:h-11"
           >
-            {labels.apply}
+            {isPending ? labels.applying : labels.apply}
           </button>
         </div>
       </div>

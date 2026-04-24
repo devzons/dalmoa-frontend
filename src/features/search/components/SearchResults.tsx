@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Badge } from "@/components/base/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/base/Card";
@@ -14,6 +16,14 @@ export function SearchResults({
   locale: "ko" | "en";
 }) {
   const grouped = groupSearchResults(data);
+
+  if (!data.results.length) {
+    return (
+      <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center text-sm text-gray-500">
+        {locale === "en" ? "No results found." : "검색 결과가 없습니다."}
+      </div>
+    );
+  }
 
   const sections = [
     {
@@ -100,81 +110,55 @@ export function SearchResults({
     },
   ];
 
-  const directoryItems = grouped.directories.map((result) => result.item);
-  const adItems = grouped.ads.map((result) => result.item);
-  const businessItems = grouped.businesses.map((result) => result.item);
+  const directoryItems = grouped.directories.map((r) => r.item);
+  const adItems = grouped.ads.map((r) => r.item);
+  const businessItems = grouped.businesses.map((r) => r.item);
 
   return (
     <div className="space-y-10">
-      {directoryItems.length > 0 ? (
+      {directoryItems.length > 0 && (
         <section>
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between">
             <SectionHeading
               title={locale === "en" ? "Businesses" : "업소"}
-              description={
-                locale === "en"
-                  ? `${directoryItems.length} results found`
-                  : `${directoryItems.length}건 검색됨`
-              }
+              description={`${directoryItems.length}`}
             />
-
-            <Link
-              href={`/${locale}/directory?q=${encodeURIComponent(data.q)}`}
-              className="mt-1 shrink-0 text-sm font-medium text-neutral-500 hover:text-neutral-900"
-            >
-              {locale === "en" ? "View more →" : "더보기 →"}
-            </Link>
+            <Link href={`/${locale}/directory?q=${data.q}`}>More →</Link>
           </div>
-
           <DirectoryList items={directoryItems} locale={locale} />
         </section>
-      ) : null}
+      )}
 
       {sections.map((section) => {
-        const items = section.items.map((result) => result.item);
-
-        if (items.length === 0) return null;
+        const items = section.items.map((r) => r.item);
+        if (!items.length) return null;
 
         return (
           <section key={section.key}>
-            <div className="flex items-start justify-between gap-4">
-              <SectionHeading
-                title={section.title}
-                description={
-                  locale === "en"
-                    ? `${items.length} results found`
-                    : `${items.length}건 검색됨`
-                }
-              />
-
-              <Link
-                href={section.listHref}
-                className="mt-1 shrink-0 text-sm font-medium text-neutral-500 hover:text-neutral-900"
-              >
-                {locale === "en" ? "View more →" : "더보기 →"}
-              </Link>
+            <div className="flex justify-between">
+              <SectionHeading title={section.title} description={`${items.length}`} />
+              <Link href={section.listHref}>More →</Link>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {items.map((item: any) => (
-                <Link
-                  key={`${section.key}-${item.id ?? item.slug}`}
-                  href={section.href(item.slug)}
-                  className="block"
-                >
-                  <Card className="h-full transition hover:shadow-md">
+                <Link key={item.slug} href={section.href(item.slug)}>
+                  <Card className="overflow-hidden hover:shadow-md">
+                    {item.thumbnailUrl && (
+                      <img
+                        src={item.thumbnailUrl}
+                        className="aspect-video w-full object-cover"
+                      />
+                    )}
+
                     <CardHeader>
-                      <div className="mb-2">
-                        <Badge>{section.badge}</Badge>
-                      </div>
+                      <Badge>{section.badge}</Badge>
                       <CardTitle>{item.title}</CardTitle>
                     </CardHeader>
 
-                    <CardContent className="space-y-2 text-sm text-neutral-600">
-                      {section.meta(item) ? <p>{section.meta(item)}</p> : null}
-                      {item.excerpt ? (
-                        <p className="line-clamp-3">{item.excerpt}</p>
-                      ) : null}
+                    <CardContent>
+                      {section.meta(item) && <p>{section.meta(item)}</p>}
+                      {item.excerpt && <p>{item.excerpt}</p>}
                     </CardContent>
                   </Card>
                 </Link>
@@ -184,87 +168,53 @@ export function SearchResults({
         );
       })}
 
-      {businessItems.length > 0 ? (
+      {businessItems.length > 0 && (
         <section>
-          <SectionHeading
-            title={locale === "en" ? "Business Pages" : "비즈니스 페이지"}
-            description={
-              locale === "en"
-                ? `${businessItems.length} results found`
-                : `${businessItems.length}건 검색됨`
-            }
-          />
+          <SectionHeading title="Business Pages" description={`${businessItems.length}`} />
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {businessItems.map((item) => (
-              <Link
-                key={item.slug}
-                href={`/${locale}/business/${item.slug}`}
-                className="block"
-              >
-                <Card className="h-full transition hover:shadow-md">
+              <Link key={item.slug} href={`/${locale}/business/${item.slug}`}>
+                <Card className="overflow-hidden">
+                  {item.hero?.imageUrl && (
+                    <img
+                      src={item.hero.imageUrl}
+                      className="aspect-video w-full object-cover"
+                    />
+                  )}
                   <CardHeader>
-                    <div className="mb-2">
-                      <Badge>{locale === "en" ? "Business" : "비즈니스"}</Badge>
-                    </div>
+                    <Badge>Business</Badge>
                     <CardTitle>{item.hero.title}</CardTitle>
                   </CardHeader>
-
-                  <CardContent className="text-sm text-neutral-600">
-                    {item.hero.subtitle ? <p>{item.hero.subtitle}</p> : null}
-                  </CardContent>
                 </Card>
               </Link>
             ))}
           </div>
         </section>
-      ) : null}
+      )}
 
-      {adItems.length > 0 ? (
+      {adItems.length > 0 && (
         <section>
-          <SectionHeading
-            title={locale === "en" ? "Ads" : "광고"}
-            description={
-              locale === "en"
-                ? `${adItems.length} results found`
-                : `${adItems.length}건 검색됨`
-            }
-          />
+          <SectionHeading title="Ads" description={`${adItems.length}`} />
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {adItems.map((item) => {
-              const href =
-                item.ctaUrl && item.ctaUrl.startsWith("/")
-                  ? item.ctaUrl
-                  : item.ctaUrl || `/${locale}/ads`;
-
-              return (
-                <Card key={item.id} className="h-full transition hover:shadow-md">
-                  <CardHeader>
-                    <div className="mb-2">
-                      <Badge>{locale === "en" ? "Ad" : "광고"}</Badge>
-                    </div>
-                    <CardTitle>{item.title}</CardTitle>
-                  </CardHeader>
-
-                  <CardContent className="space-y-2 text-sm text-neutral-600">
-                    {item.excerpt ? (
-                      <p className="line-clamp-3">{item.excerpt}</p>
-                    ) : null}
-                    <Link
-                      href={href}
-                      target={item.isExternal ? "_blank" : "_self"}
-                      className="font-medium underline"
-                    >
-                      {item.ctaLabel || (locale === "en" ? "View" : "보기")}
-                    </Link>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {adItems.map((item) => (
+              <Card key={item.id} className="overflow-hidden">
+                {item.thumbnailUrl && (
+                  <img
+                    src={item.thumbnailUrl}
+                    className="aspect-video w-full object-cover"
+                  />
+                )}
+                <CardHeader>
+                  <Badge>Ad</Badge>
+                  <CardTitle>{item.title}</CardTitle>
+                </CardHeader>
+              </Card>
+            ))}
           </div>
         </section>
-      ) : null}
+      )}
     </div>
   );
 }
