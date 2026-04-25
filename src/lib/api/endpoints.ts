@@ -30,4 +30,8 @@ export const endpoints = {
 
   townBoardList: "/town-board",
   townBoardDetail: (slug: string) => `/town-board/${slug}`,
+
+  // PAYMENT
+  createCheckoutSession: "/payments/create-checkout-session",
+  paymentWebhook: "/payments/webhook",
 } as const;

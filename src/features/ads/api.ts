@@ -16,3 +16,13 @@ export async function getFeaturedAds(locale: "ko" | "en" = "ko") {
     tags: [cacheTags.adsFeatured],
   });
 }
+
+// 🔥 추가 (핵심)
+export async function getAdBySlug(
+  slug: string,
+  locale: "ko" | "en" = "ko"
+) {
+  return apiFetch<AdItem>(
+    `${endpoints.adsList}/${slug}?locale=${locale}`
+  );
+}
