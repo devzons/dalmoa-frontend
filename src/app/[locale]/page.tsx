@@ -1,13 +1,24 @@
+import Link from "next/link";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { getHomeData } from "@/features/home/api";
 import { HomeHero } from "@/features/home/components/HomeHero";
-import { HomeSection } from "@/features/home/components/HomeSection";
 import type { HomeLocale } from "@/features/home/types";
+import HomeListingCard from "@/components/listing/HomeListingCard";
 
 type Props = {
   params: Promise<{
     locale: string;
   }>;
+};
+
+type HomeCardSectionProps = {
+  locale: HomeLocale;
+  title: string;
+  description: string;
+  moreHref: string;
+  moreLabel: string;
+  items: any[];
+  domain: string;
 };
 
 export async function generateMetadata({ params }: Props) {
@@ -36,7 +47,7 @@ export default async function HomePage({ params }: Props) {
     <div className="bg-neutral-50">
       <HomeHero locale={normalizedLocale} />
 
-      <HomeSection
+      <HomeCardSection
         locale={normalizedLocale}
         title={normalizedLocale === "en" ? "Featured Ads" : "추천 광고"}
         description={
@@ -47,9 +58,10 @@ export default async function HomePage({ params }: Props) {
         moreHref={`/${normalizedLocale}/ads`}
         moreLabel={normalizedLocale === "en" ? "View all" : "전체 보기"}
         items={data.featuredAds}
+        domain="ads"
       />
 
-      <HomeSection
+      <HomeCardSection
         locale={normalizedLocale}
         title={normalizedLocale === "en" ? "Featured Businesses" : "추천 업소"}
         description={
@@ -60,9 +72,10 @@ export default async function HomePage({ params }: Props) {
         moreHref={`/${normalizedLocale}/directory`}
         moreLabel={normalizedLocale === "en" ? "View all" : "전체 보기"}
         items={data.featuredDirectory}
+        domain="directory"
       />
 
-      <HomeSection
+      <HomeCardSection
         locale={normalizedLocale}
         title={normalizedLocale === "en" ? "Latest News" : "최신 뉴스"}
         description={
@@ -73,9 +86,10 @@ export default async function HomePage({ params }: Props) {
         moreHref={`/${normalizedLocale}/news`}
         moreLabel={normalizedLocale === "en" ? "View all" : "전체 보기"}
         items={data.latestNews}
+        domain="news"
       />
 
-      <HomeSection
+      <HomeCardSection
         locale={normalizedLocale}
         title={normalizedLocale === "en" ? "Latest Jobs" : "최신 구인구직"}
         description={
@@ -86,9 +100,10 @@ export default async function HomePage({ params }: Props) {
         moreHref={`/${normalizedLocale}/jobs`}
         moreLabel={normalizedLocale === "en" ? "View all" : "전체 보기"}
         items={data.latestJobs}
+        domain="jobs"
       />
 
-            <HomeSection
+      <HomeCardSection
         locale={normalizedLocale}
         title={normalizedLocale === "en" ? "Latest Business Sales" : "최신 사업체매매"}
         description={
@@ -99,9 +114,10 @@ export default async function HomePage({ params }: Props) {
         moreHref={`/${normalizedLocale}/business-sale`}
         moreLabel={normalizedLocale === "en" ? "View all" : "전체 보기"}
         items={data.latestBusinessSale}
+        domain="business-sale"
       />
 
-      <HomeSection
+      <HomeCardSection
         locale={normalizedLocale}
         title={normalizedLocale === "en" ? "Latest Loans" : "최신 융자"}
         description={
@@ -112,9 +128,10 @@ export default async function HomePage({ params }: Props) {
         moreHref={`/${normalizedLocale}/loan`}
         moreLabel={normalizedLocale === "en" ? "View all" : "전체 보기"}
         items={data.latestLoan}
+        domain="loan"
       />
 
-      <HomeSection
+      <HomeCardSection
         locale={normalizedLocale}
         title={normalizedLocale === "en" ? "Latest Marketplace" : "최신 사고팔기"}
         description={
@@ -125,9 +142,10 @@ export default async function HomePage({ params }: Props) {
         moreHref={`/${normalizedLocale}/marketplace`}
         moreLabel={normalizedLocale === "en" ? "View all" : "전체 보기"}
         items={data.latestMarketplace}
+        domain="marketplace"
       />
 
-      <HomeSection
+      <HomeCardSection
         locale={normalizedLocale}
         title={normalizedLocale === "en" ? "Latest Real Estate" : "최신 부동산"}
         description={
@@ -138,9 +156,10 @@ export default async function HomePage({ params }: Props) {
         moreHref={`/${normalizedLocale}/real-estate`}
         moreLabel={normalizedLocale === "en" ? "View all" : "전체 보기"}
         items={data.latestRealEstate}
+        domain="real-estate"
       />
 
-      <HomeSection
+      <HomeCardSection
         locale={normalizedLocale}
         title={normalizedLocale === "en" ? "Latest Cars" : "최신 자동차"}
         description={
@@ -151,9 +170,10 @@ export default async function HomePage({ params }: Props) {
         moreHref={`/${normalizedLocale}/cars`}
         moreLabel={normalizedLocale === "en" ? "View all" : "전체 보기"}
         items={data.latestCars}
+        domain="cars"
       />
 
-      <HomeSection
+      <HomeCardSection
         locale={normalizedLocale}
         title={normalizedLocale === "en" ? "Latest Town Board" : "최신 타운게시판"}
         description={
@@ -164,7 +184,56 @@ export default async function HomePage({ params }: Props) {
         moreHref={`/${normalizedLocale}/town-board`}
         moreLabel={normalizedLocale === "en" ? "View all" : "전체 보기"}
         items={data.latestTownBoard}
+        domain="town-board"
       />
     </div>
+  );
+}
+
+function HomeCardSection({
+  locale,
+  title,
+  description,
+  moreHref,
+  moreLabel,
+  items,
+  domain,
+}: HomeCardSectionProps) {
+  if (!items || items.length === 0) return null;
+
+  return (
+    <section className="border-t border-neutral-200 bg-neutral-50 py-8">
+      <div className="mx-auto max-w-7xl px-4">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-neutral-950">
+              {title}
+            </h2>
+            <p className="mt-1 text-sm text-neutral-500">{description}</p>
+          </div>
+
+          <Link
+            href={moreHref}
+            className="shrink-0 text-sm font-semibold text-neutral-900 hover:underline"
+          >
+            {moreLabel}
+          </Link>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {items.map((item: any) => (
+            <HomeListingCard
+              key={item.id ?? item.slug}
+              item={item}
+              locale={locale}
+              domain={domain}
+              variant={
+                domain === "ads" || domain === "directory" ? "ad" : "default"
+              }
+            />
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { Container } from "@/components/base/Container";
+import FeaturedListingGrid from "@/components/listing/FeaturedListingGrid";
 import { DirectoryFilterBar } from "@/features/directory/components/DirectoryFilterBar";
-import { DirectoryGrid } from "@/features/directory/components/DirectoryGrid";
 import { getDirectories } from "@/features/directory/api";
 import { getDirectoryCategories } from "@/features/directory/utils";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: Props) {
   });
 }
 
-export const revalidate = 300;
+export const revalidate = 0;
 
 export default async function DirectoryPage({
   params,
@@ -43,11 +44,25 @@ export default async function DirectoryPage({
   const query = {
     q: resolvedSearchParams.q?.trim() || undefined,
     category: resolvedSearchParams.category?.trim() || undefined,
-    featured: resolvedSearchParams.featured === "1",
   };
 
   const items = await getDirectories(normalizedLocale, query);
+
   const categories = getDirectoryCategories(items, normalizedLocale);
+
+  const isFeatured = (item: any) =>
+    item.featured === true ||
+    item.featured === 1 ||
+    item.featured === "1" ||
+    item.isFeatured === true ||
+    item.isFeatured === 1 ||
+    item.isFeatured === "1";
+
+  // 모든 유료/추천 상단 표시
+  const featured = items.filter((item: any) => isFeatured(item));
+
+  // 일반만 리스트
+  const regular = items.filter((item: any) => !isFeatured(item));
 
   return (
     <Container className="py-10">
@@ -67,7 +82,72 @@ export default async function DirectoryPage({
         categories={categories}
       />
 
-      <DirectoryGrid items={items} locale={normalizedLocale} />
+      <div className="mt-8 space-y-10">
+        {featured.length > 0 && (
+          <FeaturedListingGrid
+            items={featured}
+            locale={normalizedLocale}
+            domain="directory"
+          />
+        )}
+
+        {regular.length > 0 ? (
+          <div className="divide-y rounded-2xl border border-neutral-200 bg-white">
+            {regular.map((item: any, index: number) => {
+              const title =
+                item.title ||
+                item.name ||
+                item.businessName ||
+                item.displayName ||
+                item.hero?.title ||
+                "Untitled";
+
+              const subtitle =
+                item.categoryLabel ||
+                item.category ||
+                item.address ||
+                item.phone ||
+                item.hero?.subtitle ||
+                item.excerpt ||
+                null;
+
+              return (
+                <Link
+                  key={item.id ?? item.slug ?? `${title}-${index}`}
+                  href={`/${normalizedLocale}/directory/${item.slug}`}
+                  className="block px-5 py-4 transition hover:bg-neutral-50"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-neutral-900">
+                        {title}
+                      </div>
+
+                      {subtitle ? (
+                        <div className="mt-1 truncate text-sm text-neutral-500">
+                          {subtitle}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {item.phone ? (
+                      <div className="shrink-0 text-sm text-neutral-500">
+                        {item.phone}
+                      </div>
+                    ) : null}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-neutral-200 bg-white p-6 text-sm text-neutral-500">
+            {normalizedLocale === "en"
+              ? "No regular directory listings found."
+              : "일반 업소 목록이 없습니다."}
+          </div>
+        )}
+      </div>
     </Container>
   );
 }

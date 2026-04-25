@@ -1,6 +1,7 @@
 import { Container } from "@/components/base/Container";
+import FeaturedListingGrid from "@/components/listing/FeaturedListingGrid";
+import ListingRowItem from "@/components/listing/ListingRowItem";
 import { getPaginatedMarketplaceItems } from "@/features/marketplace/api";
-import { MarketplaceGrid } from "@/features/marketplace/components/MarketplaceGrid";
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
 import ListingEmptyState from "@/features/search/components/ListingEmptyState";
 import ListingFilters from "@/features/search/components/ListingFilters";
@@ -45,8 +46,18 @@ export default async function MarketplacePage({
   const filters = parseListingSearchParams(resolvedSearchParams);
 
   const result = await getPaginatedMarketplaceItems(normalizedLocale, filters);
-  const items = result.items;
+
+  const items = result.items || [];
+  const page = result.page;
   const hasNextPage = result.page < result.totalPages;
+
+  const featured =
+    page === 1
+      ? items.filter((i: any) => i.featured || i.isFeatured).slice(0, 6)
+      : [];
+
+  const featuredIds = new Set(featured.map((i: any) => i.id));
+  const regular = items.filter((i: any) => !featuredIds.has(i.id));
 
   return (
     <Container className="py-10">
@@ -62,10 +73,7 @@ export default async function MarketplacePage({
       </div>
 
       <div className="mb-6">
-        <ListingFilters
-          domain="marketplace"
-          initialFilters={filters}
-        />
+        <ListingFilters domain="marketplace" initialFilters={filters} />
       </div>
 
       <div className="mb-6">
@@ -80,13 +88,31 @@ export default async function MarketplacePage({
       />
 
       {items.length > 0 ? (
-        <>
-          <MarketplaceGrid items={items} locale={normalizedLocale} />
+        <div className="space-y-10">
+          {featured.length > 0 && (
+            <FeaturedListingGrid
+              items={featured}
+              locale={normalizedLocale}
+              domain="marketplace"
+            />
+          )}
+
+          <div className="divide-y">
+            {regular.map((item: any) => (
+              <ListingRowItem
+                key={item.id}
+                item={item}
+                locale={normalizedLocale}
+                domain="marketplace"
+              />
+            ))}
+          </div>
+
           <ListingPagination
             currentPage={filters.page}
             hasNextPage={hasNextPage}
           />
-        </>
+        </div>
       ) : (
         <ListingEmptyState locale={normalizedLocale} />
       )}

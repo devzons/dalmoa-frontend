@@ -1,12 +1,11 @@
 import { Container } from "@/components/base/Container";
-import { NewsGrid } from "@/features/news/components/NewsGrid";
+import FeaturedListingGrid from "@/components/listing/FeaturedListingGrid";
+import ListingRowItem from "@/components/listing/ListingRowItem";
 import { getNews } from "@/features/news/api";
 import { buildMetadata } from "@/lib/seo/metadata";
 
 type Props = {
-  params: Promise<{
-    locale: string;
-  }>;
+  params: Promise<{ locale: string }>;
 };
 
 export async function generateMetadata({ params }: Props) {
@@ -28,7 +27,15 @@ export const revalidate = 120;
 export default async function NewsPage({ params }: Props) {
   const { locale } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
+
   const items = await getNews(normalizedLocale);
+
+  const featured = items
+    .filter((i: any) => i.featured || i.isFeatured)
+    .slice(0, 6);
+
+  const featuredIds = new Set(featured.map((i: any) => i.id));
+  const regular = items.filter((i: any) => !featuredIds.has(i.id));
 
   return (
     <Container className="py-10">
@@ -43,7 +50,28 @@ export default async function NewsPage({ params }: Props) {
         </p>
       </div>
 
-      <NewsGrid items={items} locale={normalizedLocale} />
+      <div className="space-y-10">
+        {/* Featured */}
+        {featured.length > 0 && (
+          <FeaturedListingGrid
+            items={featured}
+            locale={normalizedLocale}
+            domain="news"
+          />
+        )}
+
+        {/* Regular */}
+        <div className="divide-y">
+          {regular.map((item: any) => (
+            <ListingRowItem
+              key={item.id}
+              item={item}
+              locale={normalizedLocale}
+              domain="news"
+            />
+          ))}
+        </div>
+      </div>
     </Container>
   );
 }

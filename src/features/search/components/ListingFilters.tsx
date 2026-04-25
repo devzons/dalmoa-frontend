@@ -59,9 +59,7 @@ export default function ListingFilters({
       page: 1,
     });
 
-    startTransition(() => {
-      router.push(href);
-    });
+    startTransition(() => router.push(href));
   };
 
   const resetFilters = () => {
@@ -72,27 +70,28 @@ export default function ListingFilters({
     setPriceMin("");
     setPriceMax("");
 
-    startTransition(() => {
-      router.push(pathname);
-    });
+    startTransition(() => router.push(pathname));
   };
 
+  const inputClass =
+    "h-9 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none transition focus:border-gray-900";
+
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+    <section className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-gray-500">Search Filters</p>
-          <h2 className="text-xl font-bold text-gray-900">{currentLabel}</h2>
+          <p className="text-xs font-medium text-gray-500">Search Filters</p>
+          <h2 className="text-base font-bold text-gray-900">{currentLabel}</h2>
         </div>
 
-        <div className="text-sm text-gray-500">
-          {isPending ? "Updating..." : "URL-based filter state enabled"}
+        <div className="text-xs text-gray-500">
+          {isPending ? "Updating..." : "Filters"}
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+      <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-6">
         <div className="xl:col-span-2">
-          <label htmlFor={`${domain}-q`} className="mb-2 block text-sm font-medium text-gray-700">
+          <label htmlFor={`${domain}-q`} className="mb-1 block text-xs font-medium text-gray-700">
             Search
           </label>
           <input
@@ -101,19 +100,19 @@ export default function ListingFilters({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={`Search ${currentLabel.toLowerCase()}...`}
-            className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-gray-900"
+            className={inputClass}
           />
         </div>
 
         <div>
-          <label htmlFor={`${domain}-category`} className="mb-2 block text-sm font-medium text-gray-700">
+          <label htmlFor={`${domain}-category`} className="mb-1 block text-xs font-medium text-gray-700">
             Category
           </label>
           <select
             id={`${domain}-category`}
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-gray-900"
+            className={inputClass}
           >
             <option value="">All Categories</option>
             {categories.map((item) => (
@@ -125,14 +124,14 @@ export default function ListingFilters({
         </div>
 
         <div>
-          <label htmlFor={`${domain}-region`} className="mb-2 block text-sm font-medium text-gray-700">
+          <label htmlFor={`${domain}-region`} className="mb-1 block text-xs font-medium text-gray-700">
             Region
           </label>
           <select
             id={`${domain}-region`}
             value={region}
             onChange={(e) => setRegion(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-gray-900"
+            className={inputClass}
           >
             <option value="">All Regions</option>
             {regionOptions.map((item) => (
@@ -144,7 +143,7 @@ export default function ListingFilters({
         </div>
 
         <div>
-          <label htmlFor={`${domain}-price-min`} className="mb-2 block text-sm font-medium text-gray-700">
+          <label htmlFor={`${domain}-price-min`} className="mb-1 block text-xs font-medium text-gray-700">
             Min Price
           </label>
           <input
@@ -154,12 +153,12 @@ export default function ListingFilters({
             value={priceMin}
             onChange={(e) => setPriceMin(e.target.value.replace(/[^\d]/g, ""))}
             placeholder="0"
-            className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-gray-900"
+            className={inputClass}
           />
         </div>
 
         <div>
-          <label htmlFor={`${domain}-price-max`} className="mb-2 block text-sm font-medium text-gray-700">
+          <label htmlFor={`${domain}-price-max`} className="mb-1 block text-xs font-medium text-gray-700">
             Max Price
           </label>
           <input
@@ -169,27 +168,27 @@ export default function ListingFilters({
             value={priceMax}
             onChange={(e) => setPriceMax(e.target.value.replace(/[^\d]/g, ""))}
             placeholder="100000"
-            className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-gray-900"
+            className={inputClass}
           />
         </div>
       </div>
 
-      <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+      <div className="mt-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <label className="inline-flex items-center gap-2 text-xs font-medium text-gray-700">
           <input
             type="checkbox"
             checked={featured}
             onChange={(e) => setFeatured(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300"
+            className="h-3.5 w-3.5 rounded border-gray-300"
           />
           Featured only
         </label>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={resetFilters}
-            className="inline-flex items-center rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50"
+            className="inline-flex h-9 items-center rounded-lg border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-900 transition hover:bg-gray-50"
           >
             Reset
           </button>
@@ -198,9 +197,9 @@ export default function ListingFilters({
             type="button"
             onClick={applyFilters}
             disabled={isPending}
-            className="inline-flex items-center rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-9 items-center rounded-lg bg-gray-900 px-3 text-xs font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Apply Filters
+            Apply
           </button>
         </div>
       </div>

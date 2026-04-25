@@ -1,6 +1,8 @@
 import { Container } from "@/components/base/Container";
+import FeaturedListingGrid from "@/components/listing/FeaturedListingGrid";
+import ListingRowItem from "@/components/listing/ListingRowItem";
 import { getPaginatedCars } from "@/features/cars/api";
-import { CarGrid } from "@/features/cars/components/CarGrid";
+
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
 import ListingEmptyState from "@/features/search/components/ListingEmptyState";
 import ListingFilters from "@/features/search/components/ListingFilters";
@@ -10,12 +12,8 @@ import { parseListingSearchParams } from "@/features/search/url";
 import { buildMetadata } from "@/lib/seo/metadata";
 
 type Props = {
-  params: Promise<{
-    locale: string;
-  }>;
-  searchParams?: Promise<{
-    [key: string]: string | string[] | undefined;
-  }>;
+  params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export async function generateMetadata({ params }: Props) {
@@ -42,8 +40,18 @@ export default async function CarsPage({ params, searchParams }: Props) {
   const filters = parseListingSearchParams(resolvedSearchParams);
 
   const result = await getPaginatedCars(normalizedLocale, filters);
-  const items = result.items;
+
+  const items = result.items || [];
+  const page = result.page;
   const hasNextPage = result.page < result.totalPages;
+
+  const featured =
+    page === 1
+      ? items.filter((i: any) => i.featured || i.isFeatured).slice(0, 6)
+      : [];
+
+  const featuredIds = new Set(featured.map((i: any) => i.id));
+  const regular = items.filter((i: any) => !featuredIds.has(i.id));
 
   return (
     <Container className="py-10">
@@ -59,10 +67,7 @@ export default async function CarsPage({ params, searchParams }: Props) {
       </div>
 
       <div className="mb-6">
-        <ListingFilters
-          domain="cars"
-          initialFilters={filters}
-        />
+        <ListingFilters domain="cars" initialFilters={filters} />
       </div>
 
       <div className="mb-6">
@@ -77,13 +82,31 @@ export default async function CarsPage({ params, searchParams }: Props) {
       />
 
       {items.length > 0 ? (
-        <>
-          <CarGrid items={items} locale={normalizedLocale} />
+        <div className="space-y-10">
+          {featured.length > 0 && (
+            <FeaturedListingGrid
+              items={featured}
+              locale={normalizedLocale}
+              domain="cars"
+            />
+          )}
+
+          <div className="divide-y">
+            {regular.map((item: any) => (
+              <ListingRowItem
+                key={item.id}
+                item={item}
+                locale={normalizedLocale}
+                domain="cars"
+              />
+            ))}
+          </div>
+
           <ListingPagination
             currentPage={filters.page}
             hasNextPage={hasNextPage}
           />
-        </>
+        </div>
       ) : (
         <ListingEmptyState locale={normalizedLocale} />
       )}
