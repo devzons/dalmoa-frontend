@@ -5,7 +5,7 @@ export function buildListingHref({
 }: {
   locale: "ko" | "en";
   domain: string;
-  slug: string;
+  slug?: string | null;
 }) {
   const pathMap: Record<string, string> = {
     jobs: "jobs",
@@ -22,5 +22,10 @@ export function buildListingHref({
 
   const path = pathMap[domain] ?? domain;
 
-  return `/${locale}/${path}/${slug}`;
+  // 🔥 slug 없을 때 안전 처리 (Not Found 방지)
+  if (!slug || typeof slug !== "string") {
+    return `/${locale}/${path}`;
+  }
+
+  return `/${locale}/${path}/${encodeURIComponent(slug)}`;
 }

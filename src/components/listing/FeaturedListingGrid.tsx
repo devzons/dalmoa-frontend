@@ -6,6 +6,8 @@ type Item = {
   slug: string;
   title?: string | null;
   price?: number | string | null;
+  priceLabel?: string | null;
+  salePriceLabel?: string | null;
   region?: string | null;
   excerpt?: string | null;
   companyName?: string | null;
@@ -14,6 +16,11 @@ type Item = {
   businessCategory?: string | null;
   address?: string | null;
   phone?: string | null;
+  featured?: boolean | number | string | null;
+  isFeatured?: boolean | number | string | null;
+  isAdActive?: boolean | null;
+  adPlan?: string | null;
+  adPriority?: number | string | null;
   hero?: {
     title?: string | null;
     subtitle?: string | null;
@@ -36,13 +43,34 @@ export default function FeaturedListingGrid({
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold">
+        <h2 className="text-lg font-bold text-neutral-950">
           {locale === "en" ? "Featured" : "추천"}
         </h2>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {items.map((item) => {
+          const adPlan = item.adPlan || "basic";
+          const adPriority = Number(item.adPriority || 0);
+          const isAdActive = item.isAdActive !== false;
+
+          const isPremium = isAdActive && adPlan === "premium";
+
+          const isFeaturedAd =
+            isAdActive &&
+            (adPlan === "featured" ||
+              adPriority >= 20 ||
+              item.isFeatured === true ||
+              item.featured === true ||
+              item.isFeatured === 1 ||
+              item.featured === 1 ||
+              item.isFeatured === "1" ||
+              item.featured === "1" ||
+              item.isFeatured === "true" ||
+              item.featured === "true");
+
+          const isAd = isPremium || isFeaturedAd;
+
           const title =
             item.title ||
             item.hero?.title ||
@@ -62,7 +90,7 @@ export default function FeaturedListingGrid({
           const price =
             typeof item.price === "number"
               ? `$${item.price.toLocaleString()}`
-              : item.price;
+              : item.price || item.priceLabel || item.salePriceLabel || null;
 
           return (
             <Link
@@ -72,19 +100,54 @@ export default function FeaturedListingGrid({
                 domain,
                 slug: item.slug,
               })}
-              className="group block overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-md"
+              className={[
+                "group relative block overflow-hidden rounded-xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
+                isPremium
+                  ? "border-amber-500 ring-2 ring-amber-300 shadow-lg"
+                  : isAd
+                    ? "border-amber-400 ring-2 ring-amber-200 shadow-md"
+                    : "border-neutral-200",
+              ].join(" ")}
             >
+              {isAd ? (
+                <div
+                  className={[
+                    "absolute left-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold text-white shadow-sm",
+                    isPremium ? "bg-amber-600" : "bg-amber-500",
+                  ].join(" ")}
+                >
+                  {isPremium ? "PREMIUM" : locale === "en" ? "AD" : "광고"}
+                </div>
+              ) : null}
+
               {item.thumbnailUrl ? (
                 <div className="aspect-[16/7] overflow-hidden bg-neutral-100">
                   <img
                     src={item.thumbnailUrl}
                     alt={title}
-                    className="h-full w-full object-cover transition group-hover:scale-105"
+                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                   />
                 </div>
               ) : (
-                <div className="flex aspect-[16/7] items-center justify-center bg-neutral-100 text-xs text-neutral-500">
-                  {locale === "en" ? "Featured" : "추천"}
+                <div
+                  className={[
+                    "flex aspect-[16/7] items-center justify-center text-xs font-semibold",
+                    isPremium
+                      ? "bg-amber-100 text-amber-800"
+                      : isAd
+                        ? "bg-amber-50 text-amber-700"
+                        : "bg-neutral-100 text-neutral-500",
+                  ].join(" ")}
+                >
+                  {isPremium
+                    ? "Premium"
+                    : isAd
+                      ? locale === "en"
+                        ? "Featured"
+                        : "추천"
+                      : locale === "en"
+                        ? "Listing"
+                        : "게시물"}
                 </div>
               )}
 
@@ -94,9 +157,18 @@ export default function FeaturedListingGrid({
                     {title}
                   </h3>
 
-                  <span className="shrink-0 rounded bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                    AD
-                  </span>
+                  {isAd ? (
+                    <span
+                      className={[
+                        "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold",
+                        isPremium
+                          ? "bg-amber-600 text-white"
+                          : "bg-amber-100 text-amber-700",
+                      ].join(" ")}
+                    >
+                      {isPremium ? "VIP" : "TOP"}
+                    </span>
+                  ) : null}
                 </div>
 
                 {subtitle ? (

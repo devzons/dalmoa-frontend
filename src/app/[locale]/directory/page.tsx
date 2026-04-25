@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Container } from "@/components/base/Container";
 import FeaturedListingGrid from "@/components/listing/FeaturedListingGrid";
+import { buildListingHref } from "@/components/listing/listingHref";
 import { DirectoryFilterBar } from "@/features/directory/components/DirectoryFilterBar";
 import { getDirectories } from "@/features/directory/api";
 import { getDirectoryCategories } from "@/features/directory/utils";
@@ -47,22 +48,15 @@ export default async function DirectoryPage({
   };
 
   const items = await getDirectories(normalizedLocale, query);
-
   const categories = getDirectoryCategories(items, normalizedLocale);
 
-  const isFeatured = (item: any) =>
-    item.featured === true ||
-    item.featured === 1 ||
-    item.featured === "1" ||
-    item.isFeatured === true ||
-    item.isFeatured === 1 ||
-    item.isFeatured === "1";
+  const isPaidAd = (item: any) =>
+    item.isAdActive !== false &&
+    Number(item.adPriority || 0) > 0;
 
-  // 모든 유료/추천 상단 표시
-  const featured = items.filter((item: any) => isFeatured(item));
+  const featured = items.filter((item: any) => isPaidAd(item));
 
-  // 일반만 리스트
-  const regular = items.filter((item: any) => !isFeatured(item));
+  const regular = items.filter((item: any) => !isPaidAd(item));
 
   return (
     <Container className="py-10">
@@ -77,10 +71,7 @@ export default async function DirectoryPage({
         </p>
       </div>
 
-      <DirectoryFilterBar
-        locale={normalizedLocale}
-        categories={categories}
-      />
+      <DirectoryFilterBar locale={normalizedLocale} categories={categories} />
 
       <div className="mt-8 space-y-10">
         {featured.length > 0 && (
@@ -103,6 +94,7 @@ export default async function DirectoryPage({
                 "Untitled";
 
               const subtitle =
+                item.businessCategory ||
                 item.categoryLabel ||
                 item.category ||
                 item.address ||
@@ -114,7 +106,11 @@ export default async function DirectoryPage({
               return (
                 <Link
                   key={item.id ?? item.slug ?? `${title}-${index}`}
-                  href={`/${normalizedLocale}/directory/${item.slug}`}
+                  href={buildListingHref({
+                    locale: normalizedLocale,
+                    domain: "directory",
+                    slug: item.slug,
+                  })}
                   className="block px-5 py-4 transition hover:bg-neutral-50"
                 >
                   <div className="flex items-center justify-between gap-4">

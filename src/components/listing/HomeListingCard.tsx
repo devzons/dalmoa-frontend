@@ -14,17 +14,27 @@ export default function HomeListingCard({
   domain,
   variant = "default",
 }: Props) {
-  const isAd =
-    variant === "ad" ||
-    domain === "ads" ||
-    item.isFeatured === true ||
-    item.featured === true ||
-    item.isFeatured === 1 ||
-    item.featured === 1 ||
-    item.isFeatured === "1" ||
-    item.featured === "1" ||
-    item.isFeatured === "true" ||
-    item.featured === "true";
+  const adPlan = item.adPlan || "basic";
+  const adPriority = Number(item.adPriority || 0);
+  const isAdActive = item.isAdActive !== false;
+
+  const isPremium = isAdActive && adPlan === "premium";
+  const isFeaturedAd =
+    isAdActive &&
+    (adPlan === "featured" ||
+      adPriority >= 20 ||
+      variant === "ad" ||
+      domain === "ads" ||
+      item.isFeatured === true ||
+      item.featured === true ||
+      item.isFeatured === 1 ||
+      item.featured === 1 ||
+      item.isFeatured === "1" ||
+      item.featured === "1" ||
+      item.isFeatured === "true" ||
+      item.featured === "true");
+
+  const isAd = isPremium || isFeaturedAd;
 
   const title = item.title || item.hero?.title || item.companyName || "Untitled";
 
@@ -51,14 +61,21 @@ export default function HomeListingCard({
       })}
       className={[
         "group relative block overflow-hidden rounded-xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
-        isAd
-          ? "border-amber-400 ring-2 ring-amber-200 shadow-md"
-          : "border-neutral-200",
+        isPremium
+          ? "border-amber-500 ring-2 ring-amber-300 shadow-lg"
+          : isAd
+            ? "border-amber-400 ring-2 ring-amber-200 shadow-md"
+            : "border-neutral-200",
       ].join(" ")}
     >
       {isAd ? (
-        <div className="absolute left-2 top-2 z-10 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
-          {locale === "en" ? "AD" : "광고"}
+        <div
+          className={[
+            "absolute left-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold text-white shadow-sm",
+            isPremium ? "bg-amber-600" : "bg-amber-500",
+          ].join(" ")}
+        >
+          {isPremium ? "PREMIUM" : locale === "en" ? "AD" : "광고"}
         </div>
       ) : null}
 
@@ -74,7 +91,7 @@ export default function HomeListingCard({
         <div
           className={[
             "flex aspect-[16/7] items-center justify-center",
-            isAd ? "bg-amber-50" : "bg-neutral-100",
+            isPremium ? "bg-amber-100" : isAd ? "bg-amber-50" : "bg-neutral-100",
           ].join(" ")}
         >
           <span
@@ -83,13 +100,15 @@ export default function HomeListingCard({
               isAd ? "text-amber-700" : "text-neutral-400",
             ].join(" ")}
           >
-            {isAd
-              ? locale === "en"
-                ? "Featured"
-                : "추천"
-              : locale === "en"
-                ? "Listing"
-                : "게시물"}
+            {isPremium
+              ? "Premium"
+              : isAd
+                ? locale === "en"
+                  ? "Featured"
+                  : "추천"
+                : locale === "en"
+                  ? "Listing"
+                  : "게시물"}
           </span>
         </div>
       )}
@@ -101,8 +120,15 @@ export default function HomeListingCard({
           </h3>
 
           {isAd ? (
-            <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-              TOP
+            <span
+              className={[
+                "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                isPremium
+                  ? "bg-amber-600 text-white"
+                  : "bg-amber-100 text-amber-700",
+              ].join(" ")}
+            >
+              {isPremium ? "VIP" : "TOP"}
             </span>
           ) : null}
         </div>

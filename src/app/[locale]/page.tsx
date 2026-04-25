@@ -19,6 +19,7 @@ type HomeCardSectionProps = {
   moreLabel: string;
   items: any[];
   domain: string;
+  forceAdStyle?: boolean;
 };
 
 export async function generateMetadata({ params }: Props) {
@@ -59,6 +60,7 @@ export default async function HomePage({ params }: Props) {
         moreLabel={normalizedLocale === "en" ? "View all" : "전체 보기"}
         items={data.featuredAds}
         domain="ads"
+        forceAdStyle
       />
 
       <HomeCardSection
@@ -73,6 +75,7 @@ export default async function HomePage({ params }: Props) {
         moreLabel={normalizedLocale === "en" ? "View all" : "전체 보기"}
         items={data.featuredDirectory}
         domain="directory"
+        forceAdStyle
       />
 
       <HomeCardSection
@@ -198,8 +201,20 @@ function HomeCardSection({
   moreLabel,
   items,
   domain,
+  forceAdStyle = false,
 }: HomeCardSectionProps) {
   if (!items || items.length === 0) return null;
+
+  const sortedItems = [...items].sort((a: any, b: any) => {
+    const aPriority = Number(a.adPriority || 0);
+    const bPriority = Number(b.adPriority || 0);
+
+    if (aPriority !== bPriority) {
+      return bPriority - aPriority;
+    }
+
+    return 0;
+  });
 
   return (
     <section className="border-t border-neutral-200 bg-neutral-50 py-8">
@@ -221,15 +236,13 @@ function HomeCardSection({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {items.map((item: any) => (
+          {sortedItems.map((item: any) => (
             <HomeListingCard
               key={item.id ?? item.slug}
               item={item}
               locale={locale}
               domain={domain}
-              variant={
-                domain === "ads" || domain === "directory" ? "ad" : "default"
-              }
+              variant={forceAdStyle ? "ad" : "default"}
             />
           ))}
         </div>
