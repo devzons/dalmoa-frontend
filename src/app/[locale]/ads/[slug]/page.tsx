@@ -72,9 +72,9 @@ export default async function AdDetailPage({ params }: Props) {
     notFound();
   }
 
-  const remainingDays = getRemainingDays(item.adEndsAt ?? item.expiresAt);
+  const remainingDays = getRemainingDays(item.ad_ends_at ?? item.expires_at);
   const isExpired =
-    remainingDays !== null ? remainingDays <= 0 : item.isAdActive === false;
+    remainingDays !== null ? remainingDays <= 0 : item.is_active === false;
   const isExpiringSoon =
     remainingDays !== null && remainingDays > 0 && remainingDays <= 3;
 
@@ -105,21 +105,21 @@ export default async function AdDetailPage({ params }: Props) {
 
           <CardHeader>
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              {item.isPaid ? (
+              {item.is_paid ? (
                 <Badge className="bg-neutral-900 text-white">
                   {normalizedLocale === "en" ? "Paid" : "유료"}
                 </Badge>
               ) : null}
 
-              {item.isFeatured ? (
+              {item.is_featured ? (
                 <Badge className="bg-amber-500 text-white">
                   {normalizedLocale === "en" ? "Featured" : "추천"}
                 </Badge>
               ) : null}
 
-              {item.adPlan ? (
+              {item.ad_plan ? (
                 <Badge className="bg-amber-50 text-amber-700">
-                  {String(item.adPlan).toUpperCase()}
+                  {String(item.ad_plan).toUpperCase()}
                 </Badge>
               ) : null}
 
@@ -231,14 +231,14 @@ export default async function AdDetailPage({ params }: Props) {
                   postId={item.id}
                   plan="featured"
                   locale={normalizedLocale}
-                  isActive={item.isAdActive}
+                  isActive={item.is_active}
                   isExpired={isExpired}
                 />
                 <AdUpgradeButton
                   postId={item.id}
                   plan="premium"
                   locale={normalizedLocale}
-                  isActive={item.isAdActive}
+                  isActive={item.is_active}
                   isExpired={isExpired}
                 />
 
