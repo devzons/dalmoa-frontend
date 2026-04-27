@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { env } from "@/lib/config/env";
-import { buildListingHref } from "./listingHref";
+import { normalizeMediaUrl } from "@/lib/api/client";
+import { buildListingHref, type ListingDomain } from "./listingHref";
 
 type Item = {
   id: number | string;
-  slug: string;
+  slug?: string | null;
   title?: string | null;
   price?: number | string | null;
   priceLabel?: string | null;
@@ -17,6 +18,11 @@ type Item = {
   companyName?: string | null;
   jobLocation?: string | null;
   thumbnailUrl?: string | null;
+  thumbnail?: string | null;
+  imageUrl?: string | null;
+  featuredImageUrl?: string | null;
+  featuredImage?: string | null;
+  image?: string | null;
   businessCategory?: string | null;
   address?: string | null;
   phone?: string | null;
@@ -34,30 +40,48 @@ type Item = {
 type Props = {
   items: Item[];
   locale: "ko" | "en";
-  domain?: string;
+  domain: ListingDomain;
 };
 
-function trackAdEvent(id: number | string | undefined, type: "click" | "impression") {
+function isTruthy(value: unknown) {
+  return value === true || value === 1 || value === "1" || value === "true";
+}
+
+function trackAdEvent(
+  id: number | string | undefined,
+  type: "click" | "impression"
+) {
   if (!id) return;
 
-  fetch(`${env.NEXT_PUBLIC_API_URL}/ads/${id}/${type}`, {
+  const baseUrl = env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
+
+  fetch(`${baseUrl}/wp-json/dalmoa/v1/ads/${id}/${type}`, {
     method: "POST",
     keepalive: true,
   }).catch(() => {});
 }
 
+function getThumbnailUrl(item: Item) {
+  return normalizeMediaUrl(
+    item.thumbnailUrl ||
+      item.thumbnail ||
+      item.imageUrl ||
+      item.featuredImageUrl ||
+      item.featuredImage ||
+      item.image
+  );
+}
+
 export default function FeaturedListingGrid({
   items,
   locale,
-  domain = "jobs",
+  domain,
 }: Props) {
   useEffect(() => {
     if (domain !== "ads" && domain !== "directory") return;
 
     items.forEach((item) => {
-      if (item.id) {
-        trackAdEvent(item.id, "impression");
-      }
+      trackAdEvent(item.id, "impression");
     });
   }, [domain, items]);
 
@@ -83,14 +107,8 @@ export default function FeaturedListingGrid({
             isAdActive &&
             (adPlan === "featured" ||
               adPriority >= 20 ||
-              item.isFeatured === true ||
-              item.featured === true ||
-              item.isFeatured === 1 ||
-              item.featured === 1 ||
-              item.isFeatured === "1" ||
-              item.featured === "1" ||
-              item.isFeatured === "true" ||
-              item.featured === "true");
+              isTruthy(item.isFeatured) ||
+              isTruthy(item.featured));
 
           const isAd = isPremium || isFeaturedAd;
 
@@ -115,14 +133,18 @@ export default function FeaturedListingGrid({
               ? `$${item.price.toLocaleString()}`
               : item.price || item.priceLabel || item.salePriceLabel || null;
 
+          const href = buildListingHref({
+            locale,
+            domain,
+            slug: item.slug,
+          });
+
+          const thumbnailUrl = getThumbnailUrl(item);
+
           return (
             <Link
-              key={item.id ?? item.slug}
-              href={buildListingHref({
-                locale,
-                domain,
-                slug: item.slug,
-              })}
+              key={item.id ?? item.slug ?? title}
+              href={href}
               onClick={() => {
                 if ((domain === "ads" || domain === "directory") && item.id) {
                   trackAdEvent(item.id, "click");
@@ -148,10 +170,10 @@ export default function FeaturedListingGrid({
                 </div>
               ) : null}
 
-              {item.thumbnailUrl ? (
+              {thumbnailUrl ? (
                 <div className="aspect-[16/7] overflow-hidden bg-neutral-100">
                   <img
-                    src={item.thumbnailUrl}
+                    src={thumbnailUrl}
                     alt={title}
                     className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                   />

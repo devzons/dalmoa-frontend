@@ -1,31 +1,42 @@
+export type ListingDomain =
+  | "jobs"
+  | "directory"
+  | "business-sale"
+  | "loan"
+  | "marketplace"
+  | "real-estate"
+  | "cars"
+  | "town-board"
+  | "news"
+  | "ads"
+  | "business";
+
+function normalizeSlug(slug: string) {
+  let value = slug;
+
+  for (let i = 0; i < 3; i++) {
+    try {
+      const decoded = decodeURIComponent(value);
+      if (decoded === value) break;
+      value = decoded;
+    } catch {
+      break;
+    }
+  }
+
+  return encodeURIComponent(value);
+}
+
 export function buildListingHref({
   locale,
   domain,
   slug,
 }: {
   locale: "ko" | "en";
-  domain: string;
+  domain: ListingDomain;
   slug?: string | null;
 }) {
-  const pathMap: Record<string, string> = {
-    jobs: "jobs",
-    "business-sale": "business-sale",
-    loan: "loan",
-    marketplace: "marketplace",
-    "real-estate": "real-estate",
-    cars: "cars",
-    directory: "directory",
-    news: "news",
-    "town-board": "town-board",
-    ads: "ads",
-  };
+  if (!slug) return `/${locale}/${domain}`;
 
-  const path = pathMap[domain] ?? domain;
-
-  // 🔥 slug 없을 때 안전 처리 (Not Found 방지)
-  if (!slug || typeof slug !== "string") {
-    return `/${locale}/${path}`;
-  }
-
-  return `/${locale}/${path}/${encodeURIComponent(slug)}`;
+  return `/${locale}/${domain}/${normalizeSlug(slug)}`;
 }

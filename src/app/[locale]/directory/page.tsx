@@ -5,12 +5,11 @@ import { buildListingHref } from "@/components/listing/listingHref";
 import { DirectoryFilterBar } from "@/features/directory/components/DirectoryFilterBar";
 import { getDirectories } from "@/features/directory/api";
 import { getDirectoryCategories } from "@/features/directory/utils";
+import { splitFeatured } from "@/features/listing/utils/splitFeatured";
 import { buildMetadata } from "@/lib/seo/metadata";
 
 type Props = {
-  params: Promise<{
-    locale: string;
-  }>;
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{
     q?: string;
     category?: string;
@@ -34,10 +33,7 @@ export async function generateMetadata({ params }: Props) {
 
 export const revalidate = 0;
 
-export default async function DirectoryPage({
-  params,
-  searchParams,
-}: Props) {
+export default async function DirectoryPage({ params, searchParams }: Props) {
   const { locale } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
   const resolvedSearchParams = await searchParams;
@@ -47,16 +43,10 @@ export default async function DirectoryPage({
     category: resolvedSearchParams.category?.trim() || undefined,
   };
 
-  const items = await getDirectories(normalizedLocale, query);
+  const items = (await getDirectories(normalizedLocale, query)) ?? [];
   const categories = getDirectoryCategories(items, normalizedLocale);
 
-  const isPaidAd = (item: any) =>
-    item.isAdActive !== false &&
-    Number(item.adPriority || 0) > 0;
-
-  const featured = items.filter((item: any) => isPaidAd(item));
-
-  const regular = items.filter((item: any) => !isPaidAd(item));
+  const { featured, regular } = splitFeatured(items);
 
   return (
     <Container className="py-10">

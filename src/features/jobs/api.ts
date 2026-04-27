@@ -4,22 +4,25 @@ import type {
   PaginatedListResponse,
 } from "@/features/search/types";
 import { apiFetch } from "@/lib/api/client";
-import { endpoints } from "@/lib/api/endpoints";
 import { cacheTags } from "@/lib/cache/tags";
+
+const JOBS_ENDPOINT = "/wp-json/dalmoa/v1/jobs";
 
 function buildSearchParams(
   locale: "ko" | "en",
   filters?: ListingSearchFilters
 ) {
   const searchParams = new URLSearchParams();
-  searchParams.set("locale", locale);
+
+  searchParams.set("lang", locale);
 
   if (filters?.q) searchParams.set("q", filters.q);
   if (filters?.featured) searchParams.set("featured", "1");
   if (filters?.region) searchParams.set("region", filters.region);
-  if (filters?.category) searchParams.set("category", filters.category); // 🔥 추가
+  if (filters?.category) searchParams.set("category", filters.category);
   if (filters?.priceMin) searchParams.set("price_min", filters.priceMin);
   if (filters?.priceMax) searchParams.set("price_max", filters.priceMax);
+
   if (filters?.page && filters.page > 1) {
     searchParams.set("page", String(filters.page));
   }
@@ -28,9 +31,19 @@ function buildSearchParams(
 }
 
 function normalizePaginated<T>(
-  raw: T[] | PaginatedListResponse<T>,
+  raw: T[] | PaginatedListResponse<T> | any | null,
   fallbackPage: number
 ): PaginatedListResponse<T> {
+  if (!raw) {
+    return {
+      items: [],
+      total: 0,
+      page: fallbackPage,
+      perPage: 0,
+      totalPages: 1,
+    };
+  }
+
   if (Array.isArray(raw)) {
     return {
       items: raw,
@@ -41,12 +54,22 @@ function normalizePaginated<T>(
     };
   }
 
+  const items = Array.isArray(raw.items) ? raw.items : [];
+  const total = Number(raw.total ?? raw.found ?? items.length ?? 0);
+  const page = Number(raw.page ?? raw.currentPage ?? fallbackPage);
+  const perPage = Number(raw.perPage ?? raw.per_page ?? items.length ?? 0);
+  const totalPages = Number(
+    raw.totalPages ??
+      raw.total_pages ??
+      (perPage > 0 ? Math.ceil(total / perPage) : 1)
+  );
+
   return {
-    items: Array.isArray(raw.items) ? raw.items : [],
-    total: typeof raw.total === "number" ? raw.total : 0,
-    page: typeof raw.page === "number" ? raw.page : fallbackPage,
-    perPage: typeof raw.perPage === "number" ? raw.perPage : 0,
-    totalPages: typeof raw.totalPages === "number" ? raw.totalPages : 1,
+    items,
+    total,
+    page,
+    perPage,
+    totalPages,
   };
 }
 
@@ -57,12 +80,16 @@ export async function getJobs(
   const searchParams = buildSearchParams(locale, filters);
 
   const raw = await apiFetch<JobItem[] | PaginatedListResponse<JobItem>>(
-    `${endpoints.jobsList}?${searchParams.toString()}`,
+    `${JOBS_ENDPOINT}?${searchParams.toString()}`,
     {
-      revalidate: 120,
-      tags: [cacheTags.jobsList],
+      next: {
+        revalidate: 120,
+        tags: [cacheTags.jobsList],
+      },
     }
   );
+
+  if (!raw) return [];
 
   return Array.isArray(raw) ? raw : raw.items ?? [];
 }
@@ -74,10 +101,9 @@ export async function getPaginatedJobs(
   const searchParams = buildSearchParams(locale, filters);
 
   const raw = await apiFetch<JobItem[] | PaginatedListResponse<JobItem>>(
-    `${endpoints.jobsList}?${searchParams.toString()}`,
+    `${JOBS_ENDPOINT}?${searchParams.toString()}`,
     {
-      revalidate: 0,
-      tags: [cacheTags.jobsList],
+      cache: "no-store",
     }
   );
 
@@ -88,11 +114,10 @@ export async function getJobBySlug(
   slug: string,
   locale: "ko" | "en" = "ko"
 ) {
-  return apiFetch<JobItem>(
-    `${endpoints.jobsDetail(slug)}?locale=${locale}`,
-    {
+  return apiFetch<JobItem>(`${JOBS_ENDPOINT}/${slug}?lang=${locale}`, {
+    next: {
       revalidate: 120,
       tags: [cacheTags.jobsDetail(slug)],
-    }
-  );
+    },
+  });
 }

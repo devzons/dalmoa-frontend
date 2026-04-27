@@ -2,6 +2,7 @@ import { Container } from "@/components/base/Container";
 import FeaturedListingGrid from "@/components/listing/FeaturedListingGrid";
 import ListingRowItem from "@/components/listing/ListingRowItem";
 import { getNews } from "@/features/news/api";
+import { splitFeatured } from "@/features/listing/utils/splitFeatured";
 import { buildMetadata } from "@/lib/seo/metadata";
 
 type Props = {
@@ -28,14 +29,8 @@ export default async function NewsPage({ params }: Props) {
   const { locale } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
 
-  const items = await getNews(normalizedLocale);
-
-  const featured = items
-    .filter((i: any) => i.featured || i.isFeatured)
-    .slice(0, 6);
-
-  const featuredIds = new Set(featured.map((i: any) => i.id));
-  const regular = items.filter((i: any) => !featuredIds.has(i.id));
+  const items = (await getNews(normalizedLocale)) ?? [];
+  const { featured, regular } = splitFeatured(items);
 
   return (
     <Container className="py-10">
@@ -51,7 +46,6 @@ export default async function NewsPage({ params }: Props) {
       </div>
 
       <div className="space-y-10">
-        {/* Featured */}
         {featured.length > 0 && (
           <FeaturedListingGrid
             items={featured}
@@ -60,17 +54,24 @@ export default async function NewsPage({ params }: Props) {
           />
         )}
 
-        {/* Regular */}
-        <div className="divide-y">
-          {regular.map((item: any) => (
-            <ListingRowItem
-              key={item.id}
-              item={item}
-              locale={normalizedLocale}
-              domain="news"
-            />
-          ))}
-        </div>
+        {regular.length > 0 ? (
+          <div className="divide-y rounded-lg border border-neutral-200 bg-white">
+            {regular.map((item: any) => (
+              <ListingRowItem
+                key={item.id ?? item.slug}
+                item={item}
+                locale={normalizedLocale}
+                domain="news"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-neutral-200 bg-white p-6 text-sm text-neutral-500">
+            {normalizedLocale === "en"
+              ? "No news found."
+              : "등록된 뉴스가 없습니다."}
+          </div>
+        )}
       </div>
     </Container>
   );

@@ -1,45 +1,59 @@
+const API_PREFIX = "/wp-json/dalmoa/v1";
+
 export const endpoints = {
   // CORE
-  directoryList: "/dalmoa/v1/directory",
-  directoryDetail: (slug: string) => `/dalmoa/v1/directory/${slug}`,
+  directoryList: `${API_PREFIX}/directory`,
+  directoryDetail: (slug: string) =>
+    `${API_PREFIX}/directory/${encodeURIComponent(slug)}`,
 
-  adsList: "/dalmoa/v1/ads",
-  adsFeatured: "/dalmoa/v1/ads/featured",
-  adsDetail: (slug: string) => `/dalmoa/v1/ads/${slug}`,
+  adsList: `${API_PREFIX}/ads`,
+  adsFeatured: `${API_PREFIX}/ads/featured`,
+  adsDetail: (slug: string) =>
+    `${API_PREFIX}/ads/${encodeURIComponent(slug)}`,
 
-  businessDetail: (slug: string) => `/dalmoa/v1/business-page/${slug}`,
+  businessList: `${API_PREFIX}/business`,
+  businessDetail: (slug: string) =>
+    `${API_PREFIX}/business/${encodeURIComponent(slug)}`,
 
-  businessSaleList: "/dalmoa/v1/business-sale",
-  businessSaleDetail: (slug: string) => `/dalmoa/v1/business-sale/${slug}`,
+  businessSaleList: `${API_PREFIX}/business-sale`,
+  businessSaleDetail: (slug: string) =>
+    `${API_PREFIX}/business-sale/${encodeURIComponent(slug)}`,
 
-  newsList: "/dalmoa/v1/news",
-  newsDetail: (slug: string) => `/dalmoa/v1/news/${slug}`,
+  newsList: `${API_PREFIX}/news`,
+  newsDetail: (slug: string) =>
+    `${API_PREFIX}/news/${encodeURIComponent(slug)}`,
 
-  jobsList: "/dalmoa/v1/jobs",
-  jobsDetail: (slug: string) => `/dalmoa/v1/jobs/${slug}`,
+  jobsList: `${API_PREFIX}/jobs`,
+  jobsDetail: (slug: string) =>
+    `${API_PREFIX}/jobs/${encodeURIComponent(slug)}`,
 
-  loanList: "/dalmoa/v1/loan",
-  loanDetail: (slug: string) => `/dalmoa/v1/loan/${slug}`,
+  loanList: `${API_PREFIX}/loan`,
+  loanDetail: (slug: string) =>
+    `${API_PREFIX}/loan/${encodeURIComponent(slug)}`,
 
-  marketplaceList: "/dalmoa/v1/marketplace",
-  marketplaceDetail: (slug: string) => `/dalmoa/v1/marketplace/${slug}`,
+  marketplaceList: `${API_PREFIX}/marketplace`,
+  marketplaceDetail: (slug: string) =>
+    `${API_PREFIX}/marketplace/${encodeURIComponent(slug)}`,
 
-  realEstateList: "/dalmoa/v1/real-estate",
-  realEstateDetail: (slug: string) => `/dalmoa/v1/real-estate/${slug}`,
+  realEstateList: `${API_PREFIX}/real-estate`,
+  realEstateDetail: (slug: string) =>
+    `${API_PREFIX}/real-estate/${encodeURIComponent(slug)}`,
 
-  carsList: "/dalmoa/v1/cars",
-  carsDetail: (slug: string) => `/dalmoa/v1/cars/${slug}`,
+  carsList: `${API_PREFIX}/cars`,
+  carsDetail: (slug: string) =>
+    `${API_PREFIX}/cars/${encodeURIComponent(slug)}`,
 
-  townBoardList: "/dalmoa/v1/town-board",
-  townBoardDetail: (slug: string) => `/dalmoa/v1/town-board/${slug}`,
+  townBoardList: `${API_PREFIX}/town-board`,
+  townBoardDetail: (slug: string) =>
+    `${API_PREFIX}/town-board/${encodeURIComponent(slug)}`,
 
   // 🔴 PAYMENT
-  createCheckoutSession: "/dalmoa/v1/payments/create-checkout-session",
-  createSubscriptionSession: "/dalmoa/v1/payments/create-subscription-session",
+  createCheckoutSession: `${API_PREFIX}/payments/create-checkout-session`,
+  createSubscriptionSession: `${API_PREFIX}/payments/create-subscription-session`,
 
-  cancelSubscription: "/dalmoa/v1/subscriptions/cancel",
-  resumeSubscription: "/dalmoa/v1/subscriptions/resume",
-  syncSubscription: "/dalmoa/v1/subscriptions/sync",
+  cancelSubscription: `${API_PREFIX}/subscriptions/cancel`,
+  resumeSubscription: `${API_PREFIX}/subscriptions/resume`,
+  syncSubscription: `${API_PREFIX}/subscriptions/sync`,
 
-  paymentWebhook: "/dalmoa/v1/payments/webhook",
+  paymentWebhook: `${API_PREFIX}/payments/webhook`,
 } as const;

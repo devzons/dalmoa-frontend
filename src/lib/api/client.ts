@@ -1,62 +1,61 @@
-import { env } from "@/lib/config/env";
-
-type FetchOptions = RequestInit & {
-  revalidate?: number;
-  tags?: string[];
+export type ApiFetchOptions = RequestInit & {
+  next?: {
+    revalidate?: number;
+    tags?: string[];
+  };
 };
 
-function normalizeApiUrl(path: string) {
-  if (path.startsWith("http://") || path.startsWith("https://")) {
-    return path;
+export async function apiFetch<T = any>(
+  path: string,
+  options: ApiFetchOptions = {}
+): Promise<T | null> {
+  const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  if (!rawBaseUrl) {
+    return null;
   }
 
-  const base = env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
-  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  const baseUrl = rawBaseUrl.replace(/\/+$/, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const url = `${baseUrl}${normalizedPath}`;
 
-  if (base.endsWith("/wp-json")) {
-    if (cleanPath.startsWith("/wp-json/")) {
-      return `${base}${cleanPath.replace(/^\/wp-json/, "")}`;
+  const fetchOptions: RequestInit = {
+    ...options,
+  };
+
+  if (!options.cache && !options.next?.revalidate) {
+    fetchOptions.cache = "no-store";
+  }
+
+  try {
+    const response = await fetch(url, fetchOptions);
+
+    if (!response.ok) {
+      if (process.env.NODE_ENV === "development") {
+        const body = await response.text().catch(() => "");
+
+        console.warn("API request failed", {
+          status: response.status,
+          statusText: response.statusText,
+          url,
+          body,
+        });
+      }
+
+      return null;
     }
 
-    return `${base}${cleanPath}`;
+    return (await response.json()) as T;
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("API fetch failed", {
+        url,
+        error,
+      });
+    }
+
+    return null;
   }
-
-  if (cleanPath.startsWith("/wp-json/")) {
-    return `${base}${cleanPath}`;
-  }
-
-  return `${base}/wp-json${cleanPath}`;
-}
-
-export async function apiFetch<T>(
-  path: string,
-  options: FetchOptions = {}
-): Promise<T> {
-  const { revalidate = 60, tags = [], ...init } = options;
-
-  const response = await fetch(normalizeApiUrl(path), {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init.headers ?? {}),
-    },
-    next: {
-      revalidate,
-      tags,
-    },
-  });
-
-  if (!response.ok) {
-    console.error("API request failed:", {
-      status: response.status,
-      url: response.url,
-      path,
-    });
-
-    throw new Error(`API request failed: ${response.status} ${response.url}`);
-  }
-
-  return response.json() as Promise<T>;
 }
 
 export function normalizeMediaUrl(url?: string | null) {
@@ -66,9 +65,9 @@ export function normalizeMediaUrl(url?: string | null) {
     return url;
   }
 
-  const base = env.NEXT_PUBLIC_API_URL
-    .replace(/\/wp-json\/?$/, "")
-    .replace(/\/+$/, "");
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
 
-  return `${base}${url.startsWith("/") ? url : `/${url}`}`;
+  if (!baseUrl) return url;
+
+  return `${baseUrl}${url.startsWith("/") ? url : `/${url}`}`;
 }

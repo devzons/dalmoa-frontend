@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { buildListingHref } from "./listingHref";
+import { buildListingHref, type ListingDomain } from "./listingHref";
 
 type Item = {
   id?: number | string;
-  slug: string;
+  slug?: string | null;
   title?: string | null;
   name?: string | null;
   businessName?: string | null;
@@ -27,14 +27,10 @@ type Item = {
 type Props = {
   item: Item;
   locale: "ko" | "en";
-  domain?: string;
+  domain: ListingDomain;
 };
 
-export default function ListingRowItem({
-  item,
-  locale,
-  domain = "jobs",
-}: Props) {
+export default function ListingRowItem({ item, locale, domain }: Props) {
   const title =
     item.title ||
     item.name ||
@@ -60,13 +56,15 @@ export default function ListingRowItem({
       ? `$${item.price.toLocaleString()}`
       : item.price;
 
+  const href = buildListingHref({
+    locale,
+    domain,
+    slug: item.slug,
+  });
+
   return (
     <Link
-      href={buildListingHref({
-        locale,
-        domain,
-        slug: item.slug,
-      })}
+      href={href}
       className="block px-4 py-3 transition hover:bg-neutral-50"
     >
       <div className="flex items-center justify-between gap-4">

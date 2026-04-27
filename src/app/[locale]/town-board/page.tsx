@@ -2,6 +2,7 @@ import { Container } from "@/components/base/Container";
 import FeaturedListingGrid from "@/components/listing/FeaturedListingGrid";
 import ListingRowItem from "@/components/listing/ListingRowItem";
 import { getTownBoardItems } from "@/features/town-board/api";
+import { splitFeatured } from "@/features/listing/utils/splitFeatured";
 import { buildMetadata } from "@/lib/seo/metadata";
 
 type Props = {
@@ -28,14 +29,8 @@ export default async function TownBoardPage({ params }: Props) {
   const { locale } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
 
-  const items = await getTownBoardItems(normalizedLocale);
-
-  const featured = items
-    .filter((i: any) => i.featured || i.isFeatured)
-    .slice(0, 6);
-
-  const featuredIds = new Set(featured.map((i: any) => i.id));
-  const regular = items.filter((i: any) => !featuredIds.has(i.id));
+  const items = (await getTownBoardItems(normalizedLocale)) ?? [];
+  const { featured, regular } = splitFeatured(items);
 
   return (
     <Container className="py-10">
@@ -51,7 +46,6 @@ export default async function TownBoardPage({ params }: Props) {
       </div>
 
       <div className="space-y-10">
-        {/* Featured */}
         {featured.length > 0 && (
           <FeaturedListingGrid
             items={featured}
@@ -60,17 +54,18 @@ export default async function TownBoardPage({ params }: Props) {
           />
         )}
 
-        {/* Regular */}
-        <div className="divide-y">
-          {regular.map((item: any) => (
-            <ListingRowItem
-              key={item.id}
-              item={item}
-              locale={normalizedLocale}
-              domain="town-board"
-            />
-          ))}
-        </div>
+        {regular.length > 0 && (
+          <div className="divide-y rounded-lg border border-neutral-200 bg-white">
+            {regular.map((item: any) => (
+              <ListingRowItem
+                key={item.id ?? item.slug}
+                item={item}
+                locale={normalizedLocale}
+                domain="town-board"
+              />
+            ))}
+          </div>
+        )}
       </div>
     </Container>
   );

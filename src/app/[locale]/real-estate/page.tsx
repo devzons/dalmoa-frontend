@@ -1,6 +1,7 @@
 import { Container } from "@/components/base/Container";
 import FeaturedListingGrid from "@/components/listing/FeaturedListingGrid";
 import ListingRowItem from "@/components/listing/ListingRowItem";
+import { splitFeatured } from "@/features/listing/utils/splitFeatured";
 import { getPaginatedRealEstateItems } from "@/features/real-estate/api";
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
 import ListingEmptyState from "@/features/search/components/ListingEmptyState";
@@ -34,23 +35,21 @@ export const revalidate = 120;
 export default async function RealEstatePage({ params, searchParams }: Props) {
   const { locale } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
+  const domain = "real-estate";
 
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filters = parseListingSearchParams(resolvedSearchParams);
 
   const result = await getPaginatedRealEstateItems(normalizedLocale, filters);
 
-  const items = result.items || [];
-  const page = result.page;
-  const hasNextPage = result.page < result.totalPages;
+  const items = result?.items ?? [];
+  const currentPage = result?.page ?? filters.page ?? 1;
+  const total = result?.total ?? 0;
+  const totalPages = result?.totalPages ?? 1;
+  const hasNextPage = currentPage < totalPages;
 
-  const featured =
-    page === 1
-      ? items.filter((i: any) => i.featured || i.isFeatured).slice(0, 6)
-      : [];
-
-  const featuredIds = new Set(featured.map((i: any) => i.id));
-  const regular = items.filter((i: any) => !featuredIds.has(i.id));
+  const { featured, regular } =
+    currentPage === 1 ? splitFeatured(items) : { featured: [], regular: items };
 
   return (
     <Container className="py-10">
@@ -66,7 +65,7 @@ export default async function RealEstatePage({ params, searchParams }: Props) {
       </div>
 
       <div className="mb-6">
-        <ListingFilters domain="real-estate" initialFilters={filters} />
+        <ListingFilters domain={domain} initialFilters={filters} />
       </div>
 
       <div className="mb-6">
@@ -74,26 +73,37 @@ export default async function RealEstatePage({ params, searchParams }: Props) {
       </div>
 
       <ListingResultSummary
-        total={result.total}
-        currentPage={result.page}
-        totalPages={result.totalPages}
+        total={total}
+        currentPage={currentPage}
+        totalPages={totalPages}
         locale={normalizedLocale}
       />
 
       {items.length > 0 ? (
         <div className="space-y-10">
           {featured.length > 0 && (
-            <FeaturedListingGrid items={featured} locale={normalizedLocale} domain="real-estate" />
+            <FeaturedListingGrid
+              items={featured}
+              locale={normalizedLocale}
+              domain={domain}
+            />
           )}
 
-          <div className="divide-y">
-            {regular.map((item: any) => (
-              <ListingRowItem key={item.id} item={item} locale={normalizedLocale} domain="real-estate" />
-            ))}
-          </div>
+          {regular.length > 0 && (
+            <div className="divide-y rounded-lg border border-neutral-200 bg-white">
+              {regular.map((item: any) => (
+                <ListingRowItem
+                  key={item.id ?? item.slug}
+                  item={item}
+                  locale={normalizedLocale}
+                  domain={domain}
+                />
+              ))}
+            </div>
+          )}
 
           <ListingPagination
-            currentPage={filters.page}
+            currentPage={currentPage}
             hasNextPage={hasNextPage}
           />
         </div>

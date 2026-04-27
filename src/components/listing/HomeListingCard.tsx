@@ -3,15 +3,19 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { env } from "@/lib/config/env";
-import { buildListingHref } from "./listingHref";
 import { normalizeMediaUrl } from "@/lib/api/client";
+import { buildListingHref, type ListingDomain } from "./listingHref";
 
 type Props = {
   item: any;
   locale: "ko" | "en";
-  domain: string;
+  domain: ListingDomain;
   variant?: "default" | "ad";
 };
+
+function isTruthy(value: unknown) {
+  return value === true || value === 1 || value === "1" || value === "true";
+}
 
 function trackAdEvent(
   id: number | string | undefined,
@@ -19,7 +23,9 @@ function trackAdEvent(
 ) {
   if (!id) return;
 
-  fetch(`${env.NEXT_PUBLIC_API_URL}/wp-json/dalmoa/v1/ads/${id}/${type}`, {
+  const baseUrl = env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
+
+  fetch(`${baseUrl}/wp-json/dalmoa/v1/ads/${id}/${type}`, {
     method: "POST",
     keepalive: true,
   }).catch(() => {});
@@ -34,28 +40,23 @@ export default function HomeListingCard({
   const cardRef = useRef<HTMLAnchorElement | null>(null);
   const hasTrackedImpression = useRef(false);
 
-  const adPlan = item.adPlan || "basic";
-  const adPriority = Number(item.adPriority || 0);
-  const isAdActive = item.isAdActive !== false;
+  const adPlan = item?.adPlan || "basic";
+  const adPriority = Number(item?.adPriority || 0);
+  const isAdActive = item?.isAdActive !== false;
 
   const isPremium = isAdActive && adPlan === "premium";
+
   const isFeaturedAd =
     isAdActive &&
     (adPlan === "featured" ||
       adPriority >= 20 ||
       variant === "ad" ||
       domain === "ads" ||
-      item.isFeatured === true ||
-      item.featured === true ||
-      item.isFeatured === 1 ||
-      item.featured === 1 ||
-      item.isFeatured === "1" ||
-      item.featured === "1" ||
-      item.isFeatured === "true" ||
-      item.featured === "true");
+      isTruthy(item?.isFeatured) ||
+      isTruthy(item?.featured));
 
   const isAd = isPremium || isFeaturedAd;
-  const shouldTrack = domain === "ads" && Boolean(item.id);
+  const shouldTrack = domain === "ads" && Boolean(item?.id);
 
   useEffect(() => {
     if (!shouldTrack || !cardRef.current) return;
@@ -71,45 +72,59 @@ export default function HomeListingCard({
           observer.disconnect();
         }
       },
-      {
-        threshold: [0.5],
-      }
+      { threshold: [0.5] }
     );
 
     observer.observe(cardRef.current);
 
     return () => observer.disconnect();
-  }, [item.id, shouldTrack]);
+  }, [item?.id, shouldTrack]);
 
-  const title = item.title || item.hero?.title || item.companyName || "Untitled";
+  const title =
+    item?.title ||
+    item?.hero?.title ||
+    item?.companyName ||
+    item?.businessName ||
+    item?.name ||
+    "Untitled";
 
   const subtitle =
-    item.region ||
-    item.address ||
-    item.businessCategory ||
-    item.jobLocation ||
-    item.excerpt ||
-    item.hero?.subtitle ||
+    item?.region ||
+    item?.address ||
+    item?.businessCategory ||
+    item?.categoryLabel ||
+    item?.category ||
+    item?.jobLocation ||
+    item?.excerpt ||
+    item?.hero?.subtitle ||
     null;
 
   const price =
-    typeof item.price === "number"
+    typeof item?.price === "number"
       ? `$${item.price.toLocaleString()}`
-      : item.price || item.priceLabel || item.salePriceLabel || null;
+      : item?.price || item?.priceLabel || item?.salePriceLabel || null;
 
-  const thumbnailUrl = normalizeMediaUrl(item.thumbnailUrl);
+  const thumbnailUrl = normalizeMediaUrl(
+    item?.thumbnailUrl ||
+      item?.thumbnail ||
+      item?.imageUrl ||
+      item?.featuredImageUrl ||
+      item?.featuredImage ||
+      item?.image
+  );
+
+  const href =
+    item?.href ||
+    buildListingHref({
+      locale,
+      domain,
+      slug: item?.slug,
+    });
 
   return (
     <Link
       ref={cardRef}
-      href={
-        item.href ||
-        buildListingHref({
-          locale,
-          domain,
-          slug: item.slug,
-        })
-      }
+      href={href}
       onClick={() => {
         if (shouldTrack) {
           trackAdEvent(item.id, "click");

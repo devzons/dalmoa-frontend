@@ -120,6 +120,31 @@ type TownBoardApiItem = {
   publishedAt?: string | null;
 };
 
+type CommonAdFields = {
+  thumbnail?: string | null;
+  imageUrl?: string | null;
+  featuredImageUrl?: string | null;
+  featuredImage?: string | null;
+  image?: string | null;
+  featured?: boolean | number | string | null;
+  isFeatured?: boolean | number | string | null;
+  isAdActive?: boolean | null;
+  adPlan?: string | null;
+  adPriority?: number | string | null;
+};
+
+function getThumbnailUrl(item: CommonAdFields & { thumbnailUrl?: string | null }) {
+  return (
+    item.thumbnailUrl ||
+    item.thumbnail ||
+    item.imageUrl ||
+    item.featuredImageUrl ||
+    item.featuredImage ||
+    item.image ||
+    null
+  );
+}
+
 function unwrapItems<T>(data: MaybePaginated<T> | null | undefined): T[] {
   if (Array.isArray(data)) return data;
   if (data && Array.isArray(data.items)) return data.items;
@@ -128,8 +153,23 @@ function unwrapItems<T>(data: MaybePaginated<T> | null | undefined): T[] {
 
 function listUrl(basePath: string, locale: HomeLocale) {
   const searchParams = new URLSearchParams();
-  searchParams.set("locale", locale);
+  searchParams.set("lang", locale);
   return `${basePath}?${searchParams.toString()}`;
+}
+
+function featuredUrl(basePath: string, locale: HomeLocale) {
+  const searchParams = new URLSearchParams();
+  searchParams.set("lang", locale);
+  return `${basePath}?${searchParams.toString()}`;
+}
+
+function withNext(tags: string[]) {
+  return {
+    next: {
+      revalidate: 120,
+      tags,
+    },
+  };
 }
 
 function take<T>(items: T[], count: number) {
@@ -145,7 +185,7 @@ function mapDirectory(
     slug: item.slug,
     title: item.title,
     excerpt: item.excerpt,
-    thumbnailUrl: item.thumbnailUrl,
+    thumbnailUrl: getThumbnailUrl(item),
     href: `/${locale}/directory/${item.slug}`,
     meta: item.address ?? item.address_ko ?? item.address_en ?? null,
   }));
@@ -160,7 +200,7 @@ function mapAds(
     slug: item.slug,
     title: item.title,
     excerpt: item.excerpt,
-    thumbnailUrl: item.thumbnailUrl,
+    thumbnailUrl: getThumbnailUrl(item),
     href: `/${locale}/ads/${item.slug}`,
     meta: locale === "en" ? "Featured Ad" : "추천 광고",
   }));
@@ -175,7 +215,7 @@ function mapNews(
     slug: item.slug,
     title: item.title,
     excerpt: item.excerpt,
-    thumbnailUrl: item.thumbnailUrl,
+    thumbnailUrl: getThumbnailUrl(item),
     publishedAt: item.publishedAt,
     href: `/${locale}/news/${item.slug}`,
     meta: item.publishedAt ?? null,
@@ -191,7 +231,7 @@ function mapJobs(
     slug: item.slug,
     title: item.title,
     excerpt: item.excerpt,
-    thumbnailUrl: item.thumbnailUrl,
+    thumbnailUrl: getThumbnailUrl(item),
     publishedAt: item.publishedAt,
     href: `/${locale}/jobs/${item.slug}`,
     meta: item.companyName ?? null,
@@ -207,7 +247,7 @@ function mapBusinessSale(
     slug: item.slug,
     title: item.title,
     excerpt: item.excerpt,
-    thumbnailUrl: item.thumbnailUrl,
+    thumbnailUrl: getThumbnailUrl(item),
     publishedAt: item.publishedAt,
     href: `/${locale}/business-sale/${item.slug}`,
     meta: item.priceLabel ?? item.location ?? item.businessCategory ?? null,
@@ -223,7 +263,7 @@ function mapLoan(
     slug: item.slug,
     title: item.title,
     excerpt: item.excerpt,
-    thumbnailUrl: item.thumbnailUrl,
+    thumbnailUrl: getThumbnailUrl(item),
     publishedAt: item.publishedAt,
     href: `/${locale}/loan/${item.slug}`,
     meta: item.interestRate ?? item.loanAmount ?? item.loanType ?? null,
@@ -239,7 +279,7 @@ function mapMarketplace(
     slug: item.slug,
     title: item.title,
     excerpt: item.excerpt,
-    thumbnailUrl: item.thumbnailUrl,
+    thumbnailUrl: getThumbnailUrl(item),
     publishedAt: item.publishedAt,
     href: `/${locale}/marketplace/${item.slug}`,
     meta: item.priceLabel ?? null,
@@ -255,7 +295,7 @@ function mapRealEstate(
     slug: item.slug,
     title: item.title,
     excerpt: item.excerpt,
-    thumbnailUrl: item.thumbnailUrl,
+    thumbnailUrl: getThumbnailUrl(item),
     publishedAt: item.publishedAt,
     href: `/${locale}/real-estate/${item.slug}`,
     meta: item.priceLabel ?? null,
@@ -271,7 +311,7 @@ function mapCars(
     slug: item.slug,
     title: item.title,
     excerpt: item.excerpt,
-    thumbnailUrl: item.thumbnailUrl,
+    thumbnailUrl: getThumbnailUrl(item),
     publishedAt: item.publishedAt,
     href: `/${locale}/cars/${item.slug}`,
     meta: item.priceLabel ?? null,
@@ -287,7 +327,7 @@ function mapTownBoard(
     slug: item.slug,
     title: item.title,
     excerpt: item.excerpt,
-    thumbnailUrl: item.thumbnailUrl,
+    thumbnailUrl: getThumbnailUrl(item),
     publishedAt: item.publishedAt,
     href: `/${locale}/town-board/${item.slug}`,
     meta: item.boardCategory ?? null,
@@ -307,46 +347,55 @@ export async function getHomeData(locale: HomeLocale): Promise<HomeData> {
     cars,
     townBoard,
   ] = await Promise.all([
-    apiFetch<MaybePaginated<AdApiItem>>(`${endpoints.adsFeatured}?locale=${locale}`, {
-      revalidate: 120,
-      tags: [cacheTags.adsFeatured],
-    }),
-    apiFetch<MaybePaginated<DirectoryApiItem>>(listUrl(endpoints.directoryList, locale), {
-      revalidate: 120,
-      tags: [cacheTags.directoryList],
-    }),
-    apiFetch<MaybePaginated<NewsApiItem>>(listUrl(endpoints.newsList, locale), {
-      revalidate: 120,
-      tags: [cacheTags.newsList],
-    }),
-    apiFetch<MaybePaginated<JobApiItem>>(listUrl(endpoints.jobsList, locale), {
-      revalidate: 120,
-      tags: [cacheTags.jobsList],
-    }),
-    apiFetch<MaybePaginated<BusinessSaleApiItem>>(listUrl(endpoints.businessSaleList, locale), {
-      revalidate: 120,
-      tags: ["business-sale-list"],
-    }),
-    apiFetch<MaybePaginated<LoanApiItem>>(listUrl(endpoints.loanList, locale), {
-      revalidate: 120,
-      tags: ["loan-list"],
-    }),
-    apiFetch<MaybePaginated<MarketplaceApiItem>>(listUrl(endpoints.marketplaceList, locale), {
-      revalidate: 120,
-      tags: [cacheTags.marketplaceList],
-    }),
-    apiFetch<MaybePaginated<RealEstateApiItem>>(listUrl(endpoints.realEstateList, locale), {
-      revalidate: 120,
-      tags: [cacheTags.realEstateList],
-    }),
-    apiFetch<MaybePaginated<CarApiItem>>(listUrl(endpoints.carsList, locale), {
-      revalidate: 120,
-      tags: [cacheTags.carsList],
-    }),
-    apiFetch<MaybePaginated<TownBoardApiItem>>(listUrl(endpoints.townBoardList, locale), {
-      revalidate: 120,
-      tags: [cacheTags.townBoardList],
-    }),
+    apiFetch<MaybePaginated<AdApiItem>>(
+      featuredUrl(endpoints.adsFeatured, locale),
+      withNext([cacheTags.adsFeatured])
+    ),
+
+    apiFetch<MaybePaginated<DirectoryApiItem>>(
+      listUrl(endpoints.directoryList, locale),
+      withNext([cacheTags.directoryList])
+    ),
+
+    apiFetch<MaybePaginated<NewsApiItem>>(
+      listUrl(endpoints.newsList, locale),
+      withNext([cacheTags.newsList])
+    ),
+
+    apiFetch<MaybePaginated<JobApiItem>>(
+      listUrl(endpoints.jobsList, locale),
+      withNext([cacheTags.jobsList])
+    ),
+
+    apiFetch<MaybePaginated<BusinessSaleApiItem>>(
+      listUrl(endpoints.businessSaleList, locale),
+      withNext(["business-sale-list"])
+    ),
+
+    apiFetch<MaybePaginated<LoanApiItem>>(
+      listUrl(endpoints.loanList, locale),
+      withNext(["loan-list"])
+    ),
+
+    apiFetch<MaybePaginated<MarketplaceApiItem>>(
+      listUrl(endpoints.marketplaceList, locale),
+      withNext([cacheTags.marketplaceList])
+    ),
+
+    apiFetch<MaybePaginated<RealEstateApiItem>>(
+      listUrl(endpoints.realEstateList, locale),
+      withNext([cacheTags.realEstateList])
+    ),
+
+    apiFetch<MaybePaginated<CarApiItem>>(
+      listUrl(endpoints.carsList, locale),
+      withNext([cacheTags.carsList])
+    ),
+
+    apiFetch<MaybePaginated<TownBoardApiItem>>(
+      listUrl(endpoints.townBoardList, locale),
+      withNext([cacheTags.townBoardList])
+    ),
   ]);
 
   const directoryItems = unwrapItems(directory);
@@ -355,7 +404,10 @@ export async function getHomeData(locale: HomeLocale): Promise<HomeData> {
   return {
     featuredAds: take(mapAds(ads, locale), 4),
     featuredDirectory: take(
-      mapDirectory(featuredDirectory.length > 0 ? featuredDirectory : directoryItems, locale),
+      mapDirectory(
+        featuredDirectory.length > 0 ? featuredDirectory : directoryItems,
+        locale
+      ),
       6
     ),
     latestNews: take(mapNews(news, locale), 4),

@@ -1,6 +1,7 @@
 import { Container } from "@/components/base/Container";
 import FeaturedListingGrid from "@/components/listing/FeaturedListingGrid";
 import ListingRowItem from "@/components/listing/ListingRowItem";
+import { splitFeatured } from "@/features/listing/utils/splitFeatured";
 import { getPaginatedMarketplaceItems } from "@/features/marketplace/api";
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
 import ListingEmptyState from "@/features/search/components/ListingEmptyState";
@@ -11,12 +12,8 @@ import { parseListingSearchParams } from "@/features/search/url";
 import { buildMetadata } from "@/lib/seo/metadata";
 
 type Props = {
-  params: Promise<{
-    locale: string;
-  }>;
-  searchParams?: Promise<{
-    [key: string]: string | string[] | undefined;
-  }>;
+  params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export async function generateMetadata({ params }: Props) {
@@ -41,23 +38,21 @@ export default async function MarketplacePage({
 }: Props) {
   const { locale } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
+  const domain = "marketplace";
 
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filters = parseListingSearchParams(resolvedSearchParams);
 
   const result = await getPaginatedMarketplaceItems(normalizedLocale, filters);
 
-  const items = result.items || [];
-  const page = result.page;
-  const hasNextPage = result.page < result.totalPages;
+  const items = result?.items ?? [];
+  const currentPage = result?.page ?? filters.page ?? 1;
+  const total = result?.total ?? 0;
+  const totalPages = result?.totalPages ?? 1;
+  const hasNextPage = currentPage < totalPages;
 
-  const featured =
-    page === 1
-      ? items.filter((i: any) => i.featured || i.isFeatured).slice(0, 6)
-      : [];
-
-  const featuredIds = new Set(featured.map((i: any) => i.id));
-  const regular = items.filter((i: any) => !featuredIds.has(i.id));
+  const { featured, regular } =
+    currentPage === 1 ? splitFeatured(items) : { featured: [], regular: items };
 
   return (
     <Container className="py-10">
@@ -73,7 +68,7 @@ export default async function MarketplacePage({
       </div>
 
       <div className="mb-6">
-        <ListingFilters domain="marketplace" initialFilters={filters} />
+        <ListingFilters domain={domain} initialFilters={filters} />
       </div>
 
       <div className="mb-6">
@@ -81,9 +76,9 @@ export default async function MarketplacePage({
       </div>
 
       <ListingResultSummary
-        total={result.total}
-        currentPage={result.page}
-        totalPages={result.totalPages}
+        total={total}
+        currentPage={currentPage}
+        totalPages={totalPages}
         locale={normalizedLocale}
       />
 
@@ -93,23 +88,25 @@ export default async function MarketplacePage({
             <FeaturedListingGrid
               items={featured}
               locale={normalizedLocale}
-              domain="marketplace"
+              domain={domain}
             />
           )}
 
-          <div className="divide-y">
-            {regular.map((item: any) => (
-              <ListingRowItem
-                key={item.id}
-                item={item}
-                locale={normalizedLocale}
-                domain="marketplace"
-              />
-            ))}
-          </div>
+          {regular.length > 0 && (
+            <div className="divide-y rounded-lg border border-neutral-200 bg-white">
+              {regular.map((item: any) => (
+                <ListingRowItem
+                  key={item.id ?? item.slug}
+                  item={item}
+                  locale={normalizedLocale}
+                  domain={domain}
+                />
+              ))}
+            </div>
+          )}
 
           <ListingPagination
-            currentPage={filters.page}
+            currentPage={currentPage}
             hasNextPage={hasNextPage}
           />
         </div>
