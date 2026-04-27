@@ -3,15 +3,101 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { env } from "@/lib/config/env";
-import { buildListingHref } from "./listingHref";
 import { normalizeMediaUrl } from "@/lib/api/client";
+import { buildListingHref } from "./listingHref";
+
+type ListingCardItem = {
+  id?: number | string;
+  slug?: string | null;
+  href?: string | null;
+  title?: string | null;
+  name?: string | null;
+  businessName?: string | null;
+  displayName?: string | null;
+  excerpt?: string | null;
+  thumbnailUrl?: string | null;
+  price?: number | string | null;
+  priceLabel?: string | null;
+  salePriceLabel?: string | null;
+  region?: string | null;
+  address?: string | null;
+  businessCategory?: string | null;
+  jobLocation?: string | null;
+  companyName?: string | null;
+  adPlan?: string | null;
+  adPriority?: number | string | null;
+  isAdActive?: boolean | null;
+  isFeatured?: boolean | number | string | null;
+  featured?: boolean | number | string | null;
+  hero?: {
+    title?: string | null;
+    subtitle?: string | null;
+  };
+};
 
 type Props = {
-  item: any;
+  item: ListingCardItem;
   locale: "ko" | "en";
   domain: string;
   variant?: "default" | "ad";
 };
+
+function isTruthyFeature(value: unknown) {
+  return value === true || value === 1 || value === "1" || value === "true";
+}
+
+function getAdState(item: ListingCardItem, domain: string, variant: Props["variant"]) {
+  const adPlan = item.adPlan || "basic";
+  const adPriority = Number(item.adPriority || 0);
+  const isAdActive = item.isAdActive !== false;
+
+  const isPremium = isAdActive && adPlan === "premium";
+  const isFeatured =
+    isAdActive &&
+    (adPlan === "featured" ||
+      adPriority >= 20 ||
+      variant === "ad" ||
+      domain === "ads" ||
+      isTruthyFeature(item.isFeatured) ||
+      isTruthyFeature(item.featured));
+
+  return {
+    isPremium,
+    isAd: isPremium || isFeatured,
+  };
+}
+
+function getTitle(item: ListingCardItem) {
+  return (
+    item.title ||
+    item.name ||
+    item.businessName ||
+    item.displayName ||
+    item.hero?.title ||
+    item.companyName ||
+    "Untitled"
+  );
+}
+
+function getSubtitle(item: ListingCardItem) {
+  return (
+    item.region ||
+    item.address ||
+    item.businessCategory ||
+    item.jobLocation ||
+    item.excerpt ||
+    item.hero?.subtitle ||
+    null
+  );
+}
+
+function getPrice(item: ListingCardItem) {
+  if (typeof item.price === "number") {
+    return `$${item.price.toLocaleString()}`;
+  }
+
+  return item.price || item.priceLabel || item.salePriceLabel || null;
+}
 
 function trackAdEvent(
   id: number | string | undefined,
@@ -34,27 +120,7 @@ export default function HomeListingCard({
   const cardRef = useRef<HTMLAnchorElement | null>(null);
   const hasTrackedImpression = useRef(false);
 
-  const adPlan = item.adPlan || "basic";
-  const adPriority = Number(item.adPriority || 0);
-  const isAdActive = item.isAdActive !== false;
-
-  const isPremium = isAdActive && adPlan === "premium";
-  const isFeaturedAd =
-    isAdActive &&
-    (adPlan === "featured" ||
-      adPriority >= 20 ||
-      variant === "ad" ||
-      domain === "ads" ||
-      item.isFeatured === true ||
-      item.featured === true ||
-      item.isFeatured === 1 ||
-      item.featured === 1 ||
-      item.isFeatured === "1" ||
-      item.featured === "1" ||
-      item.isFeatured === "true" ||
-      item.featured === "true");
-
-  const isAd = isPremium || isFeaturedAd;
+  const { isPremium, isAd } = getAdState(item, domain, variant);
   const shouldTrack = domain === "ads" && Boolean(item.id);
 
   useEffect(() => {
@@ -81,22 +147,9 @@ export default function HomeListingCard({
     return () => observer.disconnect();
   }, [item.id, shouldTrack]);
 
-  const title = item.title || item.hero?.title || item.companyName || "Untitled";
-
-  const subtitle =
-    item.region ||
-    item.address ||
-    item.businessCategory ||
-    item.jobLocation ||
-    item.excerpt ||
-    item.hero?.subtitle ||
-    null;
-
-  const price =
-    typeof item.price === "number"
-      ? `$${item.price.toLocaleString()}`
-      : item.price || item.priceLabel || item.salePriceLabel || null;
-
+  const title = getTitle(item);
+  const subtitle = getSubtitle(item);
+  const price = getPrice(item);
   const thumbnailUrl = normalizeMediaUrl(item.thumbnailUrl);
 
   return (
