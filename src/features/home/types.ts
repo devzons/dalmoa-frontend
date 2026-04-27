@@ -1,5 +1,3 @@
-export type HomeLocale = "ko" | "en";
-
 export type HomeCardItem = {
   id: number;
   slug: string;
@@ -9,17 +7,13 @@ export type HomeCardItem = {
   publishedAt?: string | null;
   href: string;
   meta?: string | null;
-};
 
-export type HomeData = {
-  featuredAds: HomeCardItem[];
-  featuredDirectory: HomeCardItem[];
-  latestNews: HomeCardItem[];
-  latestJobs: HomeCardItem[];
-  latestBusinessSale: HomeCardItem[];
-  latestLoan: HomeCardItem[];
-  latestMarketplace: HomeCardItem[];
-  latestRealEstate: HomeCardItem[];
-  latestCars: HomeCardItem[];
-  latestTownBoard: HomeCardItem[];
+  // ✅ 광고/정렬 관련 필드 추가
+  adPlan?: string | null;
+  adPriority?: number | string | null;
+  isAdActive?: boolean | null;
+
+  // ✅ featured 관련 (여러 형태 대응)
+  isFeatured?: boolean | number | string | null;
+  featured?: boolean | number | string | null;
 };
