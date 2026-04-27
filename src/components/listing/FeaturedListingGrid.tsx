@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect } from "react";
+import { env } from "@/lib/config/env";
 import { buildListingHref } from "./listingHref";
 
 type Item = {
@@ -33,11 +37,30 @@ type Props = {
   domain?: string;
 };
 
+function trackAdEvent(id: number | string | undefined, type: "click" | "impression") {
+  if (!id) return;
+
+  fetch(`${env.NEXT_PUBLIC_API_URL}/ads/${id}/${type}`, {
+    method: "POST",
+    keepalive: true,
+  }).catch(() => {});
+}
+
 export default function FeaturedListingGrid({
   items,
   locale,
   domain = "jobs",
 }: Props) {
+  useEffect(() => {
+    if (domain !== "ads" && domain !== "directory") return;
+
+    items.forEach((item) => {
+      if (item.id) {
+        trackAdEvent(item.id, "impression");
+      }
+    });
+  }, [domain, items]);
+
   if (!items.length) return null;
 
   return (
@@ -100,6 +123,11 @@ export default function FeaturedListingGrid({
                 domain,
                 slug: item.slug,
               })}
+              onClick={() => {
+                if ((domain === "ads" || domain === "directory") && item.id) {
+                  trackAdEvent(item.id, "click");
+                }
+              }}
               className={[
                 "group relative block overflow-hidden rounded-xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
                 isPremium

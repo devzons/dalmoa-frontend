@@ -6,7 +6,6 @@ import { MainNav } from "@/components/layout/MainNav";
 import { MobileNav } from "@/components/layout/MobileNav";
 import GlobalSearchBar from "@/features/search/components/GlobalSearchBar";
 
-
 type Props = {
   locale: string;
 };
@@ -17,7 +16,7 @@ export function SiteHeader({ locale }: Props) {
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/95 backdrop-blur">
       <Container className="flex flex-col gap-3 py-3">
-        
+
         {/* TOP ROW */}
         <div className="flex items-center justify-between gap-4">
           <Link
@@ -31,6 +30,15 @@ export function SiteHeader({ locale }: Props) {
 
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-3 md:flex">
+
+              {/* 🔥 광고 등록 버튼 */}
+              <Link
+                href={`/${normalizedLocale}/ads/create`}
+                className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600"
+              >
+                {normalizedLocale === "en" ? "Post Ad" : "광고 등록"}
+              </Link>
+
               <LocaleSwitcher locale={normalizedLocale} />
               <AuthButtons locale={normalizedLocale} />
             </div>

@@ -1,37 +1,45 @@
 export const endpoints = {
-  directoryList: "/directory",
-  directoryDetail: (slug: string) => `/directory/${slug}`,
+  // CORE
+  directoryList: "/dalmoa/v1/directory",
+  directoryDetail: (slug: string) => `/dalmoa/v1/directory/${slug}`,
 
-  adsList: "/ads",
-  adsFeatured: "/ads/featured",
+  adsList: "/dalmoa/v1/ads",
+  adsFeatured: "/dalmoa/v1/ads/featured",
+  adsDetail: (slug: string) => `/dalmoa/v1/ads/${slug}`,
 
-  businessDetail: (slug: string) => `/business-page/${slug}`,
+  businessDetail: (slug: string) => `/dalmoa/v1/business-page/${slug}`,
 
-  businessSaleList: "/business-sale",
-  businessSaleDetail: (slug: string) => `/business-sale/${slug}`,
+  businessSaleList: "/dalmoa/v1/business-sale",
+  businessSaleDetail: (slug: string) => `/dalmoa/v1/business-sale/${slug}`,
 
-  newsList: "/news",
-  newsDetail: (slug: string) => `/news/${slug}`,
+  newsList: "/dalmoa/v1/news",
+  newsDetail: (slug: string) => `/dalmoa/v1/news/${slug}`,
 
-  jobsList: "/jobs",
-  jobsDetail: (slug: string) => `/jobs/${slug}`,
+  jobsList: "/dalmoa/v1/jobs",
+  jobsDetail: (slug: string) => `/dalmoa/v1/jobs/${slug}`,
 
-  loanList: "/loan",
-  loanDetail: (slug: string) => `/loan/${slug}`,
+  loanList: "/dalmoa/v1/loan",
+  loanDetail: (slug: string) => `/dalmoa/v1/loan/${slug}`,
 
-  marketplaceList: "/marketplace",
-  marketplaceDetail: (slug: string) => `/marketplace/${slug}`,
+  marketplaceList: "/dalmoa/v1/marketplace",
+  marketplaceDetail: (slug: string) => `/dalmoa/v1/marketplace/${slug}`,
 
-  realEstateList: "/real-estate",
-  realEstateDetail: (slug: string) => `/real-estate/${slug}`,
+  realEstateList: "/dalmoa/v1/real-estate",
+  realEstateDetail: (slug: string) => `/dalmoa/v1/real-estate/${slug}`,
 
-  carsList: "/cars",
-  carsDetail: (slug: string) => `/cars/${slug}`,
+  carsList: "/dalmoa/v1/cars",
+  carsDetail: (slug: string) => `/dalmoa/v1/cars/${slug}`,
 
-  townBoardList: "/town-board",
-  townBoardDetail: (slug: string) => `/town-board/${slug}`,
+  townBoardList: "/dalmoa/v1/town-board",
+  townBoardDetail: (slug: string) => `/dalmoa/v1/town-board/${slug}`,
 
-  // PAYMENT
-  createCheckoutSession: "/payments/create-checkout-session",
-  paymentWebhook: "/payments/webhook",
+  // 🔴 PAYMENT
+  createCheckoutSession: "/dalmoa/v1/payments/create-checkout-session",
+  createSubscriptionSession: "/dalmoa/v1/payments/create-subscription-session",
+
+  cancelSubscription: "/dalmoa/v1/subscriptions/cancel",
+  resumeSubscription: "/dalmoa/v1/subscriptions/resume",
+  syncSubscription: "/dalmoa/v1/subscriptions/sync",
+
+  paymentWebhook: "/dalmoa/v1/payments/webhook",
 } as const;

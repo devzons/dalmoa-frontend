@@ -7,6 +7,22 @@ export type AdItem = {
   ctaUrl?: string | null;
   isExternal?: boolean;
   region?: string | null;
+
+  // 🔴 PAYMENT / SUBSCRIPTION
+  is_active?: boolean;
+  is_paid?: boolean;
+  is_featured?: boolean;
+  priority_score?: number;
+
+  payment_status?: string;
+
+  billing_type?: "one_time" | "subscription";
+
+  subscription_status?: string;
+  subscription_cancel_at_period_end?: "0" | "1";
+
+  ad_ends_at?: string;
+  expires_at?: string;
 };
 
 export type AdsResponse = {

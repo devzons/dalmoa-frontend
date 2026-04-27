@@ -1,25 +1,69 @@
 import { notFound } from "next/navigation";
-import { Container } from "@/components/base/Container";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/base/Card";
 import { Badge } from "@/components/base/Badge";
-import { SafeImage } from "@/components/common/SafeImage";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/base/Card";
+import { Container } from "@/components/base/Container";
 import AdUpgradeButton from "@/components/payment/AdUpgradeButton";
 import { getAdBySlug } from "@/features/ads/api";
+import { buildMetadata } from "@/lib/seo/metadata";
+import Link from "next/link";
+import AdSubscribeButton from "@/components/payment/AdSubscribeButton";
+import AdSubscriptionActions from "@/features/ads/components/AdSubscriptionActions";
+import { normalizeMediaUrl } from "@/lib/api/client";
 
 type Props = {
-  params: {
+  params: Promise<{
     locale: string;
     slug: string;
-  };
+  }>;
 };
 
+function getRemainingDays(adEndsAt?: string | null) {
+  if (!adEndsAt) return null;
+
+  const end = new Date(adEndsAt);
+  const now = new Date();
+
+  if (Number.isNaN(end.getTime())) return null;
+
+  return Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+export async function generateMetadata({ params }: Props) {
+  const { locale, slug } = await params;
+  const normalizedLocale = locale === "en" ? "en" : "ko";
+
+  try {
+    const item = await getAdBySlug(slug, normalizedLocale);
+
+    return buildMetadata({
+      title: item.title,
+      description:
+        item.excerpt ||
+        (normalizedLocale === "en"
+          ? `${item.title} ad detail`
+          : `${item.title} 광고 상세`),
+      path: `/${normalizedLocale}/ads/${slug}`,
+    });
+  } catch {
+    return buildMetadata({
+      title: normalizedLocale === "en" ? "Ad Detail" : "광고 상세",
+      description:
+        normalizedLocale === "en" ? "Ad detail page" : "광고 상세 페이지",
+      path: `/${normalizedLocale}/ads/${slug}`,
+    });
+  }
+}
+
+export const revalidate = 0;
+
 export default async function AdDetailPage({ params }: Props) {
-  const locale = params.locale === "en" ? "en" : "ko";
+  const { locale, slug } = await params;
+  const normalizedLocale = locale === "en" ? "en" : "ko";
 
   let item;
 
   try {
-    item = await getAdBySlug(params.slug, locale);
+    item = await getAdBySlug(slug, normalizedLocale);
   } catch {
     notFound();
   }
@@ -28,66 +72,207 @@ export default async function AdDetailPage({ params }: Props) {
     notFound();
   }
 
+  const remainingDays = getRemainingDays(item.adEndsAt ?? item.expiresAt);
+  const isExpired =
+    remainingDays !== null ? remainingDays <= 0 : item.isAdActive === false;
+  const isExpiringSoon =
+    remainingDays !== null && remainingDays > 0 && remainingDays <= 3;
+
+  const clickCount = Number(item.clickCount || 0);
+  const impressionCount = Number(item.impressionCount || 0);
+  const ctr =
+    impressionCount > 0 ? ((clickCount / impressionCount) * 100).toFixed(1) : "0.0";
+
+  const thumbnailUrl = normalizeMediaUrl(item.thumbnailUrl);
+
   return (
     <div className="bg-neutral-50 py-10">
       <Container>
         <Card className="overflow-hidden">
-          {item.thumbnailUrl ? (
-            <SafeImage
-              src={item.thumbnailUrl}
-              alt={item.title}
-              width={1400}
-              height={800}
-              className="h-[260px] w-full object-cover"
-            />
-          ) : null}
+          {thumbnailUrl ? (
+            <div className="h-[260px] w-full overflow-hidden bg-neutral-100">
+              <img
+                src={thumbnailUrl}
+                alt={item.title}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="flex h-[260px] w-full items-center justify-center bg-neutral-100 text-sm text-neutral-400">
+              {normalizedLocale === "en" ? "No image" : "이미지 없음"}
+            </div>
+          )}
 
           <CardHeader>
-            <div className="mb-3 flex items-center gap-2">
-              {item.isFeatured && (
-                <Badge className="bg-amber-500 text-white">
-                  {locale === "en" ? "Featured" : "추천"}
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              {item.isPaid ? (
+                <Badge className="bg-neutral-900 text-white">
+                  {normalizedLocale === "en" ? "Paid" : "유료"}
                 </Badge>
-              )}
+              ) : null}
+
+              {item.isFeatured ? (
+                <Badge className="bg-amber-500 text-white">
+                  {normalizedLocale === "en" ? "Featured" : "추천"}
+                </Badge>
+              ) : null}
+
+              {item.adPlan ? (
+                <Badge className="bg-amber-50 text-amber-700">
+                  {String(item.adPlan).toUpperCase()}
+                </Badge>
+              ) : null}
+
+              {remainingDays !== null ? (
+                <Badge
+                  className={
+                    isExpired
+                      ? "bg-red-50 text-red-700"
+                      : "bg-green-50 text-green-700"
+                  }
+                >
+                  {isExpired
+                    ? normalizedLocale === "en"
+                      ? "Expired"
+                      : "만료됨"
+                    : normalizedLocale === "en"
+                      ? `${remainingDays} days left`
+                      : `${remainingDays}일 남음`}
+                </Badge>
+              ) : null}
+
+              {isExpiringSoon ? (
+                <Badge className="bg-orange-50 text-orange-700">
+                  {normalizedLocale === "en" ? "Expiring soon" : "곧 만료"}
+                </Badge>
+              ) : null}
             </div>
 
             <CardTitle className="text-2xl">{item.title}</CardTitle>
 
-            {item.excerpt && (
-              <p className="mt-3 text-sm text-neutral-600">
-                {item.excerpt}
-              </p>
-            )}
+            {item.excerpt ? (
+              <p className="mt-3 text-sm text-neutral-600">{item.excerpt}</p>
+            ) : null}
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {item.ctaUrl && (
+            {item.ctaUrl ? (
               <a
                 href={item.ctaUrl}
                 target={item.isExternal ? "_blank" : "_self"}
                 rel="noreferrer"
-                className="inline-block rounded-xl bg-neutral-900 px-5 py-2 text-sm font-semibold text-white"
+                className="inline-block rounded-xl bg-neutral-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800"
               >
-                {item.ctaLabel || (locale === "en" ? "Visit" : "바로가기")}
+                {item.ctaLabel ||
+                  (normalizedLocale === "en" ? "Visit" : "바로가기")}
               </a>
-            )}
+            ) : null}
 
-            {/* 🔥 결제 버튼 */}
-            <div className="flex gap-3 pt-4">
-              <AdUpgradeButton
-                postId={item.id}
-                plan="featured"
-                locale={locale}
+            <div className="grid grid-cols-3 gap-3 rounded-2xl border border-neutral-200 bg-white p-4">
+              <StatBox
+                label={normalizedLocale === "en" ? "Impressions" : "노출"}
+                value={impressionCount.toLocaleString()}
               />
-              <AdUpgradeButton
-                postId={item.id}
-                plan="premium"
-                locale={locale}
+              <StatBox
+                label={normalizedLocale === "en" ? "Clicks" : "클릭"}
+                value={clickCount.toLocaleString()}
               />
+              <StatBox label="CTR" value={`${ctr}%`} />
+
+              <Link
+                href={`/${normalizedLocale}/ads/${slug}/report`}
+                className="inline-flex w-fit items-center justify-center rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-50"
+              >
+                {normalizedLocale === "en" ? "View full report" : "전체 리포트 보기"}
+              </Link>
+            </div>
+
+            <div
+              className={[
+                "rounded-2xl border bg-white p-4",
+                isExpired
+                  ? "border-red-200"
+                  : isExpiringSoon
+                    ? "border-orange-200"
+                    : "border-neutral-200",
+              ].join(" ")}
+            >
+              <h2 className="text-sm font-bold text-neutral-950">
+                {isExpired
+                  ? normalizedLocale === "en"
+                    ? "Reactivate this ad"
+                    : "광고 재등록"
+                  : isExpiringSoon
+                    ? normalizedLocale === "en"
+                      ? "Extend before it expires"
+                      : "만료 전 광고 연장"
+                    : normalizedLocale === "en"
+                      ? "Promote this ad"
+                      : "광고 연장 / 업그레이드"}
+              </h2>
+
+              <p className="mt-1 text-xs text-neutral-500">
+                {isExpired
+                  ? normalizedLocale === "en"
+                    ? "This ad has expired. Reactivate it with a paid placement."
+                    : "이 광고는 만료되었습니다. 유료 상품으로 다시 활성화할 수 있습니다."
+                  : isExpiringSoon
+                    ? normalizedLocale === "en"
+                      ? "This ad is expiring soon. Extend it to keep it visible."
+                      : "광고 만료가 임박했습니다. 연장하면 노출을 계속 유지할 수 있습니다."
+                    : normalizedLocale === "en"
+                      ? "Extend or upgrade this ad with a paid placement."
+                      : "유료 노출 상품으로 광고를 연장하거나 업그레이드할 수 있습니다."}
+              </p>
+
+              <div className="mt-4 flex flex-wrap gap-3">
+                {/* 기존 one-time */}
+                <AdUpgradeButton
+                  postId={item.id}
+                  plan="featured"
+                  locale={normalizedLocale}
+                  isActive={item.isAdActive}
+                  isExpired={isExpired}
+                />
+                <AdUpgradeButton
+                  postId={item.id}
+                  plan="premium"
+                  locale={normalizedLocale}
+                  isActive={item.isAdActive}
+                  isExpired={isExpired}
+                />
+
+                {/* 구독 추가 */}
+                <AdSubscribeButton
+                  postId={item.id}
+                  plan="featured_monthly"
+                  locale={normalizedLocale}
+                />
+                <AdSubscribeButton
+                  postId={item.id}
+                  plan="premium_monthly"
+                  locale={normalizedLocale}
+                />
+                <AdSubscriptionActions
+                  postId={item.id}
+                  billingType={item.billing_type}
+                  subscriptionStatus={item.subscription_status}
+                  cancelAtPeriodEnd={item.subscription_cancel_at_period_end}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
       </Container>
+    </div>
+  );
+}
+
+function StatBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-neutral-50 p-3">
+      <div className="text-[11px] font-medium text-neutral-500">{label}</div>
+      <div className="mt-1 text-lg font-bold text-neutral-950">{value}</div>
     </div>
   );
 }

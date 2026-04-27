@@ -161,10 +161,7 @@ function mapAds(
     title: item.title,
     excerpt: item.excerpt,
     thumbnailUrl: item.thumbnailUrl,
-    href:
-      item.ctaUrl && item.ctaUrl.startsWith("/")
-        ? item.ctaUrl
-        : item.ctaUrl || `/${locale}/ads`,
+    href: `/${locale}/ads/${item.slug}`,
     meta: locale === "en" ? "Featured Ad" : "추천 광고",
   }));
 }

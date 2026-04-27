@@ -26,3 +26,26 @@ export async function getAdBySlug(
     `${endpoints.adsList}/${slug}?locale=${locale}`
   );
 }
+
+// SUBSCRIPTION
+
+export async function cancelSubscription(postId: number) {
+  return apiFetch<{ ok: boolean }>(`/dalmoa/v1/subscriptions/cancel`, {
+    method: "POST",
+    body: JSON.stringify({ postId }),
+  });
+}
+
+export async function resumeSubscription(postId: number) {
+  return apiFetch<{ ok: boolean }>(`/dalmoa/v1/subscriptions/resume`, {
+    method: "POST",
+    body: JSON.stringify({ postId }),
+  });
+}
+
+export async function syncSubscription(postId: number) {
+  return apiFetch<{ ok: boolean }>(`/dalmoa/v1/subscriptions/sync`, {
+    method: "POST",
+    body: JSON.stringify({ postId }),
+  });
+}

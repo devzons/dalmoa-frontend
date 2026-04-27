@@ -5,6 +5,7 @@ import { Container } from "@/components/base/Container";
 import { SafeImage } from "@/components/common/SafeImage";
 import { getLoanItemBySlug } from "@/features/loan/api";
 import { buildMetadata } from "@/lib/seo/metadata";
+import { normalizeMediaUrl } from "@/lib/api/client";
 
 type Props = {
   params: Promise<{
@@ -59,13 +60,15 @@ export default async function LoanDetailPage({ params }: Props) {
     notFound();
   }
 
+  const thumbnailUrl = normalizeMediaUrl(item.thumbnailUrl);
+
   return (
     <div className="bg-neutral-50 py-10">
       <Container>
         <Card className="overflow-hidden">
-          {item.thumbnailUrl ? (
+          {thumbnailUrl ? (
             <SafeImage
-              src={item.thumbnailUrl}
+              src={thumbnailUrl}
               alt={item.title}
               width={1400}
               height={900}

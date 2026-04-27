@@ -1,5 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef } from "react";
+import { env } from "@/lib/config/env";
 import { buildListingHref } from "./listingHref";
+import { normalizeMediaUrl } from "@/lib/api/client";
 
 type Props = {
   item: any;
@@ -8,12 +13,27 @@ type Props = {
   variant?: "default" | "ad";
 };
 
+function trackAdEvent(
+  id: number | string | undefined,
+  type: "click" | "impression"
+) {
+  if (!id) return;
+
+  fetch(`${env.NEXT_PUBLIC_API_URL}/wp-json/dalmoa/v1/ads/${id}/${type}`, {
+    method: "POST",
+    keepalive: true,
+  }).catch(() => {});
+}
+
 export default function HomeListingCard({
   item,
   locale,
   domain,
   variant = "default",
 }: Props) {
+  const cardRef = useRef<HTMLAnchorElement | null>(null);
+  const hasTrackedImpression = useRef(false);
+
   const adPlan = item.adPlan || "basic";
   const adPriority = Number(item.adPriority || 0);
   const isAdActive = item.isAdActive !== false;
@@ -35,6 +55,31 @@ export default function HomeListingCard({
       item.featured === "true");
 
   const isAd = isPremium || isFeaturedAd;
+  const shouldTrack = domain === "ads" && Boolean(item.id);
+
+  useEffect(() => {
+    if (!shouldTrack || !cardRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+          if (!hasTrackedImpression.current) {
+            hasTrackedImpression.current = true;
+            trackAdEvent(item.id, "impression");
+          }
+
+          observer.disconnect();
+        }
+      },
+      {
+        threshold: [0.5],
+      }
+    );
+
+    observer.observe(cardRef.current);
+
+    return () => observer.disconnect();
+  }, [item.id, shouldTrack]);
 
   const title = item.title || item.hero?.title || item.companyName || "Untitled";
 
@@ -52,13 +97,24 @@ export default function HomeListingCard({
       ? `$${item.price.toLocaleString()}`
       : item.price || item.priceLabel || item.salePriceLabel || null;
 
+  const thumbnailUrl = normalizeMediaUrl(item.thumbnailUrl);
+
   return (
     <Link
-      href={buildListingHref({
-        locale,
-        domain,
-        slug: item.slug,
-      })}
+      ref={cardRef}
+      href={
+        item.href ||
+        buildListingHref({
+          locale,
+          domain,
+          slug: item.slug,
+        })
+      }
+      onClick={() => {
+        if (shouldTrack) {
+          trackAdEvent(item.id, "click");
+        }
+      }}
       className={[
         "group relative block overflow-hidden rounded-xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
         isPremium
@@ -79,10 +135,10 @@ export default function HomeListingCard({
         </div>
       ) : null}
 
-      {item.thumbnailUrl ? (
+      {thumbnailUrl ? (
         <div className="aspect-[16/7] overflow-hidden bg-neutral-100">
           <img
-            src={item.thumbnailUrl}
+            src={thumbnailUrl}
             alt={title}
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />

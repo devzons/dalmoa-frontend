@@ -7,9 +7,17 @@ type Props = {
   postId: number;
   plan: "featured" | "premium";
   locale: "ko" | "en";
+  isActive?: boolean;
+  isExpired?: boolean;
 };
 
-export default function AdUpgradeButton({ postId, plan, locale }: Props) {
+export default function AdUpgradeButton({
+  postId,
+  plan,
+  locale,
+  isActive,
+  isExpired,
+}: Props) {
   const [loading, setLoading] = useState(false);
 
   const handleClick = async () => {
@@ -52,14 +60,36 @@ export default function AdUpgradeButton({ postId, plan, locale }: Props) {
     }
   };
 
-  const label =
-    plan === "premium"
+  // 🔥 상태 기반 라벨
+  const getLabel = () => {
+    if (isExpired) {
+      return plan === "premium"
+        ? locale === "en"
+          ? "Reactivate Premium"
+          : "프리미엄 재등록"
+        : locale === "en"
+          ? "Reactivate Featured"
+          : "추천 광고 재등록";
+    }
+
+    if (isActive) {
+      return plan === "premium"
+        ? locale === "en"
+          ? "Extend Premium"
+          : "프리미엄 연장"
+        : locale === "en"
+          ? "Extend Featured"
+          : "추천 광고 연장";
+    }
+
+    return plan === "premium"
       ? locale === "en"
         ? "Upgrade to Premium"
         : "프리미엄 광고 등록"
       : locale === "en"
         ? "Upgrade to Featured"
         : "추천 광고 등록";
+  };
 
   return (
     <button
@@ -77,7 +107,7 @@ export default function AdUpgradeButton({ postId, plan, locale }: Props) {
         ? locale === "en"
           ? "Processing..."
           : "처리 중..."
-        : label}
+        : getLabel()}
     </button>
   );
 }

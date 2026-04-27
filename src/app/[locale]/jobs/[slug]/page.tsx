@@ -6,6 +6,7 @@ import { SafeImage } from "@/components/common/SafeImage";
 import { getJobBySlug } from "@/features/jobs/api";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { formatDate } from "@/lib/utils";
+import { normalizeMediaUrl } from "@/lib/api/client";
 
 type Props = {
   params: Promise<{
@@ -56,13 +57,15 @@ export default async function JobDetailPage({ params }: Props) {
     notFound();
   }
 
+  const thumbnailUrl = normalizeMediaUrl(item.thumbnailUrl);
+
   return (
     <div className="bg-neutral-50 py-10">
       <Container>
         <Card className="overflow-hidden">
-          {item.thumbnailUrl ? (
+          {thumbnailUrl ? (
             <SafeImage
-              src={item.thumbnailUrl}
+              src={thumbnailUrl}
               alt={item.title}
               width={1400}
               height={900}

@@ -39,6 +39,7 @@ export function SafeImage({
         width={width}
         height={height}
         className={className}
+        unoptimized
       />
     </div>
   );
