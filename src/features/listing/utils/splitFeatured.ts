@@ -20,14 +20,10 @@ function isFeaturedItem(item: any) {
   const plan = getAdPlan(item);
 
   return (
-    isTruthy(item?.isFeatured) ||
-    isTruthy(item?.is_featured) ||
-    isTruthy(item?.featured) ||
-    isTruthy(item?.isPaid) ||
-    isTruthy(item?.is_paid) ||
-    plan === "featured" ||
     plan === "premium" ||
-    getPriority(item) > 0
+    plan === "featured" ||
+    isTruthy(item?.isFeatured) ||
+    isTruthy(item?.is_featured)
   );
 }
 
@@ -36,7 +32,15 @@ export function splitFeatured<
 >(items: T[] = [], limit = 6) {
   const featured = items
     .filter(isFeaturedItem)
-    .sort((a: any, b: any) => getPriority(b) - getPriority(a))
+    .sort((a: any, b: any) => {
+      const planA = getAdPlan(a);
+      const planB = getAdPlan(b);
+
+      if (planA === "premium" && planB !== "premium") return -1;
+      if (planB === "premium" && planA !== "premium") return 1;
+
+      return getPriority(b) - getPriority(a);
+    })
     .slice(0, limit);
 
   const featuredKeys = new Set(

@@ -45,11 +45,10 @@ export default function HomeListingCard({
   const isAdActive = item?.isAdActive !== false;
 
   const isPremium = isAdActive && adPlan === "premium";
-
   const isFeaturedAd =
     isAdActive &&
+    !isPremium &&
     (adPlan === "featured" ||
-      adPriority >= 20 ||
       variant === "ad" ||
       domain === "ads" ||
       isTruthy(item?.isFeatured) ||
@@ -134,8 +133,8 @@ export default function HomeListingCard({
         "group relative block overflow-hidden rounded-xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
         isPremium
           ? "border-amber-500 ring-2 ring-amber-300 shadow-lg"
-          : isAd
-            ? "border-amber-400 ring-2 ring-amber-200 shadow-md"
+          : isFeaturedAd
+            ? "border-blue-400 ring-2 ring-blue-100 shadow-md"
             : "border-neutral-200",
       ].join(" ")}
     >
@@ -143,10 +142,10 @@ export default function HomeListingCard({
         <div
           className={[
             "absolute left-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold text-white shadow-sm",
-            isPremium ? "bg-amber-600" : "bg-amber-500",
+            isPremium ? "bg-amber-600" : "bg-blue-600",
           ].join(" ")}
         >
-          {isPremium ? "PREMIUM" : locale === "en" ? "AD" : "광고"}
+          {isPremium ? "PREMIUM" : locale === "en" ? "FEATURED" : "추천"}
         </div>
       ) : null}
 
@@ -162,18 +161,26 @@ export default function HomeListingCard({
         <div
           className={[
             "flex aspect-[16/7] items-center justify-center",
-            isPremium ? "bg-amber-100" : isAd ? "bg-amber-50" : "bg-neutral-100",
+            isPremium
+              ? "bg-amber-100"
+              : isFeaturedAd
+                ? "bg-blue-50"
+                : "bg-neutral-100",
           ].join(" ")}
         >
           <span
             className={[
               "text-xs font-semibold",
-              isAd ? "text-amber-700" : "text-neutral-400",
+              isPremium
+                ? "text-amber-700"
+                : isFeaturedAd
+                  ? "text-blue-700"
+                  : "text-neutral-400",
             ].join(" ")}
           >
             {isPremium
               ? "Premium"
-              : isAd
+              : isFeaturedAd
                 ? locale === "en"
                   ? "Featured"
                   : "추천"
@@ -196,7 +203,7 @@ export default function HomeListingCard({
                 "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
                 isPremium
                   ? "bg-amber-600 text-white"
-                  : "bg-amber-100 text-amber-700",
+                  : "bg-blue-100 text-blue-700",
               ].join(" ")}
             >
               {isPremium ? "VIP" : "TOP"}
