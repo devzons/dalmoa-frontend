@@ -1,3 +1,5 @@
+// src/lib/api/client.ts
+
 export type ApiFetchOptions = RequestInit & {
   next?: {
     revalidate?: number;

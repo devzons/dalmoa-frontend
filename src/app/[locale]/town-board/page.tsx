@@ -29,7 +29,8 @@ export default async function TownBoardPage({ params }: Props) {
   const { locale } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
 
-  const items = (await getTownBoardItems(normalizedLocale)) ?? [];
+  const result = await getTownBoardItems(normalizedLocale);
+  const items = Array.isArray(result?.items) ? result.items : [];
   const { featured, regular } = splitFeatured(items);
 
   return (

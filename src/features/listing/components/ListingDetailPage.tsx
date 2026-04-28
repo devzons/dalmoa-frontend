@@ -11,19 +11,11 @@ type Props = {
 };
 
 function normalizeSlug(slug: string) {
-  let value = slug;
-
-  for (let i = 0; i < 3; i++) {
-    try {
-      const decoded = decodeURIComponent(value);
-      if (decoded === value) break;
-      value = decoded;
-    } catch {
-      break;
-    }
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return slug;
   }
-
-  return encodeURIComponent(value);
 }
 
 async function getDetailData({
@@ -37,9 +29,7 @@ async function getDetailData({
 }) {
   const normalizedSlug = normalizeSlug(slug);
 
-  return apiFetch<any>(
-    `/wp-json/dalmoa/v1/${domain}/${normalizedSlug}?lang=${locale}`
-  );
+  return apiFetch<any>(`/${domain}/${normalizedSlug}?lang=${locale}`);
 }
 
 export default async function ListingDetailPage({ params, domain }: Props) {
@@ -93,26 +83,28 @@ export default async function ListingDetailPage({ params, domain }: Props) {
           {title}
         </h1>
 
-        {subtitle ? (
+        {subtitle && (
           <p className="mt-3 text-sm text-neutral-500">{subtitle}</p>
-        ) : null}
+        )}
 
-        {price ? (
+        {price && (
           <p className="mt-4 text-lg font-semibold text-neutral-950">
             {price}
           </p>
-        ) : null}
+        )}
 
-        {data.createdAt || data.publishedAt ? (
+        {(data.createdAt || data.publishedAt) && (
           <p className="mt-3 text-xs text-neutral-400">
-            {new Date(data.createdAt || data.publishedAt).toLocaleDateString(
+            {new Date(
+              data.createdAt || data.publishedAt
+            ).toLocaleDateString(
               normalizedLocale === "en" ? "en-US" : "ko-KR"
             )}
           </p>
-        ) : null}
+        )}
       </header>
 
-      {data.thumbnailUrl ? (
+      {data.thumbnailUrl && (
         <div className="mt-8 overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
           <img
             src={data.thumbnailUrl}
@@ -120,7 +112,7 @@ export default async function ListingDetailPage({ params, domain }: Props) {
             className="h-auto w-full object-cover"
           />
         </div>
-      ) : null}
+      )}
 
       {data.content ? (
         <article

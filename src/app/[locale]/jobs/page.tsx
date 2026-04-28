@@ -47,7 +47,7 @@ export default async function JobsPage({ params, searchParams }: Props) {
 
   const result = await getPaginatedJobs(normalizedLocale, filters);
 
-  const items = result?.items ?? [];
+  const items = Array.isArray(result?.items) ? result.items : [];
   const currentPage = result?.page ?? filters.page ?? 1;
   const total = result?.total ?? 0;
   const totalPages = result?.totalPages ?? 1;

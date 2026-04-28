@@ -5,6 +5,7 @@ import type {
 } from "@/features/search/types";
 import { apiFetch } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import { cacheTags } from "@/lib/cache/tags";
 
 function buildSearchParams(
   locale: "ko" | "en",
@@ -19,6 +20,7 @@ function buildSearchParams(
   if (filters?.category) searchParams.set("category", filters.category);
   if (filters?.priceMin) searchParams.set("price_min", filters.priceMin);
   if (filters?.priceMax) searchParams.set("price_max", filters.priceMax);
+
   if (filters?.page && filters.page > 1) {
     searchParams.set("page", String(filters.page));
   }
@@ -27,9 +29,19 @@ function buildSearchParams(
 }
 
 function normalizePaginated<T>(
-  raw: T[] | PaginatedListResponse<T>,
+  raw: T[] | PaginatedListResponse<T> | null,
   fallbackPage: number
 ): PaginatedListResponse<T> {
+  if (!raw) {
+    return {
+      items: [],
+      total: 0,
+      page: fallbackPage,
+      perPage: 0,
+      totalPages: 1,
+    };
+  }
+
   if (Array.isArray(raw)) {
     return {
       items: raw,
@@ -58,11 +70,13 @@ export async function getBusinessSaleItems(
   const raw = await apiFetch<
     BusinessSaleItem[] | PaginatedListResponse<BusinessSaleItem>
   >(`${endpoints.businessSaleList}?${searchParams.toString()}`, {
-    revalidate: 120,
-    tags: ["business-sale-list"],
+    next: {
+      revalidate: 120,
+      tags: [cacheTags.businessSaleList],
+    },
   });
 
-  return Array.isArray(raw) ? raw : raw.items ?? [];
+  return Array.isArray(raw) ? raw : raw?.items ?? [];
 }
 
 export async function getPaginatedBusinessSaleItems(
@@ -74,8 +88,7 @@ export async function getPaginatedBusinessSaleItems(
   const raw = await apiFetch<
     BusinessSaleItem[] | PaginatedListResponse<BusinessSaleItem>
   >(`${endpoints.businessSaleList}?${searchParams.toString()}`, {
-    revalidate: 0,
-    tags: ["business-sale-list"],
+    cache: "no-store",
   });
 
   return normalizePaginated(raw, filters?.page ?? 1);
@@ -88,8 +101,10 @@ export async function getBusinessSaleItemBySlug(
   return apiFetch<BusinessSaleItem>(
     `${endpoints.businessSaleDetail(slug)}?locale=${locale}`,
     {
-      revalidate: 120,
-      tags: [`business-sale-${slug}`],
+      next: {
+        revalidate: 120,
+        tags: [cacheTags.businessSaleDetail(slug)],
+      },
     }
   );
 }

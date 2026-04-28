@@ -42,7 +42,7 @@ export default async function CarsPage({ params, searchParams }: Props) {
 
   const result = await getPaginatedCars(normalizedLocale, filters);
 
-  const items = result?.items ?? [];
+  const items = Array.isArray(result?.items) ? result.items : [];
   const currentPage = result?.page ?? filters.page ?? 1;
   const total = result?.total ?? 0;
   const totalPages = result?.totalPages ?? 1;

@@ -22,14 +22,21 @@ function isFeaturedItem(item: any) {
   return (
     plan === "premium" ||
     plan === "featured" ||
+    isTruthy(item?.isPaid) ||
+    isTruthy(item?.is_paid) ||
     isTruthy(item?.isFeatured) ||
-    isTruthy(item?.is_featured)
+    isTruthy(item?.is_featured) ||
+    isTruthy(item?.featured)
   );
 }
 
 export function splitFeatured<
   T extends { id?: number | string; slug?: string | null },
 >(items: T[] = [], limit = 6) {
+  if (!Array.isArray(items)) {
+    return { featured: [], regular: [] };
+  }
+
   const featured = items
     .filter(isFeaturedItem)
     .sort((a: any, b: any) => {

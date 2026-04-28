@@ -5,6 +5,7 @@ import type {
 } from "@/features/search/types";
 import { apiFetch } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import { cacheTags } from "@/lib/cache/tags";
 
 function buildSearchParams(
   locale: "ko" | "en",
@@ -19,6 +20,7 @@ function buildSearchParams(
   if (filters?.category) searchParams.set("category", filters.category);
   if (filters?.priceMin) searchParams.set("price_min", filters.priceMin);
   if (filters?.priceMax) searchParams.set("price_max", filters.priceMax);
+
   if (filters?.page && filters.page > 1) {
     searchParams.set("page", String(filters.page));
   }
@@ -27,9 +29,19 @@ function buildSearchParams(
 }
 
 function normalizePaginated<T>(
-  raw: T[] | PaginatedListResponse<T>,
+  raw: T[] | PaginatedListResponse<T> | null,
   fallbackPage: number
 ): PaginatedListResponse<T> {
+  if (!raw) {
+    return {
+      items: [],
+      total: 0,
+      page: fallbackPage,
+      perPage: 0,
+      totalPages: 1,
+    };
+  }
+
   if (Array.isArray(raw)) {
     return {
       items: raw,
@@ -58,12 +70,14 @@ export async function getLoanItems(
   const raw = await apiFetch<LoanItem[] | PaginatedListResponse<LoanItem>>(
     `${endpoints.loanList}?${searchParams.toString()}`,
     {
-      revalidate: 120,
-      tags: ["loan-list"],
+      next: {
+        revalidate: 120,
+        tags: [cacheTags.loanList],
+      },
     }
   );
 
-  return Array.isArray(raw) ? raw : raw.items ?? [];
+  return Array.isArray(raw) ? raw : raw?.items ?? [];
 }
 
 export async function getPaginatedLoanItems(
@@ -75,8 +89,7 @@ export async function getPaginatedLoanItems(
   const raw = await apiFetch<LoanItem[] | PaginatedListResponse<LoanItem>>(
     `${endpoints.loanList}?${searchParams.toString()}`,
     {
-      revalidate: 0,
-      tags: ["loan-list"],
+      cache: "no-store",
     }
   );
 
@@ -87,11 +100,10 @@ export async function getLoanItemBySlug(
   slug: string,
   locale: "ko" | "en" = "ko"
 ) {
-  return apiFetch<LoanItem>(
-    `${endpoints.loanDetail(slug)}?locale=${locale}`,
-    {
+  return apiFetch<LoanItem>(`${endpoints.loanDetail(slug)}?locale=${locale}`, {
+    next: {
       revalidate: 120,
-      tags: [`loan-${slug}`],
-    }
-  );
+      tags: [cacheTags.loanDetail(slug)],
+    },
+  });
 }

@@ -1,5 +1,12 @@
 import ListingDetailPage from "@/features/listing/components/ListingDetailPage";
 
-export default function Page({ params }: any) {
+type Props = {
+  params: Promise<{
+    locale: string;
+    slug: string;
+  }>;
+};
+
+export default function JobDetailPage({ params }: Props) {
   return <ListingDetailPage params={params} domain="jobs" />;
 }

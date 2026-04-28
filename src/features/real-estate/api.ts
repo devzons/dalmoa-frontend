@@ -20,6 +20,7 @@ function buildSearchParams(
   if (filters?.category) searchParams.set("category", filters.category);
   if (filters?.priceMin) searchParams.set("price_min", filters.priceMin);
   if (filters?.priceMax) searchParams.set("price_max", filters.priceMax);
+
   if (filters?.page && filters.page > 1) {
     searchParams.set("page", String(filters.page));
   }
@@ -28,9 +29,19 @@ function buildSearchParams(
 }
 
 function normalizePaginated<T>(
-  raw: T[] | PaginatedListResponse<T>,
+  raw: T[] | PaginatedListResponse<T> | null,
   fallbackPage: number
 ): PaginatedListResponse<T> {
+  if (!raw) {
+    return {
+      items: [],
+      total: 0,
+      page: fallbackPage,
+      perPage: 0,
+      totalPages: 1,
+    };
+  }
+
   if (Array.isArray(raw)) {
     return {
       items: raw,
@@ -59,11 +70,13 @@ export async function getRealEstateItems(
   const raw = await apiFetch<
     RealEstateItem[] | PaginatedListResponse<RealEstateItem>
   >(`${endpoints.realEstateList}?${searchParams.toString()}`, {
-    revalidate: 120,
-    tags: [cacheTags.realEstateList],
+    next: {
+      revalidate: 120,
+      tags: [cacheTags.realEstateList],
+    },
   });
 
-  return Array.isArray(raw) ? raw : raw.items ?? [];
+  return Array.isArray(raw) ? raw : raw?.items ?? [];
 }
 
 export async function getPaginatedRealEstateItems(
@@ -75,8 +88,7 @@ export async function getPaginatedRealEstateItems(
   const raw = await apiFetch<
     RealEstateItem[] | PaginatedListResponse<RealEstateItem>
   >(`${endpoints.realEstateList}?${searchParams.toString()}`, {
-    revalidate: 0,
-    tags: [cacheTags.realEstateList],
+    cache: "no-store",
   });
 
   return normalizePaginated(raw, filters?.page ?? 1);
@@ -89,8 +101,10 @@ export async function getRealEstateItemBySlug(
   return apiFetch<RealEstateItem>(
     `${endpoints.realEstateDetail(slug)}?locale=${locale}`,
     {
-      revalidate: 120,
-      tags: [cacheTags.realEstateDetail(slug)],
+      next: {
+        revalidate: 120,
+        tags: [cacheTags.realEstateDetail(slug)],
+      },
     }
   );
 }

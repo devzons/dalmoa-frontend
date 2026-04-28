@@ -26,14 +26,16 @@ export default async function BusinessSalePage({ params, searchParams }: Props) 
 
   const result = await getPaginatedBusinessSaleItems(normalizedLocale, filters);
 
-  const items = result?.items ?? [];
+  const items = Array.isArray(result?.items) ? result.items : [];
   const currentPage = result?.page ?? filters.page ?? 1;
   const total = result?.total ?? 0;
   const totalPages = result?.totalPages ?? 1;
   const hasNextPage = currentPage < totalPages;
 
   const { featured, regular } =
-    currentPage === 1 ? splitFeatured(items) : { featured: [], regular: items };
+    currentPage === 1
+      ? splitFeatured(items)
+      : { featured: [], regular: items };
 
   return (
     <Container className="py-10">

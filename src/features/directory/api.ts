@@ -13,17 +13,9 @@ function buildDirectoryQuery(
   const searchParams = new URLSearchParams();
   searchParams.set("locale", locale);
 
-  if (params?.q) {
-    searchParams.set("q", params.q);
-  }
-
-  if (params?.category) {
-    searchParams.set("category", params.category);
-  }
-
-  if (params?.featured) {
-    searchParams.set("featured", "1");
-  }
+  if (params?.q) searchParams.set("q", params.q);
+  if (params?.category) searchParams.set("category", params.category);
+  if (params?.featured) searchParams.set("featured", "1");
 
   return `${endpoints.directoryList}?${searchParams.toString()}`;
 }
@@ -33,8 +25,10 @@ export async function getDirectories(
   params?: DirectoryQueryParams
 ) {
   return apiFetch<DirectoryItem[]>(buildDirectoryQuery(locale, params), {
-    revalidate: 300,
-    tags: [cacheTags.directoryList],
+    next: {
+      revalidate: 300,
+      tags: [cacheTags.directoryList],
+    },
   });
 }
 
@@ -45,8 +39,10 @@ export async function getDirectoryBySlug(
   return apiFetch<DirectoryItem>(
     `${endpoints.directoryDetail(slug)}?locale=${locale}`,
     {
-      revalidate: 300,
-      tags: [cacheTags.directoryDetail(slug)],
+      next: {
+        revalidate: 300,
+        tags: [cacheTags.directoryDetail(slug)],
+      },
     }
   );
 }

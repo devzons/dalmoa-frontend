@@ -4,9 +4,8 @@ import type {
   PaginatedListResponse,
 } from "@/features/search/types";
 import { apiFetch } from "@/lib/api/client";
+import { endpoints } from "@/lib/api/endpoints";
 import { cacheTags } from "@/lib/cache/tags";
-
-const JOBS_ENDPOINT = "/wp-json/dalmoa/v1/jobs";
 
 function buildSearchParams(
   locale: "ko" | "en",
@@ -80,7 +79,7 @@ export async function getJobs(
   const searchParams = buildSearchParams(locale, filters);
 
   const raw = await apiFetch<JobItem[] | PaginatedListResponse<JobItem>>(
-    `${JOBS_ENDPOINT}?${searchParams.toString()}`,
+    `${endpoints.jobsList}?${searchParams.toString()}`,
     {
       next: {
         revalidate: 120,
@@ -101,7 +100,7 @@ export async function getPaginatedJobs(
   const searchParams = buildSearchParams(locale, filters);
 
   const raw = await apiFetch<JobItem[] | PaginatedListResponse<JobItem>>(
-    `${JOBS_ENDPOINT}?${searchParams.toString()}`,
+    `${endpoints.jobsList}?${searchParams.toString()}`,
     {
       cache: "no-store",
     }
@@ -114,7 +113,7 @@ export async function getJobBySlug(
   slug: string,
   locale: "ko" | "en" = "ko"
 ) {
-  return apiFetch<JobItem>(`${JOBS_ENDPOINT}/${slug}?lang=${locale}`, {
+  return apiFetch<JobItem>(`${endpoints.jobsDetail(slug)}?lang=${locale}`, {
     next: {
       revalidate: 120,
       tags: [cacheTags.jobsDetail(slug)],

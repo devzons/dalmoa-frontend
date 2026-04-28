@@ -29,7 +29,8 @@ export default async function NewsPage({ params }: Props) {
   const { locale } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
 
-  const items = (await getNews(normalizedLocale)) ?? [];
+  const result = await getNews(normalizedLocale);
+  const items = Array.isArray(result?.items) ? result.items : [];
   const { featured, regular } = splitFeatured(items);
 
   return (

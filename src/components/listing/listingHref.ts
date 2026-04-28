@@ -12,19 +12,11 @@ export type ListingDomain =
   | "business";
 
 function normalizeSlug(slug: string) {
-  let value = slug;
-
-  for (let i = 0; i < 3; i++) {
-    try {
-      const decoded = decodeURIComponent(value);
-      if (decoded === value) break;
-      value = decoded;
-    } catch {
-      break;
-    }
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return slug;
   }
-
-  return encodeURIComponent(value);
 }
 
 export function buildListingHref({

@@ -43,7 +43,9 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
     category: resolvedSearchParams.category?.trim() || undefined,
   };
 
-  const items = (await getDirectories(normalizedLocale, query)) ?? [];
+  const result = await getDirectories(normalizedLocale, query);
+  const items = Array.isArray(result?.items) ? result.items : [];
+
   const categories = getDirectoryCategories(items, normalizedLocale);
 
   const { featured, regular } = splitFeatured(items);

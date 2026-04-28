@@ -4,7 +4,9 @@ export const cacheTags = {
 
   adsList: "ads-list",
   adsFeatured: "ads-featured",
+  adsDetail: (slug: string) => `ads-${slug}`,
 
+  businessList: "business-list",
   businessDetail: (slug: string) => `business-${slug}`,
 
   newsList: "news-list",
