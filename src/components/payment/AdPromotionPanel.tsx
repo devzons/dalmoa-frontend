@@ -14,7 +14,7 @@ type Props = {
   isAdActive?: boolean;
 };
 
-export default function AdUpgradeButton({
+export default function AdPromotionPanel({
   postId,
   locale,
   adPlan,
@@ -27,7 +27,6 @@ export default function AdUpgradeButton({
   const currentPlan =
     adPlan === "premium" || adPlan === "featured" ? adPlan : null;
 
-  const hasAd = isPaid || isFeatured || !!currentPlan;
   const isPremium = currentPlan === "premium";
   const isFeaturedPlan = currentPlan === "featured";
 
@@ -35,33 +34,31 @@ export default function AdUpgradeButton({
     if (loadingPlan) return;
 
     const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
-
-    if (!baseUrl) {
-      alert(locale === "en" ? "API URL is missing." : "API URL이 없습니다.");
-      return;
-    }
+    if (!baseUrl) return;
 
     setLoadingPlan(plan);
 
     try {
       const res = await fetch(`${baseUrl}${endpoints.createCheckoutSession}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId, plan, locale }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          postId,
+          plan,
+          locale,
+        }),
       });
 
-      if (!res.ok) throw new Error("Failed to create checkout session");
+      if (!res.ok) throw new Error();
 
       const data = await res.json();
 
       if (data?.url) {
         window.location.href = data.url;
-        return;
       }
-
-      throw new Error("Invalid Stripe response");
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert(
         locale === "en"
           ? "Payment initialization failed."
@@ -73,38 +70,48 @@ export default function AdUpgradeButton({
   }
 
   return (
-    <section className="mt-10 rounded-2xl bg-white p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        
-        {isPremium ? (
+    <section className="mt-10 rounded-2xl border border-neutral-200 bg-white p-5">
+      {/* 헤더 */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-base font-bold text-neutral-950">
+            {locale === "en" ? "Promote this listing" : "광고 연장 / 업그레이드"}
+          </h2>
+
+          <p className="mt-2 text-sm text-neutral-500">
+            {locale === "en"
+              ? "Increase visibility with paid promotion."
+              : "유료 노출 상품으로 게시물을 상단에 노출할 수 있습니다."}
+          </p>
+        </div>
+
+        {isPremium && (
           <span className="rounded-full bg-premium px-3 py-1 text-xs font-bold text-white">
             PREMIUM
           </span>
-        ) : isFeaturedPlan ? (
-          <span className="rounded-full bg-neutral-900 px-3 py-1 text-xs font-bold text-white">
-            FEATURED
-          </span>
-        ) : null}
+        )}
       </div>
 
+      {/* ===================== */}
+      {/* 🔥 PREMIUM ACTIVE 상태 */}
+      {/* ===================== */}
       {isPremium ? (
         <div className="mt-6 rounded-2xl border border-premium/30 bg-premium-light/40 p-5">
           <h3 className="text-sm font-bold text-neutral-950">
-            {locale === "en" ? "Premium Listing Active" : "프리미엄 광고 이용 중"}
+            {locale === "en" ? "Premium Active" : "프리미엄 광고 이용 중"}
           </h3>
 
           <p className="mt-2 text-sm text-neutral-600">
             {locale === "en"
-              ? "This listing already has the strongest placement. Extend your Premium promotion to keep top exposure."
-              : "현재 최상위 광고 상품을 사용 중입니다. 프리미엄 광고를 연장하면 최상단 노출을 계속 유지할 수 있습니다."}
+              ? "You already have the highest exposure. Extend to keep it."
+              : "현재 최상단 노출 상태입니다. 연장하여 유지할 수 있습니다."}
           </p>
 
-          <div className="mt-4 flex flex-wrap gap-2 border-t border-premium/20 pt-4">
+          <div className="mt-4 border-t pt-4">
             <button
-              type="button"
               onClick={() => startCheckout("premium")}
               disabled={!!loadingPlan}
-              className="inline-flex items-center justify-center rounded-xl bg-premium px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl bg-premium px-4 py-2 text-sm font-semibold text-white"
             >
               {loadingPlan === "premium"
                 ? locale === "en"
@@ -114,28 +121,30 @@ export default function AdUpgradeButton({
                   ? "Extend Premium"
                   : "프리미엄 연장"}
             </button>
-
           </div>
         </div>
       ) : (
+        /* ===================== */
+        /* 🔥 NORMAL / FEATURED 상태 */
+        /* ===================== */
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-neutral-200 bg-white p-5">
-            <h3 className="text-sm font-bold text-neutral-950">
+          {/* FEATURED */}
+          <div className="rounded-2xl border border-neutral-200 p-5">
+            <h3 className="text-sm font-bold">
               {locale === "en" ? "Featured Listing" : "추천 광고"}
             </h3>
 
             <p className="mt-2 text-sm text-neutral-500">
               {locale === "en"
-                ? "Show this listing above regular posts."
-                : "이 게시물을 일반 게시물보다 상단에 노출합니다."}
+                ? "Show above regular listings."
+                : "일반 게시물보다 상단에 노출됩니다."}
             </p>
 
-            <div className="mt-4 flex flex-wrap gap-2 border-t border-neutral-200 pt-4">
+            <div className="mt-4 border-t pt-4">
               <button
-                type="button"
                 onClick={() => startCheckout("featured")}
                 disabled={!!loadingPlan}
-                className="inline-flex items-center justify-center rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white"
               >
                 {loadingPlan === "featured"
                   ? locale === "en"
@@ -146,31 +155,29 @@ export default function AdUpgradeButton({
                       ? "Extend Featured"
                       : "추천 광고 연장"
                     : locale === "en"
-                      ? "Promote as Featured"
+                      ? "Promote"
                       : "추천 광고 등록"}
               </button>
-
-            
             </div>
           </div>
 
-          <div className="rounded-2xl border border-premium/30 bg-white p-5">
-            <h3 className="text-sm font-bold text-neutral-950">
+          {/* PREMIUM */}
+          <div className="rounded-2xl border border-premium/30 p-5">
+            <h3 className="text-sm font-bold">
               {locale === "en" ? "Premium Listing" : "프리미엄 광고"}
             </h3>
 
             <p className="mt-2 text-sm text-neutral-500">
               {locale === "en"
-                ? "Get the strongest placement and visual emphasis."
-                : "최상단 우선 노출과 강한 시각적 강조를 제공합니다."}
+                ? "Top placement with strong visibility."
+                : "최상단 우선 노출 + 강한 강조 효과."}
             </p>
 
-            <div className="mt-4 flex flex-wrap gap-2 border-t border-neutral-200 pt-4">
+            <div className="mt-4 border-t pt-4">
               <button
-                type="button"
                 onClick={() => startCheckout("premium")}
                 disabled={!!loadingPlan}
-                className="inline-flex items-center justify-center rounded-xl bg-premium px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-xl bg-premium px-4 py-2 text-sm font-semibold text-white"
               >
                 {loadingPlan === "premium"
                   ? locale === "en"
@@ -180,8 +187,6 @@ export default function AdUpgradeButton({
                     ? "Upgrade to Premium"
                     : "프리미엄 광고 등록"}
               </button>
-
-              
             </div>
           </div>
         </div>

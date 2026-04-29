@@ -25,7 +25,7 @@ function trackAdEvent(
 
   const baseUrl = env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
 
-  fetch(`${baseUrl}/wp-json/dalmoa/v1/ads/${id}/${type}`, {
+  fetch(`${baseUrl}/ads/${id}/${type}`, {
     method: "POST",
     keepalive: true,
   }).catch(() => {});

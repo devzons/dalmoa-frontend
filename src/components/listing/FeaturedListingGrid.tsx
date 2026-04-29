@@ -28,6 +28,7 @@ type Item = {
   phone?: string | null;
   featured?: boolean | number | string | null;
   isFeatured?: boolean | number | string | null;
+  isPaid?: boolean | number | string | null;
   isAdActive?: boolean | null;
   adPlan?: string | null;
   adPriority?: number | string | null;
@@ -47,6 +48,10 @@ function isTruthy(value: unknown) {
   return value === true || value === 1 || value === "1" || value === "true";
 }
 
+function getPlan(item: Item) {
+  return (item.adPlan || "").toLowerCase();
+}
+
 function trackAdEvent(
   id: number | string | undefined,
   type: "click" | "impression"
@@ -55,7 +60,7 @@ function trackAdEvent(
 
   const baseUrl = env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
 
-  fetch(`${baseUrl}/wp-json/dalmoa/v1/ads/${id}/${type}`, {
+  fetch(`${baseUrl}/ads/${id}/${type}`, {
     method: "POST",
     keepalive: true,
   }).catch(() => {});
@@ -78,12 +83,12 @@ export default function FeaturedListingGrid({
   domain,
 }: Props) {
   useEffect(() => {
-    if (domain !== "ads" && domain !== "directory") return;
-
-    items.forEach((item) => {
-      trackAdEvent(item.id, "impression");
-    });
-  }, [domain, items]);
+    items
+      .filter((item) => isTruthy(item.isPaid) || getPlan(item) !== "")
+      .forEach((item) => {
+        trackAdEvent(item.id, "impression");
+      });
+  }, [items]);
 
   if (!items.length) return null;
 
@@ -97,20 +102,34 @@ export default function FeaturedListingGrid({
 
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {items.map((item) => {
-          const adPlan = item.adPlan || "basic";
+          const plan = getPlan(item);
           const adPriority = Number(item.adPriority || 0);
+          const isPaid = isTruthy(item.isPaid);
           const isAdActive = item.isAdActive !== false;
 
-          const isPremium = isAdActive && adPlan === "premium";
-
+          const isPremium = isAdActive && plan === "premium";
           const isFeaturedAd =
-            isAdActive &&
-            (adPlan === "featured" ||
-              adPriority >= 20 ||
-              isTruthy(item.isFeatured) ||
-              isTruthy(item.featured));
+            isAdActive && (plan === "featured" || adPriority >= 200);
+          const isSponsored =
+            isAdActive && isPaid && !isPremium && !isFeaturedAd;
+          const isFreeFeatured =
+            !isPaid &&
+            !plan &&
+            (isTruthy(item.isFeatured) || isTruthy(item.featured));
 
-          const isAd = isPremium || isFeaturedAd;
+          const badgeLabel = isPremium
+            ? "PREMIUM"
+            : isFeaturedAd
+              ? "FEATURED"
+              : isSponsored
+                ? locale === "en"
+                  ? "SPONSORED"
+                  : "광고"
+                : isFreeFeatured
+                  ? locale === "en"
+                    ? "FEATURED"
+                    : "추천"
+                  : null;
 
           const title =
             item.title ||
@@ -146,27 +165,35 @@ export default function FeaturedListingGrid({
               key={item.id ?? item.slug ?? title}
               href={href}
               onClick={() => {
-                if ((domain === "ads" || domain === "directory") && item.id) {
+                if (isPaid || plan) {
                   trackAdEvent(item.id, "click");
                 }
               }}
               className={[
                 "group relative block overflow-hidden rounded-xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
                 isPremium
-                  ? "border-amber-500 ring-2 ring-amber-300 shadow-lg"
-                  : isAd
-                    ? "border-amber-400 ring-2 ring-amber-200 shadow-md"
-                    : "border-neutral-200",
+                  ? "border-premium ring-2 ring-premium-light shadow-lg"
+                  : isFeaturedAd
+                    ? "border-featured ring-2 ring-featured-light shadow-md"
+                    : isSponsored
+                      ? "border-sponsored ring-1 ring-sponsored-light"
+                      : "border-neutral-200",
               ].join(" ")}
             >
-              {isAd ? (
+              {badgeLabel ? (
                 <div
                   className={[
-                    "absolute left-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold text-white shadow-sm",
-                    isPremium ? "bg-amber-600" : "bg-amber-500",
+                    "absolute left-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm",
+                    isPremium
+                      ? "bg-premium text-white"
+                      : isFeaturedAd
+                        ? "bg-featured text-white"
+                        : isSponsored
+                          ? "bg-sponsored text-white"
+                          : "bg-neutral-800 text-white",
                   ].join(" ")}
                 >
-                  {isPremium ? "PREMIUM" : locale === "en" ? "AD" : "광고"}
+                  {badgeLabel}
                 </div>
               ) : null}
 
@@ -183,21 +210,15 @@ export default function FeaturedListingGrid({
                   className={[
                     "flex aspect-[16/7] items-center justify-center text-xs font-semibold",
                     isPremium
-                      ? "bg-amber-100 text-amber-800"
-                      : isAd
-                        ? "bg-amber-50 text-amber-700"
-                        : "bg-neutral-100 text-neutral-500",
+                      ? "bg-premium-light text-premium"
+                      : isFeaturedAd
+                        ? "bg-featured-light text-featured"
+                        : isSponsored
+                          ? "bg-sponsored-light text-sponsored"
+                          : "bg-neutral-100 text-neutral-500",
                   ].join(" ")}
                 >
-                  {isPremium
-                    ? "Premium"
-                    : isAd
-                      ? locale === "en"
-                        ? "Featured"
-                        : "추천"
-                      : locale === "en"
-                        ? "Listing"
-                        : "게시물"}
+                  {badgeLabel || (locale === "en" ? "Listing" : "게시물")}
                 </div>
               )}
 
@@ -207,7 +228,7 @@ export default function FeaturedListingGrid({
                     {title}
                   </h3>
 
-                  {isAd ? (
+                  {isPremium || isFeaturedAd ? (
                     <span
                       className={[
                         "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold",

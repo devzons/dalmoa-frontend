@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { apiFetch } from "@/lib/api/client";
 import { type ListingDomain } from "@/components/listing/listingHref";
+import AdPromotionPanel from "@/components/payment/AdPromotionPanel";
 
 type Props = {
   params: Promise<{
@@ -126,6 +127,20 @@ export default async function ListingDetailPage({ params, domain }: Props) {
             : "상세 내용이 없습니다."}
         </div>
       )}
+
+      {/* 광고 업그레이드 버튼 */}
+      <div className="mt-10 border-t pt-6">
+        {domain !== "ads" && (
+          <AdPromotionPanel
+            postId={data.id}
+            locale={normalizedLocale}
+            adPlan={data.adPlan}
+            isPaid={data.isPaid}
+            isFeatured={data.isFeatured}
+            isAdActive={data.isAdActive}
+          />
+        )}
+      </div>
     </main>
   );
 }

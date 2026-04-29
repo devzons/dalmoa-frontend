@@ -18,6 +18,10 @@ type Item = {
   region?: string | null;
   jobLocation?: string | null;
   price?: number | string | null;
+  views?: number | string | null;
+  viewCount?: number | string | null;
+  hitCount?: number | string | null;
+  view_count?: number | string | null;
   hero?: {
     title?: string | null;
     subtitle?: string | null;
@@ -39,22 +43,18 @@ export default function ListingRowItem({ item, locale, domain }: Props) {
     item.hero?.title ||
     "Untitled";
 
-  const subtitle =
-    item.address ||
-    item.businessCategory ||
-    item.categoryLabel ||
-    item.category ||
-    item.region ||
-    item.jobLocation ||
-    item.hero?.subtitle ||
+  const content =
     item.excerpt ||
     item.description ||
-    null;
+    item.hero?.subtitle ||
+    item.categoryLabel ||
+    item.category ||
+    "-";
 
-  const price =
-    typeof item.price === "number"
-      ? `$${item.price.toLocaleString()}`
-      : item.price;
+  const region = item.region || item.jobLocation || item.address || "-";
+
+  const views =
+    item.viewCount ?? item.views ?? item.hitCount ?? item.view_count ?? 0;
 
   const href = buildListingHref({
     locale,
@@ -64,35 +64,27 @@ export default function ListingRowItem({ item, locale, domain }: Props) {
 
   return (
     <Link
-      href={href}
-      className="block px-4 py-3 transition hover:bg-neutral-50"
+    href={href}
+    className="grid grid-cols-[1fr_60px] sm:grid-cols-[2fr_3fr_1fr_80px] gap-1 px-3 py-2 mb-1 text-sm transition border-b border-neutral-200 hover:bg-neutral-50"
     >
-      <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-neutral-900">
-            {title}
-          </div>
+      {/* 제목 */}
+      <div className="truncate font-semibold text-neutral-900">
+        {title}
+      </div>
 
-          {subtitle ? (
-            <div className="mt-1 truncate text-xs text-neutral-500">
-              {subtitle}
-            </div>
-          ) : null}
-        </div>
+      {/* 내용 (모바일 숨김) */}
+      <div className="hidden sm:block truncate text-neutral-500">
+        {content}
+      </div>
 
-        <div className="shrink-0 text-right">
-          {price ? (
-            <div className="text-xs font-semibold text-neutral-700">
-              {price}
-            </div>
-          ) : null}
+      {/* 지역 (모바일 숨김) */}
+      <div className="hidden sm:block truncate text-neutral-500">
+        {region}
+      </div>
 
-          {item.phone ? (
-            <div className="mt-1 text-[11px] text-neutral-500">
-              {item.phone}
-            </div>
-          ) : null}
-        </div>
+      {/* 조회수 */}
+      <div className="text-right text-neutral-400">
+        {views}
       </div>
     </Link>
   );

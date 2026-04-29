@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Container } from "@/components/base/Container";
 import FeaturedListingGrid from "@/components/listing/FeaturedListingGrid";
-import { buildListingHref } from "@/components/listing/listingHref";
+import ListingRowItem from "@/components/listing/ListingRowItem";
 import { DirectoryFilterBar } from "@/features/directory/components/DirectoryFilterBar";
 import { getDirectories } from "@/features/directory/api";
 import { getDirectoryCategories } from "@/features/directory/utils";
@@ -14,6 +14,7 @@ type Props = {
     q?: string;
     category?: string;
     featured?: string;
+    sort?: string;
   }>;
 };
 
@@ -38,17 +39,35 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
   const normalizedLocale = locale === "en" ? "en" : "ko";
   const resolvedSearchParams = await searchParams;
 
+  const currentSort = resolvedSearchParams.sort === "popular" ? "popular" : "";
+
   const query = {
     q: resolvedSearchParams.q?.trim() || undefined,
     category: resolvedSearchParams.category?.trim() || undefined,
+    featured: resolvedSearchParams.featured === "1",
+    sort: currentSort || undefined,
   };
 
   const result = await getDirectories(normalizedLocale, query);
   const items = Array.isArray(result?.items) ? result.items : [];
 
   const categories = getDirectoryCategories(items, normalizedLocale);
-
   const { featured, regular } = splitFeatured(items);
+
+  const baseParams = new URLSearchParams();
+
+  if (query.q) baseParams.set("q", query.q);
+  if (query.category) baseParams.set("category", query.category);
+  if (query.featured) baseParams.set("featured", "1");
+
+  const latestHref = `/${normalizedLocale}/directory${
+    baseParams.toString() ? `?${baseParams.toString()}` : ""
+  }`;
+
+  const popularParams = new URLSearchParams(baseParams.toString());
+  popularParams.set("sort", "popular");
+
+  const popularHref = `/${normalizedLocale}/directory?${popularParams.toString()}`;
 
   return (
     <Container className="py-10">
@@ -65,7 +84,31 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
 
       <DirectoryFilterBar locale={normalizedLocale} categories={categories} />
 
-      <div className="mt-8 space-y-10">
+      <div className="mb-5 flex gap-2">
+        <Link
+          href={latestHref}
+          className={`rounded-full px-4 py-2 text-sm font-semibold ${
+            currentSort === ""
+              ? "bg-primary text-white"
+              : "bg-neutral-100 text-neutral-600"
+          }`}
+        >
+          {normalizedLocale === "en" ? "Latest" : "최신순"}
+        </Link>
+
+        <Link
+          href={popularHref}
+          className={`rounded-full px-4 py-2 text-sm font-semibold ${
+            currentSort === "popular"
+              ? "bg-primary text-white"
+              : "bg-neutral-100 text-neutral-600"
+          }`}
+        >
+          {normalizedLocale === "en" ? "Popular" : "인기순"}
+        </Link>
+      </div>
+
+      <div className="mt-5 space-y-10">
         {featured.length > 0 && (
           <FeaturedListingGrid
             items={featured}
@@ -75,58 +118,28 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
         )}
 
         {regular.length > 0 ? (
-          <div className="divide-y rounded-2xl border border-neutral-200 bg-white">
-            {regular.map((item: any, index: number) => {
-              const title =
-                item.title ||
-                item.name ||
-                item.businessName ||
-                item.displayName ||
-                item.hero?.title ||
-                "Untitled";
+          <div className="rounded-2xl border border-neutral-200 bg-white">
+            <div className="grid grid-cols-[1fr_60px] gap-2 border-b bg-neutral-50 px-3 py-2 text-xs font-semibold text-neutral-500 sm:grid-cols-[2fr_3fr_1fr_80px]">
+              <div>{normalizedLocale === "en" ? "Title" : "제목"}</div>
+              <div className="hidden sm:block">
+                {normalizedLocale === "en" ? "Content" : "내용"}
+              </div>
+              <div className="hidden sm:block">
+                {normalizedLocale === "en" ? "Region" : "지역"}
+              </div>
+              <div className="text-right">
+                {normalizedLocale === "en" ? "Views" : "조회수"}
+              </div>
+            </div>
 
-              const subtitle =
-                item.businessCategory ||
-                item.categoryLabel ||
-                item.category ||
-                item.address ||
-                item.phone ||
-                item.hero?.subtitle ||
-                item.excerpt ||
-                null;
-
-              return (
-                <Link
-                  key={item.id ?? item.slug ?? `${title}-${index}`}
-                  href={buildListingHref({
-                    locale: normalizedLocale,
-                    domain: "directory",
-                    slug: item.slug,
-                  })}
-                  className="block px-5 py-4 transition hover:bg-neutral-50"
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-neutral-900">
-                        {title}
-                      </div>
-
-                      {subtitle ? (
-                        <div className="mt-1 truncate text-sm text-neutral-500">
-                          {subtitle}
-                        </div>
-                      ) : null}
-                    </div>
-
-                    {item.phone ? (
-                      <div className="shrink-0 text-sm text-neutral-500">
-                        {item.phone}
-                      </div>
-                    ) : null}
-                  </div>
-                </Link>
-              );
-            })}
+            {regular.map((item: any) => (
+              <ListingRowItem
+                key={item.id ?? item.slug}
+                item={item}
+                locale={normalizedLocale}
+                domain="directory"
+              />
+            ))}
           </div>
         ) : (
           <div className="rounded-2xl border border-neutral-200 bg-white p-6 text-sm text-neutral-500">

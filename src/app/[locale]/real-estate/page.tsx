@@ -90,16 +90,25 @@ export default async function RealEstatePage({ params, searchParams }: Props) {
           )}
 
           {regular.length > 0 && (
-            <div className="divide-y rounded-lg border border-neutral-200 bg-white">
-              {regular.map((item: any) => (
+            <>
+              {/* 헤더 */}
+              <div className="grid grid-cols-[1fr_60px] sm:grid-cols-[2fr_3fr_1fr_80px] gap-4 border-b bg-neutral-50 px-4 py-2 mb-2 text-xs font-semibold text-neutral-500">
+                <div>제목</div>
+                <div className="hidden sm:block">내용</div>
+                <div className="hidden sm:block">지역</div>
+                <div className="text-right">조회수</div>
+              </div>
+
+              {/* 리스트 */}
+              {regular.map((item) => (
                 <ListingRowItem
-                  key={item.id ?? item.slug}
+                  key={item.id}
                   item={item}
                   locale={normalizedLocale}
-                  domain={domain}
+                  domain="jobs"
                 />
               ))}
-            </div>
+            </>
           )}
 
           <ListingPagination

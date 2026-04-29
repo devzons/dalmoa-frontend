@@ -2,12 +2,10 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/base/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/base/Card";
 import { Container } from "@/components/base/Container";
-import AdUpgradeButton from "@/components/payment/AdUpgradeButton";
+import AdPromotionPanel from "@/components/payment/AdPromotionPanel";
 import { getAdBySlug } from "@/features/ads/api";
 import { buildMetadata } from "@/lib/seo/metadata";
 import Link from "next/link";
-import AdSubscribeButton from "@/components/payment/AdSubscribeButton";
-import AdSubscriptionActions from "@/features/ads/components/AdSubscriptionActions";
 import { normalizeMediaUrl } from "@/lib/api/client";
 
 type Props = {
@@ -32,26 +30,12 @@ export async function generateMetadata({ params }: Props) {
   const { locale, slug } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
 
-  try {
-    const item = await getAdBySlug(slug, normalizedLocale);
-
-    return buildMetadata({
-      title: item.title,
-      description:
-        item.excerpt ||
-        (normalizedLocale === "en"
-          ? `${item.title} ad detail`
-          : `${item.title} 광고 상세`),
-      path: `/${normalizedLocale}/ads/${slug}`,
-    });
-  } catch {
-    return buildMetadata({
-      title: normalizedLocale === "en" ? "Ad Detail" : "광고 상세",
-      description:
-        normalizedLocale === "en" ? "Ad detail page" : "광고 상세 페이지",
-      path: `/${normalizedLocale}/ads/${slug}`,
-    });
-  }
+  return buildMetadata({
+    title: normalizedLocale === "en" ? "Ad Detail" : "광고 상세",
+    description:
+      normalizedLocale === "en" ? "Ad detail page" : "광고 상세 페이지",
+    path: `/${normalizedLocale}/ads/${slug}`,
+  });
 }
 
 export const revalidate = 0;
@@ -225,40 +209,22 @@ export default async function AdDetailPage({ params }: Props) {
                       : "유료 노출 상품으로 광고를 연장하거나 업그레이드할 수 있습니다."}
               </p>
 
-              <div className="mt-4 flex flex-wrap gap-3">
-                {/* 기존 one-time */}
-                <AdUpgradeButton
+              <div className="mt-4 space-y-4">
+                <AdPromotionPanel
                   postId={item.id}
-                  plan="featured"
                   locale={normalizedLocale}
-                  isActive={item.isAdActive}
-                  isExpired={isExpired}
-                />
-                <AdUpgradeButton
-                  postId={item.id}
-                  plan="premium"
-                  locale={normalizedLocale}
-                  isActive={item.isAdActive}
-                  isExpired={isExpired}
+                  adPlan={item.adPlan}
+                  isPaid={item.isPaid}
+                  isFeatured={item.isFeatured}
+                  isAdActive={item.isAdActive}
                 />
 
-                {/* 구독 추가 */}
-                <AdSubscribeButton
-                  postId={item.id}
-                  plan="featured_monthly"
-                  locale={normalizedLocale}
-                />
-                <AdSubscribeButton
-                  postId={item.id}
-                  plan="premium_monthly"
-                  locale={normalizedLocale}
-                />
-                <AdSubscriptionActions
+                {/* <AdSubscriptionActions
                   postId={item.id}
                   billingType={item.billing_type}
                   subscriptionStatus={item.subscription_status}
                   cancelAtPeriodEnd={item.subscription_cancel_at_period_end}
-                />
+                /> */}
               </div>
             </div>
           </CardContent>
