@@ -171,62 +171,15 @@ export default async function AdDetailPage({ params }: Props) {
               </Link>
             </div>
 
-            <div
-              className={[
-                "rounded-2xl border bg-white p-4",
-                isExpired
-                  ? "border-red-200"
-                  : isExpiringSoon
-                    ? "border-orange-200"
-                    : "border-neutral-200",
-              ].join(" ")}
-            >
-              <h2 className="text-sm font-bold text-neutral-950">
-                {isExpired
-                  ? normalizedLocale === "en"
-                    ? "Reactivate this ad"
-                    : "광고 재등록"
-                  : isExpiringSoon
-                    ? normalizedLocale === "en"
-                      ? "Extend before it expires"
-                      : "만료 전 광고 연장"
-                    : normalizedLocale === "en"
-                      ? "Promote this ad"
-                      : "광고 연장 / 업그레이드"}
-              </h2>
-
-              <p className="mt-1 text-xs text-neutral-500">
-                {isExpired
-                  ? normalizedLocale === "en"
-                    ? "This ad has expired. Reactivate it with a paid placement."
-                    : "이 광고는 만료되었습니다. 유료 상품으로 다시 활성화할 수 있습니다."
-                  : isExpiringSoon
-                    ? normalizedLocale === "en"
-                      ? "This ad is expiring soon. Extend it to keep it visible."
-                      : "광고 만료가 임박했습니다. 연장하면 노출을 계속 유지할 수 있습니다."
-                    : normalizedLocale === "en"
-                      ? "Extend or upgrade this ad with a paid placement."
-                      : "유료 노출 상품으로 광고를 연장하거나 업그레이드할 수 있습니다."}
-              </p>
-
-              <div className="mt-4 space-y-4">
-                <AdPromotionPanel
-                  postId={item.id}
-                  locale={normalizedLocale}
-                  adPlan={item.adPlan}
-                  isPaid={item.isPaid}
-                  isFeatured={item.isFeatured}
-                  isAdActive={item.isAdActive}
-                />
-
-                {/* <AdSubscriptionActions
-                  postId={item.id}
-                  billingType={item.billing_type}
-                  subscriptionStatus={item.subscription_status}
-                  cancelAtPeriodEnd={item.subscription_cancel_at_period_end}
-                /> */}
-              </div>
-            </div>
+            <AdPromotionPanel
+              postId={item.id}
+              locale={normalizedLocale}
+              adPlan={item.adPlan}
+              isPaid={item.isPaid}
+              isFeatured={item.isFeatured}
+              isAdActive={item.isAdActive}
+              enableSubscription={false}
+            />
           </CardContent>
         </Card>
       </Container>

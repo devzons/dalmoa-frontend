@@ -83,12 +83,12 @@ export default function FeaturedListingGrid({
   domain,
 }: Props) {
   useEffect(() => {
-    items
-      .filter((item) => isTruthy(item.isPaid) || getPlan(item) !== "")
-      .forEach((item) => {
-        trackAdEvent(item.id, "impression");
-      });
-  }, [items]);
+    if (domain !== "ads") return;
+
+    items.forEach((item) => {
+      trackAdEvent(item.id, "impression");
+    });
+  }, [domain, items]);
 
   if (!items.length) return null;
 
@@ -165,7 +165,7 @@ export default function FeaturedListingGrid({
               key={item.id ?? item.slug ?? title}
               href={href}
               onClick={() => {
-                if (isPaid || plan) {
+                if (domain === "ads") {
                   trackAdEvent(item.id, "click");
                 }
               }}
@@ -233,8 +233,8 @@ export default function FeaturedListingGrid({
                       className={[
                         "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold",
                         isPremium
-                          ? "bg-amber-600 text-white"
-                          : "bg-amber-100 text-amber-700",
+                          ? "bg-premium text-white"
+                          : "bg-featured-light text-featured",
                       ].join(" ")}
                     >
                       {isPremium ? "VIP" : "TOP"}

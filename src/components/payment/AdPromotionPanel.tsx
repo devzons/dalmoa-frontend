@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { endpoints } from "@/lib/api/endpoints";
+import AdSubscribeButton from "@/components/payment/AdSubscribeButton";
 
 type Plan = "featured" | "premium";
 
@@ -12,6 +13,7 @@ type Props = {
   isPaid?: boolean;
   isFeatured?: boolean;
   isAdActive?: boolean;
+  enableSubscription?: boolean;
 };
 
 export default function AdPromotionPanel({
@@ -21,6 +23,7 @@ export default function AdPromotionPanel({
   isPaid = false,
   isFeatured = false,
   isAdActive = false,
+  enableSubscription = false,
 }: Props) {
   const [loadingPlan, setLoadingPlan] = useState<Plan | null>(null);
 
@@ -41,14 +44,8 @@ export default function AdPromotionPanel({
     try {
       const res = await fetch(`${baseUrl}${endpoints.createCheckoutSession}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          postId,
-          plan,
-          locale,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId, plan, locale }),
       });
 
       if (!res.ok) throw new Error();
@@ -71,13 +68,11 @@ export default function AdPromotionPanel({
 
   return (
     <section className="mt-10 rounded-2xl border border-neutral-200 bg-white p-5">
-      {/* 헤더 */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-base font-bold text-neutral-950">
             {locale === "en" ? "Promote this listing" : "광고 연장 / 업그레이드"}
           </h2>
-
           <p className="mt-2 text-sm text-neutral-500">
             {locale === "en"
               ? "Increase visibility with paid promotion."
@@ -85,18 +80,15 @@ export default function AdPromotionPanel({
           </p>
         </div>
 
-        {isPremium && (
-          <span className="rounded-full bg-premium px-3 py-1 text-xs font-bold text-white">
+        {isPremium ? (
+          <span className="shrink-0 rounded-full bg-purple-600 px-3 py-1 text-xs font-bold text-white">
             PREMIUM
           </span>
-        )}
+        ) : null}
       </div>
 
-      {/* ===================== */}
-      {/* 🔥 PREMIUM ACTIVE 상태 */}
-      {/* ===================== */}
       {isPremium ? (
-        <div className="mt-6 rounded-2xl border border-premium/30 bg-premium-light/40 p-5">
+        <div className="mt-6 rounded-2xl border border-purple-200 bg-purple-50 p-5">
           <h3 className="text-sm font-bold text-neutral-950">
             {locale === "en" ? "Premium Active" : "프리미엄 광고 이용 중"}
           </h3>
@@ -107,11 +99,12 @@ export default function AdPromotionPanel({
               : "현재 최상단 노출 상태입니다. 연장하여 유지할 수 있습니다."}
           </p>
 
-          <div className="mt-4 border-t pt-4">
+          <div className="mt-4 flex min-h-12 flex-wrap items-center gap-2 border-t border-purple-200 pt-4">
             <button
+              type="button"
               onClick={() => startCheckout("premium")}
               disabled={!!loadingPlan}
-              className="rounded-xl bg-premium px-4 py-2 text-sm font-semibold text-white"
+              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loadingPlan === "premium"
                 ? locale === "en"
@@ -121,14 +114,18 @@ export default function AdPromotionPanel({
                   ? "Extend Premium"
                   : "프리미엄 연장"}
             </button>
+
+            {enableSubscription ? (
+              <AdSubscribeButton
+                postId={postId}
+                plan="premium_monthly"
+                locale={locale}
+              />
+            ) : null}
           </div>
         </div>
       ) : (
-        /* ===================== */
-        /* 🔥 NORMAL / FEATURED 상태 */
-        /* ===================== */
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {/* FEATURED */}
           <div className="rounded-2xl border border-neutral-200 p-5">
             <h3 className="text-sm font-bold">
               {locale === "en" ? "Featured Listing" : "추천 광고"}
@@ -140,11 +137,12 @@ export default function AdPromotionPanel({
                 : "일반 게시물보다 상단에 노출됩니다."}
             </p>
 
-            <div className="mt-4 border-t pt-4">
+            <div className="mt-4 flex min-h-12 flex-wrap items-center gap-2 border-t pt-4">
               <button
+                type="button"
                 onClick={() => startCheckout("featured")}
                 disabled={!!loadingPlan}
-                className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white"
+                className="inline-flex min-h-10 items-center justify-center rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loadingPlan === "featured"
                   ? locale === "en"
@@ -158,11 +156,18 @@ export default function AdPromotionPanel({
                       ? "Promote"
                       : "추천 광고 등록"}
               </button>
+
+              {enableSubscription ? (
+                <AdSubscribeButton
+                  postId={postId}
+                  plan="featured_monthly"
+                  locale={locale}
+                />
+              ) : null}
             </div>
           </div>
 
-          {/* PREMIUM */}
-          <div className="rounded-2xl border border-premium/30 p-5">
+          <div className="rounded-2xl border border-purple-200 p-5">
             <h3 className="text-sm font-bold">
               {locale === "en" ? "Premium Listing" : "프리미엄 광고"}
             </h3>
@@ -173,11 +178,12 @@ export default function AdPromotionPanel({
                 : "최상단 우선 노출 + 강한 강조 효과."}
             </p>
 
-            <div className="mt-4 border-t pt-4">
+            <div className="mt-4 flex min-h-12 flex-wrap items-center gap-2 border-t pt-4">
               <button
+                type="button"
                 onClick={() => startCheckout("premium")}
                 disabled={!!loadingPlan}
-                className="rounded-xl bg-premium px-4 py-2 text-sm font-semibold text-white"
+                className="inline-flex min-h-10 items-center justify-center rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loadingPlan === "premium"
                   ? locale === "en"
@@ -187,6 +193,14 @@ export default function AdPromotionPanel({
                     ? "Upgrade to Premium"
                     : "프리미엄 광고 등록"}
               </button>
+
+              {enableSubscription ? (
+                <AdSubscribeButton
+                  postId={postId}
+                  plan="premium_monthly"
+                  locale={locale}
+                />
+              ) : null}
             </div>
           </div>
         </div>
