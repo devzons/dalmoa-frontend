@@ -1,16 +1,15 @@
-import Link from 'next/link';
-import HomepageAdSections from '@/features/ads/components/HomepageAdSections';
+import Link from "next/link";
 
 const categoryLinks = [
-  { href: '/ko/jobs', label: 'Jobs' },
-  { href: '/ko/business-sale', label: 'Business Sale' },
-  { href: '/ko/loan', label: 'Loan' },
-  { href: '/ko/marketplace', label: 'Marketplace' },
-  { href: '/ko/real-estate', label: 'Real Estate' },
-  { href: '/ko/cars', label: 'Cars' },
-  { href: '/ko/directory', label: 'Directory' },
-  { href: '/ko/town-board', label: 'Town Board' },
-  { href: '/ko/news', label: 'News' },
+  { href: "/ko/jobs", label: "Jobs" },
+  { href: "/ko/business-sale", label: "Business Sale" },
+  { href: "/ko/loan", label: "Loan" },
+  { href: "/ko/marketplace", label: "Marketplace" },
+  { href: "/ko/real-estate", label: "Real Estate" },
+  { href: "/ko/cars", label: "Cars" },
+  { href: "/ko/directory", label: "Directory" },
+  { href: "/ko/town-board", label: "Town Board" },
+  { href: "/ko/news", label: "News" },
 ];
 
 export default function HomePage() {
@@ -62,10 +61,6 @@ export default function HomePage() {
             </Link>
           ))}
         </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-        <HomepageAdSections />
       </section>
     </main>
   );

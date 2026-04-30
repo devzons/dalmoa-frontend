@@ -1,7 +1,7 @@
 import { EmptyState } from "@/components/common/EmptyState";
 import { SectionHeading } from "@/components/common/SectionHeading";
-import { FeaturedAds } from "@/features/ads/components/FeaturedAds";
-import type { AdItem } from "@/features/ads/types";
+import { FeaturedAdSection } from "@/features/ads/components/FeaturedAdSection";
+import type { AdItem } from "@/features/ads/types/ad";
 
 export function FeaturedSection({
   items,
@@ -10,26 +10,35 @@ export function FeaturedSection({
   items: AdItem[];
   locale: "ko" | "en";
 }) {
-  if (items.length === 0) {
+  if (!items.length) {
     return (
       <EmptyState
-        title={locale === "en" ? "No featured ads found." : "추천 광고가 없습니다."}
+        title={locale === "en" ? "No featured ads" : "추천 광고 없음"}
+        description={
+          locale === "en"
+            ? "Featured ads will appear here."
+            : "추천 광고가 여기에 표시됩니다."
+        }
       />
     );
   }
 
   return (
-    <section>
+    <section className="space-y-4">
       <SectionHeading
         title={locale === "en" ? "Featured Ads" : "추천 광고"}
         description={
           locale === "en"
-            ? "Paid ads appear in a card layout."
-            : "유료 광고가 상단 카드형으로 노출됩니다."
+            ? "Priority promotional placements."
+            : "우선 노출되는 프로모션 광고입니다."
         }
       />
 
-      <FeaturedAds items={items} locale={locale} />
+      <FeaturedAdSection
+        items={items}
+        locale={locale}
+        placement="listing_top"
+      />
     </section>
   );
 }

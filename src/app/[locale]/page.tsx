@@ -7,6 +7,7 @@ import type { AdItem } from "@/features/ads/types/ad";
 import { FeaturedAdSection } from "@/features/ads/components/FeaturedAdSection";
 import { sortAdsByPriority } from "@/features/ads/lib/sortAdsByPriority";
 import HomeListingCard from "@/components/listing/HomeListingCard";
+import type { ListingDomain } from "@/components/listing/listingHref";
 
 type Props = {
   params: Promise<{
@@ -21,7 +22,7 @@ type HomeCardSectionProps = {
   moreHref: string;
   moreLabel: string;
   items: any[];
-  domain: string;
+  domain: ListingDomain;
   forceAdStyle?: boolean;
 };
 

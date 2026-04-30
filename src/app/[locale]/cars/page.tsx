@@ -3,6 +3,10 @@ import FeaturedListingGrid from "@/components/listing/FeaturedListingGrid";
 import ListingRowItem from "@/components/listing/ListingRowItem";
 import { getPaginatedCars } from "@/features/cars/api";
 import { splitFeatured } from "@/features/listing/utils/splitFeatured";
+import { getFeaturedAds } from "@/features/ads/api/getFeaturedAds";
+import { injectAdsIntoList } from "@/features/ads/lib/injectAdsIntoList";
+import { sortAdsByPriority } from "@/features/ads/lib/sortAdsByPriority";
+import { AdSlot } from "@/features/ads/components/AdSlot";
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
 import ListingEmptyState from "@/features/search/components/ListingEmptyState";
 import ListingFilters from "@/features/search/components/ListingFilters";
@@ -40,7 +44,10 @@ export default async function CarsPage({ params, searchParams }: Props) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filters = parseListingSearchParams(resolvedSearchParams);
 
-  const result = await getPaginatedCars(normalizedLocale, filters);
+  const [result, ads] = await Promise.all([
+    getPaginatedCars(normalizedLocale, filters),
+    getFeaturedAds(normalizedLocale),
+  ]);
 
   const items = Array.isArray(result?.items) ? result.items : [];
   const currentPage = result?.page ?? filters.page ?? 1;
@@ -50,6 +57,12 @@ export default async function CarsPage({ params, searchParams }: Props) {
 
   const { featured, regular } =
     currentPage === 1 ? splitFeatured(items) : { featured: [], regular: items };
+
+  const mergedList = injectAdsIntoList({
+    listings: regular,
+    ads: sortAdsByPriority(ads),
+    interval: 6,
+  });
 
   return (
     <Container className="py-10">
@@ -89,25 +102,38 @@ export default async function CarsPage({ params, searchParams }: Props) {
             />
           )}
 
-          {regular.length > 0 && (
+          {mergedList.length > 0 && (
             <>
-              {/* 헤더 */}
-              <div className="grid grid-cols-[1fr_60px] sm:grid-cols-[2fr_3fr_1fr_80px] gap-4 border-b bg-neutral-50 px-4 py-2 mb-2 text-xs font-semibold text-neutral-500">
-                <div>제목</div>
-                <div className="hidden sm:block">내용</div>
-                <div className="hidden sm:block">지역</div>
-                <div className="text-right">조회수</div>
+              <div className="mb-2 grid grid-cols-[1fr_60px] gap-4 border-b bg-neutral-50 px-4 py-2 text-xs font-semibold text-neutral-500 sm:grid-cols-[2fr_3fr_1fr_80px]">
+                <div>{normalizedLocale === "en" ? "Title" : "제목"}</div>
+                <div className="hidden sm:block">
+                  {normalizedLocale === "en" ? "Content" : "내용"}
+                </div>
+                <div className="hidden sm:block">
+                  {normalizedLocale === "en" ? "Region" : "지역"}
+                </div>
+                <div className="text-right">
+                  {normalizedLocale === "en" ? "Views" : "조회수"}
+                </div>
               </div>
 
-              {/* 리스트 */}
-              {regular.map((item) => (
-                <ListingRowItem
-                  key={item.id}
-                  item={item}
-                  locale={normalizedLocale}
-                  domain="jobs"
-                />
-              ))}
+              {mergedList.map((item: any, index: number) =>
+                item?.adPlan ? (
+                  <AdSlot
+                    key={`ad-${item.id}-${index}`}
+                    item={item}
+                    locale={normalizedLocale}
+                    placement="listing_middle"
+                  />
+                ) : (
+                  <ListingRowItem
+                    key={item.id}
+                    item={item}
+                    locale={normalizedLocale}
+                    domain={domain}
+                  />
+                ),
+              )}
             </>
           )}
 

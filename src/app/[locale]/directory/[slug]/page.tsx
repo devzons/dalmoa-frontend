@@ -43,18 +43,24 @@ export default async function DirectoryDetailPage({ params }: Props) {
     notFound();
   }
 
+  const listing = item as any;
+
   return (
     <>
       <DirectoryDetail item={item} />
 
       <div className="mx-auto max-w-3xl px-4 pb-10">
         <AdPromotionPanel
-          postId={item.id}
+          postId={listing.id}
           locale={normalizedLocale}
-          adPlan={item.adPlan}
-          isPaid={item.isPaid}
-          isFeatured={item.isFeatured}
-          isAdActive={item.isAdActive}
+          adPlan={listing.adPlan ?? listing.ad_plan ?? null}
+          isPaid={Boolean(listing.isPaid ?? listing.is_paid ?? false)}
+          isFeatured={Boolean(
+            listing.isFeatured ?? listing.is_featured ?? false,
+          )}
+          isAdActive={Boolean(
+            listing.isAdActive ?? listing.is_active ?? true,
+          )}
           enableSubscription={false}
         />
       </div>

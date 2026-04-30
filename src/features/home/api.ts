@@ -398,7 +398,7 @@ export async function getHomeData(locale: HomeLocale): Promise<HomeData> {
   const featuredDirectory = directoryItems.filter((item) => item.isFeatured);
 
   return {
-    featuredAds: take(mapAds(ads), 4),
+    featuredAds: take(mapAds(ads ?? []), 4),
     featuredDirectory: take(
       mapDirectory(
         featuredDirectory.length > 0 ? featuredDirectory : directoryItems,
@@ -406,13 +406,13 @@ export async function getHomeData(locale: HomeLocale): Promise<HomeData> {
       ),
       6,
     ),
-    latestNews: take(mapNews(news, locale), 4),
-    latestJobs: take(mapJobs(jobs, locale), 4),
-    latestBusinessSale: take(mapBusinessSale(businessSale, locale), 4),
-    latestLoan: take(mapLoan(loan, locale), 4),
-    latestMarketplace: take(mapMarketplace(marketplace, locale), 4),
-    latestRealEstate: take(mapRealEstate(realEstate, locale), 4),
-    latestCars: take(mapCars(cars, locale), 4),
-    latestTownBoard: take(mapTownBoard(townBoard, locale), 4),
+    latestNews: take(mapNews(news ?? [], locale), 4),
+    latestJobs: take(mapJobs(jobs ?? [], locale), 4),
+    latestBusinessSale: take(mapBusinessSale(businessSale ?? [], locale), 4),
+    latestLoan: take(mapLoan(loan ?? [], locale), 4),
+    latestMarketplace: take(mapMarketplace(marketplace ?? [], locale), 4),
+    latestRealEstate: take(mapRealEstate(realEstate ?? [], locale), 4),
+    latestCars: take(mapCars(cars ?? [], locale), 4),
+    latestTownBoard: take(mapTownBoard(townBoard ?? [], locale), 4),
   };
 }

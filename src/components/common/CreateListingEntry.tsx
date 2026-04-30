@@ -26,6 +26,7 @@ const pathMap: Record<SubmitCategory, string> = {
   "real-estate": "real-estate",
   cars: "cars",
   jobs: "jobs",
+  ads: "ads",
 };
 
 export async function CreateListingEntry({

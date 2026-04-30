@@ -10,8 +10,10 @@ export async function getBusinessPageBySlug(
   return apiFetch<BusinessPage>(
     `${endpoints.businessDetail(slug)}?locale=${locale}`,
     {
-      revalidate: 300,
-      tags: [cacheTags.businessDetail(slug)],
+      next: {
+        revalidate: 300,
+        tags: [cacheTags.businessDetail(slug)],
+      },
     }
   );
 }

@@ -44,9 +44,17 @@ export default async function AdReportPage({ params }: Props) {
     notFound();
   }
 
-  const impressions = Number(item.impressionCount || 0);
-  const clicks = Number(item.clickCount || 0);
-  const ctr = impressions > 0 ? ((clicks / impressions) * 100).toFixed(1) : "0.0";
+  const ad = item as any;
+
+  const impressions = Number(ad.impressionCount ?? ad.impression_count ?? 0);
+  const clicks = Number(ad.clickCount ?? ad.click_count ?? 0);
+  const ctr =
+    impressions > 0 ? ((clicks / impressions) * 100).toFixed(1) : "0.0";
+
+  const adPlan = ad.adPlan ?? ad.ad_plan ?? "basic";
+  const isAdActive = Boolean(ad.isAdActive ?? ad.is_active ?? true);
+  const adStartsAt = ad.adStartsAt ?? ad.ad_starts_at ?? "-";
+  const adEndsAt = ad.adEndsAt ?? ad.ad_ends_at ?? ad.expiresAt ?? ad.expires_at ?? "-";
 
   return (
     <div className="bg-neutral-50 py-10">
@@ -56,7 +64,7 @@ export default async function AdReportPage({ params }: Props) {
             <h1 className="text-3xl font-bold tracking-tight text-neutral-950">
               {normalizedLocale === "en" ? "Ad Report" : "광고 성과 리포트"}
             </h1>
-            <p className="mt-2 text-sm text-neutral-500">{item.title}</p>
+            <p className="mt-2 text-sm text-neutral-500">{ad.title}</p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
@@ -79,10 +87,30 @@ export default async function AdReportPage({ params }: Props) {
             </CardHeader>
 
             <CardContent className="space-y-3 text-sm text-neutral-700">
-              <Row label={normalizedLocale === "en" ? "Plan" : "광고 상품"} value={String(item.adPlan || "basic").toUpperCase()} />
-              <Row label={normalizedLocale === "en" ? "Status" : "상태"} value={item.isAdActive ? normalizedLocale === "en" ? "Active" : "활성" : normalizedLocale === "en" ? "Inactive" : "비활성"} />
-              <Row label={normalizedLocale === "en" ? "Start Date" : "시작일"} value={item.adStartsAt || "-"} />
-              <Row label={normalizedLocale === "en" ? "End Date" : "종료일"} value={item.adEndsAt || item.expiresAt || "-"} />
+              <Row
+                label={normalizedLocale === "en" ? "Plan" : "광고 상품"}
+                value={String(adPlan).toUpperCase()}
+              />
+              <Row
+                label={normalizedLocale === "en" ? "Status" : "상태"}
+                value={
+                  isAdActive
+                    ? normalizedLocale === "en"
+                      ? "Active"
+                      : "활성"
+                    : normalizedLocale === "en"
+                      ? "Inactive"
+                      : "비활성"
+                }
+              />
+              <Row
+                label={normalizedLocale === "en" ? "Start Date" : "시작일"}
+                value={String(adStartsAt)}
+              />
+              <Row
+                label={normalizedLocale === "en" ? "End Date" : "종료일"}
+                value={String(adEndsAt)}
+              />
             </CardContent>
           </Card>
 

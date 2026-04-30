@@ -27,7 +27,7 @@ export default async function JobsCreatePage({ params }: Props) {
   const { locale } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
 
-  await requireSessionUser(normalizedLocale, `/${normalizedLocale}/jobs/new`);
+  await requireSessionUser();
 
   return (
     <Container className="space-y-6 py-10">

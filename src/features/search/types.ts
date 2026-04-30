@@ -1,4 +1,4 @@
-import type { AdItem } from "@/features/ads/types";
+import type { AdItem } from "@/features/ads/types/ad";
 import type { BusinessPage } from "@/features/business/types";
 import type { BusinessSaleItem } from "@/features/business-sale/types";
 import type { CarItem } from "@/features/cars/types";

@@ -59,12 +59,14 @@ export async function getCars(
   const raw = await apiFetch<CarItem[] | PaginatedListResponse<CarItem>>(
     `${endpoints.carsList}?${searchParams.toString()}`,
     {
-      revalidate: 120,
-      tags: [cacheTags.carsList],
+      next: {
+        revalidate: 120,
+        tags: [cacheTags.carsList],
+      },
     }
   );
 
-  return Array.isArray(raw) ? raw : raw.items ?? [];
+  return Array.isArray(raw) ? raw : raw?.items ?? [];
 }
 
 export async function getPaginatedCars(
@@ -75,13 +77,24 @@ export async function getPaginatedCars(
 
   const raw = await apiFetch<CarItem[] | PaginatedListResponse<CarItem>>(
     `${endpoints.carsList}?${searchParams.toString()}`,
-    {
-      revalidate: 0,
-      tags: [cacheTags.carsList],
+    {  
+      next: {
+        revalidate: 0,
+        tags: [cacheTags.carsList],
+      },
     }
   );
 
-  return normalizePaginated(raw, filters?.page ?? 1);
+  return normalizePaginated(
+    raw ?? {
+      items: [],
+      total: 0,
+      page: filters?.page ?? 1,
+      perPage: 12,
+      totalPages: 1,
+    },
+    filters?.page ?? 1,
+  );
 }
 
 export async function getCarBySlug(
@@ -91,8 +104,10 @@ export async function getCarBySlug(
   return apiFetch<CarItem>(
     `${endpoints.carsDetail(slug)}?locale=${locale}`,
     {
-      revalidate: 120,
-      tags: [cacheTags.carsDetail(slug)],
+      next: {
+        revalidate: 120,
+        tags: [cacheTags.carsDetail(slug)],
+      },
     }
   );
 }

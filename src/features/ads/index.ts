@@ -18,3 +18,4 @@ export * from "@/features/ads/components/AdSlot";
 export * from "@/features/ads/components/AdRenderer";
 export * from "@/features/ads/components/AdSection";
 export * from "@/features/ads/components/FeaturedAdSection";
+export * from "@/features/ads/components/StandardAdsTable";

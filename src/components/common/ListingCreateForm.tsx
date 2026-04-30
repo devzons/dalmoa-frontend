@@ -19,6 +19,7 @@ const pathMap: Record<SubmitCategory, string> = {
   "real-estate": "real-estate",
   cars: "cars",
   jobs: "jobs",
+  ads: "ads",
 };
 
 const labels = {
@@ -65,6 +66,30 @@ const categoryFields: Record<
     type?: string;
   }[]
 > = {
+  ads: [
+    {
+      name: "title",
+      ko: "제목",
+      en: "Title",
+    },
+    {
+      name: "excerpt",
+      ko: "설명",
+      en: "Description",
+      placeholderKo: "광고 내용을 입력하세요.",
+      placeholderEn: "Enter ad description.",
+    },
+    {
+      name: "thumbnailUrl",
+      ko: "이미지 URL",
+      en: "Image URL",
+    },
+    {
+      name: "ctaUrl",
+      ko: "연결 URL",
+      en: "CTA URL",
+    },
+  ],
   jobs: [
     { name: "companyName", ko: "회사명", en: "Company Name" },
     { name: "salaryLabel", ko: "급여", en: "Salary", placeholderKo: "예: 시급 $18", placeholderEn: "e.g. $18/hour" },

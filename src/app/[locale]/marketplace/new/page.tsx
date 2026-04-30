@@ -12,7 +12,7 @@ export default async function MarketplaceCreatePage({ params }: Props) {
   const { locale } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
 
-  await requireSessionUser(normalizedLocale, `/${normalizedLocale}/marketplace/new`);
+  await requireSessionUser();
 
   return (
     <Container className="space-y-6 py-10">

@@ -1,60 +1,46 @@
-import type { AdItem, AdsResponse } from "@/features/ads/types";
 import { apiFetch } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
-import { cacheTags } from "@/lib/cache/tags";
+import type { AdItem } from "@/features/ads/types/ad";
 
-export async function getAds(locale: "ko" | "en" = "ko") {
-  return apiFetch<AdsResponse>(`${endpoints.adsList}?locale=${locale}`, {
-    next: {
-      revalidate: 120,
-      tags: [cacheTags.adsList],
-    },
+type AdsResponse = {
+  featured: AdItem[];
+  standard: AdItem[];
+};
+
+export async function getAds(locale: "ko" | "en"): Promise<AdsResponse | null> {
+  const searchParams = new URLSearchParams({
+    lang: locale,
   });
-}
 
-export async function getFeaturedAds(locale: "ko" | "en" = "ko") {
-  return apiFetch<AdItem[]>(`${endpoints.adsFeatured}?locale=${locale}`, {
+  return apiFetch<AdsResponse>(`${endpoints.adsList}?${searchParams.toString()}`, {
     next: {
       revalidate: 120,
-      tags: [cacheTags.adsFeatured],
+      tags: ["ads-list"],
     },
   });
 }
 
 export async function getAdBySlug(
   slug: string,
-  locale: "ko" | "en" = "ko"
-) {
+  locale: "ko" | "en",
+): Promise<AdItem | null> {
+  const searchParams = new URLSearchParams({
+    lang: locale,
+  });
+
   return apiFetch<AdItem>(
-    `${endpoints.adsDetail(slug)}?locale=${locale}`,
+    `${endpoints.adsDetail(slug)}?${searchParams.toString()}`,
     {
       next: {
-        revalidate: 120,
-        tags: [cacheTags.adsDetail(slug)],
+        revalidate: 0,
+        tags: [`ads-${slug}`],
       },
-    }
+    },
   );
 }
 
-// SUBSCRIPTION
-
-export async function cancelSubscription(postId: number) {
-  return apiFetch<{ ok: boolean }>(`${endpoints.cancelSubscription}`, {
-    method: "POST",
-    body: JSON.stringify({ postId }),
-  });
-}
-
-export async function resumeSubscription(postId: number) {
-  return apiFetch<{ ok: boolean }>(`${endpoints.resumeSubscription}`, {
-    method: "POST",
-    body: JSON.stringify({ postId }),
-  });
-}
-
-export async function syncSubscription(postId: number) {
-  return apiFetch<{ ok: boolean }>(`${endpoints.syncSubscription}`, {
-    method: "POST",
-    body: JSON.stringify({ postId }),
-  });
-}
+export * from "./api/createAdCheckout";
+export * from "./api/getAds";
+export * from "./api/getFeaturedAds";
+export * from "./api/getAdBySlug";
+export * from "./api/trackAdEvent";

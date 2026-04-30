@@ -1,3 +1,10 @@
+import { apiFetch } from "@/lib/api/client";
+
+type Params = {
+  domain: string;
+  locale: string;
+};
+
 export async function getListings({ domain, locale }: Params) {
   const data = await apiFetch<any>(
     `/wp-json/dalmoa/v1/${domain}?lang=${locale}`

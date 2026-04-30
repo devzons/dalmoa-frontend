@@ -22,7 +22,7 @@ export default async function ListingPage({ locale, domain }: Props) {
     <div className="mx-auto max-w-6xl px-4 py-8">
       {featured.length > 0 && (
         <FeaturedListingGrid
-          items={featured}
+          items={featured as any[]}
           locale={locale}
           domain={domain}
         />

@@ -11,7 +11,7 @@ export default async function MyPostDetail({ params }: Props) {
   const { locale, id } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
 
-  await requireSessionUser(normalizedLocale, `/${normalizedLocale}/login`);
+  await requireSessionUser();
 
   const post = await getMyPost(id);
 

@@ -6,6 +6,10 @@ import { DirectoryFilterBar } from "@/features/directory/components/DirectoryFil
 import { getDirectories } from "@/features/directory/api";
 import { getDirectoryCategories } from "@/features/directory/utils";
 import { splitFeatured } from "@/features/listing/utils/splitFeatured";
+import { getFeaturedAds } from "@/features/ads/api/getFeaturedAds";
+import { injectAdsIntoList } from "@/features/ads/lib/injectAdsIntoList";
+import { sortAdsByPriority } from "@/features/ads/lib/sortAdsByPriority";
+import { AdSlot } from "@/features/ads/components/AdSlot";
 import { buildMetadata } from "@/lib/seo/metadata";
 
 type Props = {
@@ -48,11 +52,25 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
     sort: currentSort || undefined,
   };
 
-  const result = await getDirectories(normalizedLocale, query);
-  const items = Array.isArray(result?.items) ? result.items : [];
+  const [result, ads] = await Promise.all([
+    getDirectories(normalizedLocale, query),
+    getFeaturedAds(normalizedLocale),
+  ]);
+
+  const items = Array.isArray(result)
+    ? result
+    : Array.isArray((result as any)?.items)
+      ? (result as any).items
+      : [];
 
   const categories = getDirectoryCategories(items, normalizedLocale);
   const { featured, regular } = splitFeatured(items);
+
+  const mergedList = injectAdsIntoList({
+    listings: regular,
+    ads: sortAdsByPriority(ads),
+    interval: 6,
+  });
 
   const baseParams = new URLSearchParams();
 
@@ -111,13 +129,13 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
       <div className="mt-5 space-y-10">
         {featured.length > 0 && (
           <FeaturedListingGrid
-            items={featured}
+            items={featured as any[]}
             locale={normalizedLocale}
             domain="directory"
           />
         )}
 
-        {regular.length > 0 ? (
+        {mergedList.length > 0 ? (
           <div className="rounded-2xl border border-neutral-200 bg-white">
             <div className="grid grid-cols-[1fr_60px] gap-2 border-b bg-neutral-50 px-3 py-2 text-xs font-semibold text-neutral-500 sm:grid-cols-[2fr_3fr_1fr_80px]">
               <div>{normalizedLocale === "en" ? "Title" : "제목"}</div>
@@ -132,14 +150,23 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
               </div>
             </div>
 
-            {regular.map((item: any) => (
-              <ListingRowItem
-                key={item.id ?? item.slug}
-                item={item}
-                locale={normalizedLocale}
-                domain="directory"
-              />
-            ))}
+            {mergedList.map((item: any, index: number) =>
+              item?.adPlan ? (
+                <AdSlot
+                  key={`ad-${item.id}-${index}`}
+                  item={item}
+                  locale={normalizedLocale}
+                  placement="listing_middle"
+                />
+              ) : (
+                <ListingRowItem
+                  key={item.id ?? item.slug}
+                  item={item}
+                  locale={normalizedLocale}
+                  domain="directory"
+                />
+              ),
+            )}
           </div>
         ) : (
           <div className="rounded-2xl border border-neutral-200 bg-white p-6 text-sm text-neutral-500">

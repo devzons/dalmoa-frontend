@@ -1,13 +1,25 @@
-import type { AdPlacement } from "../types/adPlacement";
+import type { AdPlacement } from "@/features/ads/types/adPlacement";
 
 export const AD_PLACEMENTS: AdPlacement[] = [
-  "list",
-  "featured",
-  "top",
-  "sidebar",
-  "inline",
+  "home_top",
+  "home_middle",
+  "home_bottom",
+  "listing_top",
+  "listing_middle",
+  "listing_bottom",
+  "detail_sidebar",
+  "search_top",
+  "search_middle",
 ];
 
-export const isValidPlacement = (placement: string): placement is AdPlacement => {
-  return AD_PLACEMENTS.includes(placement as AdPlacement);
+export const AD_PLACEMENT_LABELS: Record<AdPlacement, string> = {
+  home_top: "Home Top",
+  home_middle: "Home Middle",
+  home_bottom: "Home Bottom",
+  listing_top: "Listing Top",
+  listing_middle: "Listing Middle",
+  listing_bottom: "Listing Bottom",
+  detail_sidebar: "Detail Sidebar",
+  search_top: "Search Top",
+  search_middle: "Search Middle",
 };

@@ -10,8 +10,16 @@ export async function searchAll(
     q,
   });
 
-  return apiFetch<SearchResponse>(`/search?${params.toString()}`, {
-    revalidate: 120,
-    tags: [`search-${locale}-${q}`],
+  const data = await apiFetch<SearchResponse>(`/search?${params.toString()}`, {
+    next: {
+      revalidate: 120,
+      tags: [`search-${locale}-${q}`],
+    },
   });
+
+  return data ?? {
+    q,
+    total: 0,
+    results: [],
+  };
 }

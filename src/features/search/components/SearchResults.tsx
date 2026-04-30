@@ -230,7 +230,7 @@ export function SearchResults({
               <Link
                 key={item.slug}
                 href={`/${locale}/business/${item.slug}`}
-                onClick={() => trackClick("business", item.id)}
+                onClick={() => trackClick("business", Number(item.slug) || 0)}
               >
                 <Card className="h-full overflow-hidden transition hover:shadow-md">
                   {item.hero?.imageUrl ? (
