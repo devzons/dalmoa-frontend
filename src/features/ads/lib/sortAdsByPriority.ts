@@ -29,13 +29,21 @@ function getTimestamp(value?: string | null): number {
   return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
+function getCTR(item: AdItem): number {
+  const clicks = Number((item as any).clickCount ?? (item as any).click_count ?? 0);
+  const impressions = Number((item as any).impressionCount ?? (item as any).impression_count ?? 0);
+
+  if (impressions <= 0) return 0;
+  return clicks / impressions;
+}
+
 export function sortAdsByPriority<T extends AdItem>(items: T[]): T[] {
   return [...items].sort((a, b) => {
     const priorityDiff = getAdPriority(b) - getAdPriority(a);
+    if (priorityDiff !== 0) return priorityDiff;
 
-    if (priorityDiff !== 0) {
-      return priorityDiff;
-    }
+    const ctrDiff = getCTR(b) - getCTR(a);
+    if (ctrDiff !== 0) return ctrDiff;
 
     return getTimestamp(b.createdAt) - getTimestamp(a.createdAt);
   });

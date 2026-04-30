@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { normalizeMediaUrl } from "@/lib/api/client";
 import { buildListingHref, type ListingDomain } from "./listingHref";
+import { trackAdEvent } from "@/features/ads/api/trackAdEvent";
 
 type Props = {
   item: any;
@@ -80,6 +81,15 @@ export default function HomeListingCard({
   return (
     <Link
       href={href}
+      onClick={() => {
+        if (isAd && item?.id) {
+          trackAdEvent({
+            adId: item.id,
+            type: "click",
+            placement: "home_listing",
+          });
+        }
+      }}
       className={[
         "group relative block overflow-hidden rounded-xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
         isPremium

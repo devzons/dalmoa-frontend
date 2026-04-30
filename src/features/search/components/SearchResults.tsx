@@ -8,7 +8,7 @@ import { DirectoryList } from "@/features/directory/components/DirectoryList";
 import { AdSlot } from "@/features/ads/components/AdSlot";
 import type { SearchResponse } from "@/features/search/types";
 import { groupSearchResults } from "@/features/search/utils";
-import { trackClick } from "@/lib/tracking/trackClick";
+import { trackAdEvent } from "@/features/ads/api/trackAdEvent";
 
 export function SearchResults({
   data,
@@ -170,37 +170,52 @@ export function SearchResults({
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {items.map((item: any) => (
-                <Link
-                  key={`${section.key}-${item.id ?? item.slug}`}
-                  href={section.href(item.slug)}
-                  onClick={() => trackClick(section.key, item.id)}
-                >
-                  <Card className="h-full overflow-hidden transition hover:shadow-md">
-                    {item.thumbnailUrl ? (
-                      <img
-                        src={item.thumbnailUrl}
-                        alt={item.title}
-                        className="aspect-video w-full object-cover"
-                      />
-                    ) : null}
+              {items.map((item: any) => {
+                const isAd =
+                  item?.adPlan === "premium" ||
+                  item?.adPlan === "featured" ||
+                  item?.isFeatured;
 
-                    <CardHeader>
-                      <div className="mb-2">
-                        <Badge>{section.badge}</Badge>
-                      </div>
-                      <CardTitle>{item.title}</CardTitle>
-                    </CardHeader>
-
-                    <CardContent className="space-y-2 text-sm text-neutral-600">
-                      {section.meta(item) ? <p>{section.meta(item)}</p> : null}
-                      {item.excerpt ? (
-                        <p className="line-clamp-3">{item.excerpt}</p>
+                return (
+                  <Link
+                    key={`${section.key}-${item.id ?? item.slug}`}
+                    href={section.href(item.slug)}
+                    onClick={() => {
+                      if (isAd && item?.id) {
+                        trackAdEvent({
+                          adId: item.id,
+                          type: "click",
+                          placement: "search_card",
+                        });
+                      }
+                    }}
+                  >
+                    <Card className="h-full overflow-hidden transition hover:shadow-md">
+                      {item.thumbnailUrl ? (
+                        <img
+                          src={item.thumbnailUrl}
+                          alt={item.title}
+                          className="aspect-video w-full object-cover"
+                        />
                       ) : null}
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+
+                      <CardHeader>
+                        <div className="mb-2">
+                          <Badge>{section.badge}</Badge>
+                        </div>
+                        <CardTitle>{item.title}</CardTitle>
+                      </CardHeader>
+
+                      <CardContent className="space-y-2 text-sm text-neutral-600">
+                        {section.meta(item) ? <p>{section.meta(item)}</p> : null}
+                        {item.excerpt ? (
+                          <p className="line-clamp-3">{item.excerpt}</p>
+                        ) : null}
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
             </div>
           </section>
         );
@@ -230,7 +245,7 @@ export function SearchResults({
               <Link
                 key={item.slug}
                 href={`/${locale}/business/${item.slug}`}
-                onClick={() => trackClick("business", Number(item.slug) || 0)}
+                className="pointer-events-none"
               >
                 <Card className="h-full overflow-hidden transition hover:shadow-md">
                   {item.hero?.imageUrl ? (

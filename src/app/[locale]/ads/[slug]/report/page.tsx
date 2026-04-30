@@ -54,7 +54,34 @@ export default async function AdReportPage({ params }: Props) {
   const adPlan = ad.adPlan ?? ad.ad_plan ?? "basic";
   const isAdActive = Boolean(ad.isAdActive ?? ad.is_active ?? true);
   const adStartsAt = ad.adStartsAt ?? ad.ad_starts_at ?? "-";
-  const adEndsAt = ad.adEndsAt ?? ad.ad_ends_at ?? ad.expiresAt ?? ad.expires_at ?? "-";
+  const adEndsAt =
+    ad.adEndsAt ??
+    ad.ad_ends_at ??
+    ad.expiresAt ??
+    ad.expires_at ??
+    "-";
+
+  // 🔥 placement breakdown (자동 수집)
+  const placementStats = Object.entries(ad)
+    .filter(([key]) => key.startsWith("impression_count_"))
+    .map(([key, value]) => {
+      const placement = key.replace("impression_count_", "");
+      const placementClicks = Number(ad[`click_count_${placement}`] ?? 0);
+      const placementImpressions = Number(value ?? 0);
+
+      const placementCtr =
+        placementImpressions > 0
+          ? ((placementClicks / placementImpressions) * 100).toFixed(1)
+          : "0.0";
+
+      return {
+        placement,
+        impressions: placementImpressions,
+        clicks: placementClicks,
+        ctr: placementCtr,
+      };
+    })
+    .sort((a, b) => b.impressions - a.impressions);
 
   return (
     <div className="bg-neutral-50 py-10">
@@ -67,6 +94,7 @@ export default async function AdReportPage({ params }: Props) {
             <p className="mt-2 text-sm text-neutral-500">{ad.title}</p>
           </div>
 
+          {/* 기본 KPI */}
           <div className="grid gap-4 md:grid-cols-3">
             <ReportCard
               label={normalizedLocale === "en" ? "Impressions" : "노출 수"}
@@ -79,6 +107,45 @@ export default async function AdReportPage({ params }: Props) {
             <ReportCard label="CTR" value={`${ctr}%`} />
           </div>
 
+          {/* 🔥 placement별 성과 */}
+          {placementStats.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {normalizedLocale === "en"
+                    ? "Placement Performance"
+                    : "노출 위치별 성과"}
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent className="space-y-2 text-sm">
+                {placementStats.map((p) => (
+                  <div
+                    key={p.placement}
+                    className="flex items-center justify-between rounded-lg border border-neutral-200 px-3 py-2"
+                  >
+                    <span className="font-medium">
+                      {p.placement}
+                    </span>
+
+                    <div className="flex gap-4 text-xs text-neutral-600">
+                      <span>
+                        {normalizedLocale === "en" ? "Imp" : "노출"}:{" "}
+                        {p.impressions}
+                      </span>
+                      <span>
+                        {normalizedLocale === "en" ? "Click" : "클릭"}:{" "}
+                        {p.clicks}
+                      </span>
+                      <span>CTR: {p.ctr}%</span>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 광고 정보 */}
           <Card>
             <CardHeader>
               <CardTitle>

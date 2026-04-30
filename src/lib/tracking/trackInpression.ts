@@ -1,4 +1,4 @@
-export async function trackClick(
+export async function trackImpression(
   id: number,
   placement: string
 ) {
@@ -15,7 +15,7 @@ export async function trackClick(
       },
       body: JSON.stringify({
         id,
-        type: "click",
+        type: "impression",
         placement,
       }),
     });

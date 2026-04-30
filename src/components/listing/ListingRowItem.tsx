@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { buildListingHref, type ListingDomain } from "./listingHref";
+import { trackAdEvent } from "@/features/ads/api/trackAdEvent";
 
 type Item = {
   id?: number | string;
@@ -26,6 +29,10 @@ type Item = {
     title?: string | null;
     subtitle?: string | null;
   };
+
+  // 🔥 ads fields
+  adPlan?: string | null;
+  isFeatured?: boolean | number | string;
 };
 
 type Props = {
@@ -33,6 +40,10 @@ type Props = {
   locale: "ko" | "en";
   domain: ListingDomain;
 };
+
+function isTruthy(value: unknown) {
+  return value === true || value === 1 || value === "1" || value === "true";
+}
 
 export default function ListingRowItem({ item, locale, domain }: Props) {
   const title =
@@ -62,27 +73,37 @@ export default function ListingRowItem({ item, locale, domain }: Props) {
     slug: item.slug,
   });
 
+  const isAd =
+    item.adPlan === "premium" ||
+    item.adPlan === "featured" ||
+    isTruthy(item.isFeatured);
+
   return (
     <Link
-    href={href}
-    className="grid grid-cols-[1fr_60px] sm:grid-cols-[2fr_3fr_1fr_80px] gap-1 px-3 py-2 mb-1 text-sm transition border-b border-neutral-200 hover:bg-neutral-50"
+      href={href}
+      onClick={() => {
+        if (isAd && item?.id) {
+          trackAdEvent({
+            adId: Number(item.id),
+            type: "click",
+            placement: "listing_row",
+          });
+        }
+      }}
+      className="grid grid-cols-[1fr_60px] sm:grid-cols-[2fr_3fr_1fr_80px] gap-1 px-3 py-2 mb-1 text-sm transition border-b border-neutral-200 hover:bg-neutral-50"
     >
-      {/* 제목 */}
       <div className="truncate font-semibold text-neutral-900">
         {title}
       </div>
 
-      {/* 내용 (모바일 숨김) */}
       <div className="hidden sm:block truncate text-neutral-500">
         {content}
       </div>
 
-      {/* 지역 (모바일 숨김) */}
       <div className="hidden sm:block truncate text-neutral-500">
         {region}
       </div>
 
-      {/* 조회수 */}
       <div className="text-right text-neutral-400">
         {views}
       </div>

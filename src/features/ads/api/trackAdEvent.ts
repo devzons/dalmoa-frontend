@@ -11,13 +11,16 @@ export async function trackAdEvent({
   type,
   placement,
 }: TrackAdEventParams): Promise<void> {
-  await fetch(`${process.env.NEXT_PUBLIC_WORDPRESS_API_URL}/dalmoa/v1/ads/track`, {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
+  if (!baseUrl) return;
+
+  await fetch(`${baseUrl}/dalmoa/v1/ads/track`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      adId,
+      id: adId, // 🔥 핵심 수정
       type,
       placement,
     }),
