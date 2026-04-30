@@ -1,3 +1,5 @@
+import type { AdItem } from "@/features/ads/types/ad";
+
 export type HomeLocale = "ko" | "en";
 
 export type HomeCardItem = {
@@ -12,7 +14,7 @@ export type HomeCardItem = {
 };
 
 export type HomeData = {
-  featuredAds: HomeCardItem[];
+  featuredAds: AdItem[];
   featuredDirectory: HomeCardItem[];
   latestNews: HomeCardItem[];
   latestJobs: HomeCardItem[];

@@ -5,6 +5,7 @@ import { Badge } from "@/components/base/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/base/Card";
 import { SectionHeading } from "@/components/common/SectionHeading";
 import { DirectoryList } from "@/features/directory/components/DirectoryList";
+import { AdSlot } from "@/features/ads/components/AdSlot";
 import type { SearchResponse } from "@/features/search/types";
 import { groupSearchResults } from "@/features/search/utils";
 import { trackClick } from "@/lib/tracking/trackClick";
@@ -117,46 +118,10 @@ export function SearchResults({
     },
   ];
 
-  const adHref = topAd
-    ? topAd.ctaUrl && topAd.ctaUrl.startsWith("/")
-      ? topAd.ctaUrl
-      : topAd.ctaUrl || `/${locale}/ads`
-    : "";
-
   return (
     <div className="space-y-10">
       {topAd ? (
-        <section className="overflow-hidden rounded-3xl border border-amber-200 bg-amber-50 shadow-sm">
-          <Link
-            href={adHref}
-            target={topAd.isExternal ? "_blank" : "_self"}
-            onClick={() => trackClick("ad", topAd.id)}
-            className="grid gap-0 md:grid-cols-[240px_1fr]"
-          >
-            {topAd.thumbnailUrl ? (
-              <img
-                src={topAd.thumbnailUrl}
-                alt={topAd.title}
-                className="aspect-video w-full object-cover md:h-full"
-              />
-            ) : null}
-
-            <div className="p-5">
-              <div className="mb-2">
-                <Badge>{locale === "en" ? "Sponsored" : "스폰서 광고"}</Badge>
-              </div>
-              <h2 className="text-lg font-bold text-neutral-900">{topAd.title}</h2>
-              {topAd.excerpt ? (
-                <p className="mt-2 line-clamp-2 text-sm text-neutral-600">
-                  {topAd.excerpt}
-                </p>
-              ) : null}
-              <p className="mt-3 text-sm font-semibold text-neutral-900">
-                {topAd.ctaLabel || (locale === "en" ? "View details →" : "자세히 보기 →")}
-              </p>
-            </div>
-          </Link>
-        </section>
+        <AdSlot item={topAd as any} locale={locale} placement="search_top" />
       ) : null}
 
       {directoryItems.length > 0 ? (
@@ -229,7 +194,9 @@ export function SearchResults({
 
                     <CardContent className="space-y-2 text-sm text-neutral-600">
                       {section.meta(item) ? <p>{section.meta(item)}</p> : null}
-                      {item.excerpt ? <p className="line-clamp-3">{item.excerpt}</p> : null}
+                      {item.excerpt ? (
+                        <p className="line-clamp-3">{item.excerpt}</p>
+                      ) : null}
                     </CardContent>
                   </Card>
                 </Link>
@@ -303,41 +270,14 @@ export function SearchResults({
           />
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {remainingAds.map((item) => {
-              const href =
-                item.ctaUrl && item.ctaUrl.startsWith("/")
-                  ? item.ctaUrl
-                  : item.ctaUrl || `/${locale}/ads`;
-
-              return (
-                <Card key={item.id} className="h-full overflow-hidden transition hover:shadow-md">
-                  {item.thumbnailUrl ? (
-                    <img
-                      src={item.thumbnailUrl}
-                      alt={item.title}
-                      className="aspect-video w-full object-cover"
-                    />
-                  ) : null}
-                  <CardHeader>
-                    <div className="mb-2">
-                      <Badge>{locale === "en" ? "Ad" : "광고"}</Badge>
-                    </div>
-                    <CardTitle>{item.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-sm text-neutral-600">
-                    {item.excerpt ? <p className="line-clamp-3">{item.excerpt}</p> : null}
-                    <Link
-                      href={href}
-                      target={item.isExternal ? "_blank" : "_self"}
-                      onClick={() => trackClick("ad", item.id)}
-                      className="font-medium underline"
-                    >
-                      {item.ctaLabel || (locale === "en" ? "View" : "보기")}
-                    </Link>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {remainingAds.map((item) => (
+              <AdSlot
+                key={item.id}
+                item={item as any}
+                locale={locale}
+                placement="search_middle"
+              />
+            ))}
           </div>
         </section>
       ) : null}

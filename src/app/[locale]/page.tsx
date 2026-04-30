@@ -3,6 +3,9 @@ import { buildMetadata } from "@/lib/seo/metadata";
 import { getHomeData } from "@/features/home/api";
 import { HomeHero } from "@/features/home/components/HomeHero";
 import type { HomeLocale } from "@/features/home/types";
+import type { AdItem } from "@/features/ads/types/ad";
+import { FeaturedAdSection } from "@/features/ads/components/FeaturedAdSection";
+import { sortAdsByPriority } from "@/features/ads/lib/sortAdsByPriority";
 import HomeListingCard from "@/components/listing/HomeListingCard";
 
 type Props = {
@@ -48,19 +51,9 @@ export default async function HomePage({ params }: Props) {
     <div className="bg-neutral-50">
       <HomeHero locale={normalizedLocale} />
 
-      <HomeCardSection
+      <HomeFeaturedAdSection
         locale={normalizedLocale}
-        title={normalizedLocale === "en" ? "Featured Ads" : "추천 광고"}
-        description={
-          normalizedLocale === "en"
-            ? "Priority promotional placements."
-            : "우선 노출되는 프로모션 광고입니다."
-        }
-        moreHref={`/${normalizedLocale}/ads`}
-        moreLabel={normalizedLocale === "en" ? "View all" : "전체 보기"}
         items={data.featuredAds}
-        domain="ads"
-        forceAdStyle
       />
 
       <HomeCardSection
@@ -108,7 +101,9 @@ export default async function HomePage({ params }: Props) {
 
       <HomeCardSection
         locale={normalizedLocale}
-        title={normalizedLocale === "en" ? "Latest Business Sales" : "최신 사업체매매"}
+        title={
+          normalizedLocale === "en" ? "Latest Business Sales" : "최신 사업체매매"
+        }
         description={
           normalizedLocale === "en"
             ? "Recently listed business sale opportunities."
@@ -190,6 +185,50 @@ export default async function HomePage({ params }: Props) {
         domain="town-board"
       />
     </div>
+  );
+}
+
+function HomeFeaturedAdSection({
+  locale,
+  items,
+}: {
+  locale: HomeLocale;
+  items: AdItem[];
+}) {
+  if (!items || items.length === 0) return null;
+
+  const sortedItems = sortAdsByPriority(items);
+
+  return (
+    <section className="border-t border-neutral-200 bg-neutral-50 py-8">
+      <div className="mx-auto max-w-7xl px-4">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-neutral-950">
+              {locale === "en" ? "Featured Ads" : "추천 광고"}
+            </h2>
+            <p className="mt-1 text-sm text-neutral-500">
+              {locale === "en"
+                ? "Priority promotional placements."
+                : "우선 노출되는 프로모션 광고입니다."}
+            </p>
+          </div>
+
+          <Link
+            href={`/${locale}/ads`}
+            className="shrink-0 text-sm font-semibold text-neutral-900 hover:underline"
+          >
+            {locale === "en" ? "View all" : "전체 보기"}
+          </Link>
+        </div>
+
+        <FeaturedAdSection
+          items={sortedItems}
+          locale={locale}
+          placement="home_top"
+        />
+      </div>
+    </section>
   );
 }
 

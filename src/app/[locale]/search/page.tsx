@@ -9,6 +9,8 @@ import { SearchResults } from "@/features/search/components/SearchResults";
 import { searchAll } from "@/features/search/api";
 import { normalizeSearchQuery } from "@/features/search/utils";
 import { buildMetadata } from "@/lib/seo/metadata";
+import { getFeaturedAds } from "@/features/ads/api/getFeaturedAds";
+import { FeaturedAdSection } from "@/features/ads/components/FeaturedAdSection";
 
 type Props = {
   params: Promise<{
@@ -64,9 +66,10 @@ export default async function SearchPage({ params, searchParams }: Props) {
   const filters = normalizeFilterValues(resolvedSearchParams);
   const q = filters.q;
 
-  const data = q
-    ? await searchAll(q, normalizedLocale)
-    : { q: "", total: 0, results: [] };
+  const [data, ads] = await Promise.all([
+    q ? searchAll(q, normalizedLocale) : Promise.resolve({ q: "", total: 0, results: [] }),
+    getFeaturedAds(normalizedLocale),
+  ]);
 
   return (
     <Container className="space-y-6 py-6 md:space-y-8 md:py-10">
@@ -82,6 +85,14 @@ export default async function SearchPage({ params, searchParams }: Props) {
       </div>
 
       <SearchFilters locale={normalizedLocale} initialValues={filters} />
+
+      {ads.length > 0 ? (
+        <FeaturedAdSection
+          items={ads.slice(0, 3)}
+          locale={normalizedLocale}
+          placement="search_top"
+        />
+      ) : null}
 
       {!q ? (
         <div className="rounded-3xl border border-dashed border-neutral-300 bg-white p-6 text-center md:p-10">
@@ -99,10 +110,19 @@ export default async function SearchPage({ params, searchParams }: Props) {
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             {[
               ["jobs", normalizedLocale === "en" ? "Jobs" : "구인구직"],
-              ["business-sale", normalizedLocale === "en" ? "Business Sale" : "사업체매매"],
+              [
+                "business-sale",
+                normalizedLocale === "en" ? "Business Sale" : "사업체매매",
+              ],
               ["loan", normalizedLocale === "en" ? "Loan" : "융자"],
-              ["marketplace", normalizedLocale === "en" ? "Marketplace" : "사고팔기"],
-              ["real-estate", normalizedLocale === "en" ? "Real Estate" : "부동산"],
+              [
+                "marketplace",
+                normalizedLocale === "en" ? "Marketplace" : "사고팔기",
+              ],
+              [
+                "real-estate",
+                normalizedLocale === "en" ? "Real Estate" : "부동산",
+              ],
               ["cars", normalizedLocale === "en" ? "Cars" : "자동차"],
             ].map(([href, label]) => (
               <Link

@@ -1,18 +1,24 @@
 import type { AdItem } from "@/features/ads/types/ad";
+import type { AdPlacement } from "@/features/ads/types/adPlacement";
 import { AdRenderer } from "@/features/ads/components/AdRenderer";
+import { sortAdsByPriority } from "@/features/ads/lib/sortAdsByPriority";
 
-export function AdSection({
+export function FeaturedAdSection({
   title,
   description,
   items,
   locale,
+  placement = "home_top",
 }: {
   title?: string;
   description?: string;
   items: AdItem[];
   locale: "ko" | "en";
+  placement?: AdPlacement;
 }) {
   if (!items.length) return null;
+
+  const sortedItems = sortAdsByPriority(items);
 
   return (
     <section className="space-y-4">
@@ -28,7 +34,11 @@ export function AdSection({
         </div>
       ) : null}
 
-      <AdRenderer items={items} locale={locale} />
+      <AdRenderer
+        items={sortedItems}
+        locale={locale}
+        placement={placement}
+      />
     </section>
   );
 }

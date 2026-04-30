@@ -12,6 +12,11 @@ import ListingResultSummary from "@/features/search/components/ListingResultSumm
 import { parseListingSearchParams } from "@/features/search/url";
 import { buildMetadata } from "@/lib/seo/metadata";
 
+import { getFeaturedAds } from "@/features/ads/api/getFeaturedAds";
+import { injectAdsIntoList } from "@/features/ads/lib/injectAdsIntoList";
+import { sortAdsByPriority } from "@/features/ads/lib/sortAdsByPriority";
+import { AdSlot } from "@/features/ads/components/AdSlot";
+
 type Props = {
   params: Promise<{
     locale: string;
@@ -45,7 +50,10 @@ export default async function JobsPage({ params, searchParams }: Props) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filters = parseListingSearchParams(resolvedSearchParams);
 
-  const result = await getPaginatedJobs(normalizedLocale, filters);
+  const [result, ads] = await Promise.all([
+    getPaginatedJobs(normalizedLocale, filters),
+    getFeaturedAds(normalizedLocale),
+  ]);
 
   const items = Array.isArray(result?.items) ? result.items : [];
   const currentPage = result?.page ?? filters.page ?? 1;
@@ -55,6 +63,13 @@ export default async function JobsPage({ params, searchParams }: Props) {
 
   const { featured, regular } =
     currentPage === 1 ? splitFeatured(items) : { featured: [], regular: items };
+
+  const sortedAds = sortAdsByPriority(ads);
+  const mergedList = injectAdsIntoList({
+    listings: regular,
+    ads: sortedAds,
+    interval: 6,
+  });
 
   return (
     <Container className="py-10">
@@ -98,9 +113,8 @@ export default async function JobsPage({ params, searchParams }: Props) {
             />
           )}
 
-          {regular.length > 0 && (
+          {mergedList.length > 0 && (
             <>
-              {/* 헤더 */}
               <div className="grid grid-cols-[1fr_60px] sm:grid-cols-[2fr_3fr_1fr_80px] gap-4 border-b bg-neutral-50 px-4 py-2 mb-2 text-xs font-semibold text-neutral-500">
                 <div>제목</div>
                 <div className="hidden sm:block">내용</div>
@@ -108,15 +122,23 @@ export default async function JobsPage({ params, searchParams }: Props) {
                 <div className="text-right">조회수</div>
               </div>
 
-              {/* 리스트 */}
-              {regular.map((item) => (
-                <ListingRowItem
-                  key={item.id}
-                  item={item}
-                  locale={normalizedLocale}
-                  domain="jobs"
-                />
-              ))}
+              {mergedList.map((item: any, index: number) =>
+                item?.adPlan ? (
+                  <AdSlot
+                    key={`ad-${item.id}-${index}`}
+                    item={item}
+                    locale={normalizedLocale}
+                    placement="listing_middle"
+                  />
+                ) : (
+                  <ListingRowItem
+                    key={item.id}
+                    item={item}
+                    locale={normalizedLocale}
+                    domain="jobs"
+                  />
+                ),
+              )}
             </>
           )}
 

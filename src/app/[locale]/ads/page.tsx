@@ -1,5 +1,5 @@
 import { Container } from "@/components/base/Container";
-import { FeaturedSection } from "@/components/ad/FeaturedSection";
+import { FeaturedAdSection } from "@/features/ads/components/FeaturedAdSection";
 import { StandardAdsTable } from "@/features/ads/components/StandardAdsTable";
 import { getAds } from "@/features/ads/api";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -45,7 +45,12 @@ export default async function AdsPage({ params }: Props) {
       </div>
 
       <div className="space-y-12">
-        <FeaturedSection items={data.featured} locale={normalizedLocale} />
+        <FeaturedAdSection
+          items={data.featured}
+          locale={normalizedLocale}
+          placement="listing_top"
+        />
+
         <StandardAdsTable items={data.standard} locale={normalizedLocale} />
       </div>
     </Container>

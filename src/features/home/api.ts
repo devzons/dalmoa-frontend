@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { cacheTags } from "@/lib/cache/tags";
+import type { AdItem } from "@/features/ads/types/ad";
 import type { HomeCardItem, HomeData, HomeLocale } from "@/features/home/types";
 
 type PaginatedApiResponse<T> = {
@@ -25,15 +26,11 @@ type DirectoryApiItem = {
   isFeatured?: boolean;
 };
 
-type AdApiItem = {
-  id: number;
-  slug: string;
-  title: string;
-  excerpt?: string | null;
-  thumbnailUrl?: string | null;
+type AdApiItem = AdItem & {
   ctaUrl?: string | null;
   isExternal?: boolean;
   isFeatured?: boolean;
+  adPriority?: number | string | null;
 };
 
 type NewsApiItem = {
@@ -120,20 +117,17 @@ type TownBoardApiItem = {
   publishedAt?: string | null;
 };
 
-type CommonAdFields = {
+type CommonImageFields = {
   thumbnail?: string | null;
   imageUrl?: string | null;
   featuredImageUrl?: string | null;
   featuredImage?: string | null;
   image?: string | null;
-  featured?: boolean | number | string | null;
-  isFeatured?: boolean | number | string | null;
-  isAdActive?: boolean | null;
-  adPlan?: string | null;
-  adPriority?: number | string | null;
 };
 
-function getThumbnailUrl(item: CommonAdFields & { thumbnailUrl?: string | null }) {
+function getThumbnailUrl(
+  item: CommonImageFields & { thumbnailUrl?: string | null },
+) {
   return (
     item.thumbnailUrl ||
     item.thumbnail ||
@@ -178,7 +172,7 @@ function take<T>(items: T[], count: number) {
 
 function mapDirectory(
   data: MaybePaginated<DirectoryApiItem>,
-  locale: HomeLocale
+  locale: HomeLocale,
 ): HomeCardItem[] {
   return unwrapItems(data).map((item) => ({
     id: item.id,
@@ -191,24 +185,26 @@ function mapDirectory(
   }));
 }
 
-function mapAds(
-  data: MaybePaginated<AdApiItem>,
-  locale: HomeLocale
-): HomeCardItem[] {
+function mapAds(data: MaybePaginated<AdApiItem>): AdItem[] {
   return unwrapItems(data).map((item) => ({
     id: item.id,
     slug: item.slug,
     title: item.title,
     excerpt: item.excerpt,
     thumbnailUrl: getThumbnailUrl(item),
-    href: `/${locale}/ads/${item.slug}`,
-    meta: locale === "en" ? "Featured Ad" : "추천 광고",
+    region: item.region ?? null,
+    adPlan: item.adPlan ?? null,
+    status: item.status ?? null,
+    priority: item.priority ?? null,
+    createdAt: item.createdAt,
+    startsAt: item.startsAt ?? null,
+    endsAt: item.endsAt ?? null,
   }));
 }
 
 function mapNews(
   data: MaybePaginated<NewsApiItem>,
-  locale: HomeLocale
+  locale: HomeLocale,
 ): HomeCardItem[] {
   return unwrapItems(data).map((item) => ({
     id: item.id,
@@ -224,7 +220,7 @@ function mapNews(
 
 function mapJobs(
   data: MaybePaginated<JobApiItem>,
-  locale: HomeLocale
+  locale: HomeLocale,
 ): HomeCardItem[] {
   return unwrapItems(data).map((item) => ({
     id: item.id,
@@ -240,7 +236,7 @@ function mapJobs(
 
 function mapBusinessSale(
   data: MaybePaginated<BusinessSaleApiItem>,
-  locale: HomeLocale
+  locale: HomeLocale,
 ): HomeCardItem[] {
   return unwrapItems(data).map((item) => ({
     id: item.id,
@@ -256,7 +252,7 @@ function mapBusinessSale(
 
 function mapLoan(
   data: MaybePaginated<LoanApiItem>,
-  locale: HomeLocale
+  locale: HomeLocale,
 ): HomeCardItem[] {
   return unwrapItems(data).map((item) => ({
     id: item.id,
@@ -272,7 +268,7 @@ function mapLoan(
 
 function mapMarketplace(
   data: MaybePaginated<MarketplaceApiItem>,
-  locale: HomeLocale
+  locale: HomeLocale,
 ): HomeCardItem[] {
   return unwrapItems(data).map((item) => ({
     id: item.id,
@@ -288,7 +284,7 @@ function mapMarketplace(
 
 function mapRealEstate(
   data: MaybePaginated<RealEstateApiItem>,
-  locale: HomeLocale
+  locale: HomeLocale,
 ): HomeCardItem[] {
   return unwrapItems(data).map((item) => ({
     id: item.id,
@@ -304,7 +300,7 @@ function mapRealEstate(
 
 function mapCars(
   data: MaybePaginated<CarApiItem>,
-  locale: HomeLocale
+  locale: HomeLocale,
 ): HomeCardItem[] {
   return unwrapItems(data).map((item) => ({
     id: item.id,
@@ -320,7 +316,7 @@ function mapCars(
 
 function mapTownBoard(
   data: MaybePaginated<TownBoardApiItem>,
-  locale: HomeLocale
+  locale: HomeLocale,
 ): HomeCardItem[] {
   return unwrapItems(data).map((item) => ({
     id: item.id,
@@ -349,52 +345,52 @@ export async function getHomeData(locale: HomeLocale): Promise<HomeData> {
   ] = await Promise.all([
     apiFetch<MaybePaginated<AdApiItem>>(
       featuredUrl(endpoints.adsFeatured, locale),
-      withNext([cacheTags.adsFeatured])
+      withNext([cacheTags.adsFeatured]),
     ),
 
     apiFetch<MaybePaginated<DirectoryApiItem>>(
       listUrl(endpoints.directoryList, locale),
-      withNext([cacheTags.directoryList])
+      withNext([cacheTags.directoryList]),
     ),
 
     apiFetch<MaybePaginated<NewsApiItem>>(
       listUrl(endpoints.newsList, locale),
-      withNext([cacheTags.newsList])
+      withNext([cacheTags.newsList]),
     ),
 
     apiFetch<MaybePaginated<JobApiItem>>(
       listUrl(endpoints.jobsList, locale),
-      withNext([cacheTags.jobsList])
+      withNext([cacheTags.jobsList]),
     ),
 
     apiFetch<MaybePaginated<BusinessSaleApiItem>>(
       listUrl(endpoints.businessSaleList, locale),
-      withNext(["business-sale-list"])
+      withNext(["business-sale-list"]),
     ),
 
     apiFetch<MaybePaginated<LoanApiItem>>(
       listUrl(endpoints.loanList, locale),
-      withNext(["loan-list"])
+      withNext(["loan-list"]),
     ),
 
     apiFetch<MaybePaginated<MarketplaceApiItem>>(
       listUrl(endpoints.marketplaceList, locale),
-      withNext([cacheTags.marketplaceList])
+      withNext([cacheTags.marketplaceList]),
     ),
 
     apiFetch<MaybePaginated<RealEstateApiItem>>(
       listUrl(endpoints.realEstateList, locale),
-      withNext([cacheTags.realEstateList])
+      withNext([cacheTags.realEstateList]),
     ),
 
     apiFetch<MaybePaginated<CarApiItem>>(
       listUrl(endpoints.carsList, locale),
-      withNext([cacheTags.carsList])
+      withNext([cacheTags.carsList]),
     ),
 
     apiFetch<MaybePaginated<TownBoardApiItem>>(
       listUrl(endpoints.townBoardList, locale),
-      withNext([cacheTags.townBoardList])
+      withNext([cacheTags.townBoardList]),
     ),
   ]);
 
@@ -402,13 +398,13 @@ export async function getHomeData(locale: HomeLocale): Promise<HomeData> {
   const featuredDirectory = directoryItems.filter((item) => item.isFeatured);
 
   return {
-    featuredAds: take(mapAds(ads, locale), 4),
+    featuredAds: take(mapAds(ads), 4),
     featuredDirectory: take(
       mapDirectory(
         featuredDirectory.length > 0 ? featuredDirectory : directoryItems,
-        locale
+        locale,
       ),
-      6
+      6,
     ),
     latestNews: take(mapNews(news, locale), 4),
     latestJobs: take(mapJobs(jobs, locale), 4),

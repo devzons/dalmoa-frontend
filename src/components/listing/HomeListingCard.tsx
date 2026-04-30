@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
-import { env } from "@/lib/config/env";
 import { normalizeMediaUrl } from "@/lib/api/client";
 import { buildListingHref, type ListingDomain } from "./listingHref";
 
@@ -17,31 +15,13 @@ function isTruthy(value: unknown) {
   return value === true || value === 1 || value === "1" || value === "true";
 }
 
-function trackAdEvent(
-  id: number | string | undefined,
-  type: "click" | "impression"
-) {
-  if (!id) return;
-
-  const baseUrl = env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
-
-  fetch(`${baseUrl}/ads/${id}/${type}`, {
-    method: "POST",
-    keepalive: true,
-  }).catch(() => {});
-}
-
 export default function HomeListingCard({
   item,
   locale,
   domain,
   variant = "default",
 }: Props) {
-  const cardRef = useRef<HTMLAnchorElement | null>(null);
-  const hasTrackedImpression = useRef(false);
-
   const adPlan = item?.adPlan || "basic";
-  const adPriority = Number(item?.adPriority || 0);
   const isAdActive = item?.isAdActive !== false;
 
   const isPremium = isAdActive && adPlan === "premium";
@@ -55,29 +35,6 @@ export default function HomeListingCard({
       isTruthy(item?.featured));
 
   const isAd = isPremium || isFeaturedAd;
-  const shouldTrack = domain === "ads" && Boolean(item?.id);
-
-  useEffect(() => {
-    if (!shouldTrack || !cardRef.current) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-          if (!hasTrackedImpression.current) {
-            hasTrackedImpression.current = true;
-            trackAdEvent(item.id, "impression");
-          }
-
-          observer.disconnect();
-        }
-      },
-      { threshold: [0.5] }
-    );
-
-    observer.observe(cardRef.current);
-
-    return () => observer.disconnect();
-  }, [item?.id, shouldTrack]);
 
   const title =
     item?.title ||
@@ -109,7 +66,7 @@ export default function HomeListingCard({
       item?.imageUrl ||
       item?.featuredImageUrl ||
       item?.featuredImage ||
-      item?.image
+      item?.image,
   );
 
   const href =
@@ -122,13 +79,7 @@ export default function HomeListingCard({
 
   return (
     <Link
-      ref={cardRef}
       href={href}
-      onClick={() => {
-        if (shouldTrack) {
-          trackAdEvent(item.id, "click");
-        }
-      }}
       className={[
         "group relative block overflow-hidden rounded-xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
         isPremium
