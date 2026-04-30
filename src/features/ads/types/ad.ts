@@ -4,6 +4,12 @@ export type AdStatus = "draft" | "active" | "expired" | "inactive";
 
 export type AdPriority = "basic" | "featured" | "premium";
 
+export type AdAbTest = {
+  enabled: boolean;
+  variantId?: string;
+  strategy?: "weighted" | "auto_ctr";
+};
+
 export type AdItem = {
   id: number;
   slug: string;
@@ -20,4 +26,6 @@ export type AdItem = {
   createdAt?: string;
   startsAt?: string | null;
   endsAt?: string | null;
+
+  abTest?: AdAbTest;
 };

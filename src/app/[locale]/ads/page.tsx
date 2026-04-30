@@ -27,7 +27,7 @@ function normalizeAdItem(item: any): AdItem {
     adPlan: item.adPlan ?? item.ad_plan ?? null,
     status: item.status ?? null,
     priority: item.priority ?? null,
-    createdAt: item.createdAt ?? item.created_at ?? null,
+    createdAt: item.createdAt ?? item.created_at ?? undefined,
     startsAt:
       item.startsAt ??
       item.starts_at ??
@@ -42,6 +42,7 @@ function normalizeAdItem(item: any): AdItem {
       item.expiresAt ??
       item.expires_at ??
       null,
+    abTest: item.abTest ?? item.ab_test ?? undefined,
   };
 }
 

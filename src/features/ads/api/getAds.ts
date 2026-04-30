@@ -1,5 +1,6 @@
 import { apiFetch } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import type { AdItem } from "@/features/ads/types/ad";
 
 export async function getAds(locale: "ko" | "en") {
   const params = new URLSearchParams();
@@ -18,15 +19,33 @@ export async function getAds(locale: "ko" | "en") {
 
   const items = Array.isArray(data) ? data : data.items ?? [];
 
-  const featured = items.filter(
-    (item: any) =>
+  const mapItem = (item: any): AdItem => ({
+    id: item.id,
+    slug: item.slug,
+    title: item.title,
+    excerpt: item.excerpt ?? null,
+    thumbnailUrl: item.thumbnailUrl ?? null,
+    region: item.region ?? null,
+    adPlan: item.adPlan ?? null,
+    status: item.status ?? null,
+    priority: item.priority ?? null,
+    createdAt: item.createdAt,
+    startsAt: item.startsAt ?? null,
+    endsAt: item.endsAt ?? null,
+    abTest: item.abTest ?? undefined,
+  });
+
+  const mapped = items.map(mapItem);
+
+  const featured = mapped.filter(
+    (item) =>
       item.adPlan === "premium" ||
       item.adPlan === "featured" ||
-      item.isFeatured === true ||
-      item.is_featured === true
+      item.priority === "premium" ||
+      item.priority === "featured"
   );
 
-  const standard = items.filter((item: any) => !featured.includes(item));
+  const standard = mapped.filter((item) => !featured.includes(item));
 
   return { featured, standard };
 }

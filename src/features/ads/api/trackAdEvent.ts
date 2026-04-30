@@ -4,12 +4,14 @@ type TrackAdEventParams = {
   adId: number;
   type: TrackAdEventType;
   placement?: string;
+  variantId?: string;
 };
 
 export async function trackAdEvent({
   adId,
   type,
   placement,
+  variantId,
 }: TrackAdEventParams): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
   if (!baseUrl) return;
@@ -20,9 +22,10 @@ export async function trackAdEvent({
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      id: adId, // 🔥 핵심 수정
+      id: adId,
       type,
       placement,
+      variantId: variantId ?? "",
     }),
     cache: "no-store",
   });

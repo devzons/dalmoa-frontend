@@ -27,6 +27,7 @@ export function AdCard({
   const hasTracked = useRef(false);
 
   const href = `/${locale}/ads/${item.slug}`;
+  const variantId = item.abTest?.variantId;
 
   const isPremium =
     item.adPlan === "premium" ||
@@ -50,6 +51,7 @@ export function AdCard({
             adId: item.id,
             type: "impression",
             placement,
+            variantId,
           });
 
           observer.disconnect();
@@ -61,7 +63,7 @@ export function AdCard({
     observer.observe(ref.current);
 
     return () => observer.disconnect();
-  }, [item.id, placement]);
+  }, [item.id, placement, variantId]);
 
   return (
     <div ref={ref}>
@@ -116,6 +118,7 @@ export function AdCard({
                 adId: item.id,
                 type: "click",
                 placement,
+                variantId,
               })
             }
           >
