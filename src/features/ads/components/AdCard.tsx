@@ -40,30 +40,40 @@ export function AdCard({
     item.priority === "featured";
 
   useEffect(() => {
-    if (!ref.current) return;
+    const element = ref.current;
+    if (!element) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !hasTracked.current) {
-          hasTracked.current = true;
+        if (!entry?.isIntersecting || hasTracked.current) return;
 
-          trackAdEvent({
-            adId: item.id,
-            type: "impression",
-            placement,
-            variantId,
-          });
+        hasTracked.current = true;
 
-          observer.disconnect();
-        }
+        void trackAdEvent({
+          adId: item.id,
+          type: "impression",
+          placement,
+          variantId,
+        });
+
+        observer.disconnect();
       },
       { threshold: 0.5 },
     );
 
-    observer.observe(ref.current);
+    observer.observe(element);
 
     return () => observer.disconnect();
   }, [item.id, placement, variantId]);
+
+  const handleClick = () => {
+    void trackAdEvent({
+      adId: item.id,
+      type: "click",
+      placement,
+      variantId,
+    });
+  };
 
   return (
     <div ref={ref}>
@@ -111,17 +121,7 @@ export function AdCard({
             <div className="text-sm text-neutral-500">{item.region}</div>
           ) : null}
 
-          <Link
-            href={href}
-            onClick={() =>
-              trackAdEvent({
-                adId: item.id,
-                type: "click",
-                placement,
-                variantId,
-              })
-            }
-          >
+          <Link href={href} onClick={handleClick}>
             <Button className="w-full" size="lg">
               {locale === "en" ? "View Details" : "자세히 보기"}
             </Button>

@@ -27,5 +27,5 @@ export type AdItem = {
   startsAt?: string | null;
   endsAt?: string | null;
 
-  abTest?: AdAbTest;
+  abTest?: AdAbTest | null;
 };

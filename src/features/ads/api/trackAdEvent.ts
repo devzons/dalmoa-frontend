@@ -25,8 +25,9 @@ export async function trackAdEvent({
       id: adId,
       type,
       placement,
-      variantId: variantId ?? "",
+      ...(variantId ? { variantId } : {}),
     }),
     cache: "no-store",
+    keepalive: true,
   });
 }

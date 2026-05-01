@@ -20,19 +20,36 @@ export async function getAds(locale: "ko" | "en") {
   const items = Array.isArray(data) ? data : data.items ?? [];
 
   const mapItem = (item: any): AdItem => ({
-    id: item.id,
-    slug: item.slug,
-    title: item.title,
+    id: Number(item.id),
+    slug: item.slug ?? String(item.id),
+    title: item.title ?? "",
     excerpt: item.excerpt ?? null,
-    thumbnailUrl: item.thumbnailUrl ?? null,
-    region: item.region ?? null,
-    adPlan: item.adPlan ?? null,
+    thumbnailUrl:
+      item.thumbnailUrl ??
+      item.thumbnail_url ??
+      item.imageUrl ??
+      item.image_url ??
+      null,
+    region: item.region ?? item.location ?? null,
+    adPlan: item.adPlan ?? item.ad_plan ?? null,
     status: item.status ?? null,
-    priority: item.priority ?? null,
-    createdAt: item.createdAt,
-    startsAt: item.startsAt ?? null,
-    endsAt: item.endsAt ?? null,
-    abTest: item.abTest ?? undefined,
+    priority: item.priority ?? item.adPriority ?? null,
+    createdAt: item.createdAt ?? item.created_at,
+    startsAt:
+      item.startsAt ??
+      item.starts_at ??
+      item.adStartsAt ??
+      item.ad_starts_at ??
+      null,
+    endsAt:
+      item.endsAt ??
+      item.ends_at ??
+      item.adEndsAt ??
+      item.ad_ends_at ??
+      item.expiresAt ??
+      item.expires_at ??
+      null,
+    abTest: item.abTest ?? item.ab_test ?? null,
   });
 
   const mapped = items.map(mapItem);
