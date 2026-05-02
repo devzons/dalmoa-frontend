@@ -28,6 +28,7 @@ export function AdCard({
 
   const href = `/${locale}/ads/${item.slug ?? item.id}`;
   const variantId = item.abTest?.variantId;
+  const clickCount = Number(item.clickCount ?? 0);
 
   const isPremium =
     item.adPlan === "premium" ||
@@ -107,9 +108,12 @@ export function AdCard({
           </CardHeader>
 
           <CardContent>
-            {item.region ? (
-              <div className="text-sm text-neutral-500">{item.region}</div>
-            ) : null}
+            <div className="space-y-1 text-sm text-neutral-500">
+              {item.region ? <div>{item.region}</div> : null}
+              <div>
+                {locale === "en" ? "Clicks" : "조회"} {clickCount}
+              </div>
+            </div>
 
             <Link
               href={href}
@@ -144,7 +148,9 @@ export function AdCard({
           {item.region ?? "-"}
         </div>
 
-        <div className="text-right text-xs font-bold text-indigo-700">AD</div>
+        <div className="text-right text-xs font-bold text-indigo-700">
+          {clickCount}
+        </div>
       </Link>
     </div>
   );

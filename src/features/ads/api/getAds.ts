@@ -8,21 +8,21 @@ export async function getAds(locale: "ko" | "en") {
   params.set("lang", locale);
 
   const data = await apiFetch<any>(`${endpoints.adsList}?${params.toString()}`, {
-    next: {
-      revalidate: 120,
-      tags: ["ads-list"],
-    },
+    cache: "no-store",
   });
 
   if (!data) {
     return { featured: [], standard: [], sidebar: null, sidebars: [] };
   }
 
-  const items = Array.isArray(data)
+  const items: any[] = Array.isArray(data)
     ? data
     : Array.isArray(data.items)
-      ? data.items
-      : [];
+    ? data.items
+    : [
+        ...(Array.isArray(data.featured) ? data.featured : []),
+        ...(Array.isArray(data.standard) ? data.standard : []),
+      ];
 
   const mapItem = (item: any): AdItem => ({
     id: Number(item.id ?? 0),
@@ -44,6 +44,9 @@ export async function getAds(locale: "ko" | "en") {
     adPlan: item.adPlan ?? item.ad_plan ?? null,
     status: item.status ?? null,
     priority: item.priority ?? item.adPriority ?? null,
+    viewCount: Number(item.viewCount ?? item.view_count ?? 0),
+    impressionCount: Number(item.impressionCount ?? item.impression_count ?? 0),
+    clickCount: Number(item.clickCount ?? item.click_count ?? 0),
     createdAt: item.createdAt ?? item.created_at ?? null,
     startsAt:
       item.startsAt ??
@@ -60,29 +63,26 @@ export async function getAds(locale: "ko" | "en") {
       item.expires_at ??
       null,
     abTest: item.abTest ?? item.ad_test ?? item.ab_test ?? null,
-    isSidebarAd: Boolean(item.isSidebarAd ?? item.is_sidebar_ad ?? false),
   });
 
   const mapped = items.map(mapItem).filter((item) => item.id);
 
-  const featured = sortAdsByPriority(
-    mapped.filter(
-      (item) =>
-        item.adPlan === "premium" ||
-        item.adPlan === "premium_monthly" ||
-        item.adPlan === "featured" ||
-        item.adPlan === "featured_monthly" ||
-        item.priority === "premium" ||
-        item.priority === "featured"
-    )
-  );
+  const isSidebarAd = (item: any) =>
+    Boolean(item?.isSidebarAd ?? item?.is_sidebar_ad ?? false);
 
-  const standard = sortAdsByPriority(
-    mapped.filter((item) => !featured.some((featuredItem) => featuredItem.id === item.id))
-  );
+  const isPaidAd = (item: AdItem) =>
+    item.adPlan === "premium" ||
+    item.adPlan === "premium_monthly" ||
+    item.adPlan === "featured" ||
+    item.adPlan === "featured_monthly" ||
+    item.priority === "premium" ||
+    item.priority === "featured";
+
+  const featured = sortAdsByPriority(mapped.filter(isPaidAd));
+  const standard = mapped.filter((item) => !isPaidAd(item));
 
   const sidebars = sortAdsByPriority(
-    mapped.filter((item) => item.isSidebarAd === true)
+    items.filter((item: any) => isSidebarAd(item)).map(mapItem)
   );
 
   return {

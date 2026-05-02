@@ -36,6 +36,15 @@ function normalizeAdItem(item: any): AdItem {
     adPlan: item.adPlan ?? item.ad_plan ?? null,
     status: item.status ?? null,
     priority: item.priority ?? null,
+    viewCount: Number(
+      item.viewCount ??
+        item.view_count ??
+        item.impressionCount ??
+        item.impression_count ??
+        0
+    ),
+    impressionCount: Number(item.impressionCount ?? item.impression_count ?? 0),
+    clickCount: Number(item.clickCount ?? item.click_count ?? 0),
     createdAt: item.createdAt ?? item.created_at ?? undefined,
     startsAt:
       item.startsAt ??
@@ -52,8 +61,23 @@ function normalizeAdItem(item: any): AdItem {
       item.expires_at ??
       null,
     abTest: item.abTest ?? item.ab_test ?? undefined,
-    isSidebarAd: Boolean(item.isSidebarAd ?? item.is_sidebar_ad ?? false),
   };
+}
+
+function isPremiumAd(item: AdItem) {
+  return (
+    item.adPlan === "premium" ||
+    item.adPlan === "premium_monthly" ||
+    item.priority === "premium"
+  );
+}
+
+function isFeaturedAd(item: AdItem) {
+  return (
+    item.adPlan === "featured" ||
+    item.adPlan === "featured_monthly" ||
+    item.priority === "featured"
+  );
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -70,7 +94,8 @@ export async function generateMetadata({ params }: Props) {
   });
 }
 
-export const revalidate = 120;
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 export default async function AdsPage({ params }: Props) {
   const { locale } = await params;
@@ -78,24 +103,21 @@ export default async function AdsPage({ params }: Props) {
 
   const data = await getAds(normalizedLocale);
 
-  const allFeaturedAds = Array.isArray(data?.featured)
-    ? sortAdsByPriority(data.featured.map(normalizeAdItem))
-    : [];
+  const allAds = [
+    ...(Array.isArray(data?.featured) ? data.featured : []),
+    ...(Array.isArray(data?.standard) ? data.standard : []),
+  ].map(normalizeAdItem);
 
-  const premiumAds = allFeaturedAds.filter(
-    (item) =>
-      item.adPlan === "premium" ||
-      item.adPlan === "premium_monthly" ||
-      item.priority === "premium"
+  const sortedPaidAds = sortAdsByPriority(
+    allAds.filter((item) => isPremiumAd(item) || isFeaturedAd(item))
   );
 
-  const featuredAds = allFeaturedAds.filter(
-    (item) => !premiumAds.some((premium) => premium.id === item.id)
-  );
+  const premiumAds = sortedPaidAds.filter(isPremiumAd);
+  const featuredAds = sortedPaidAds.filter(isFeaturedAd);
 
-  const standardAds = Array.isArray(data?.standard)
-    ? sortAdsByPriority(data.standard.map(normalizeAdItem))
-    : [];
+  const standardAds = allAds.filter(
+    (item) => !isPremiumAd(item) && !isFeaturedAd(item)
+  );
 
   return (
     <Container className="py-10">
@@ -106,8 +128,8 @@ export default async function AdsPage({ params }: Props) {
           </h1>
           <p className="mt-2 text-neutral-500">
             {normalizedLocale === "en"
-              ? "Featured and standard ads are separated for clarity."
-              : "추천 광고와 일반 광고를 분리해 제공합니다."}
+              ? "Premium and featured ads appear first. Free standard ads are listed below."
+              : "프리미엄 광고와 추천 광고를 먼저 보여주고, 무료 일반 광고는 하단 리스트로 제공합니다."}
           </p>
         </div>
 

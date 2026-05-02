@@ -23,6 +23,10 @@ export type AdItem = {
   status?: AdStatus | null;
   priority?: AdPriority | null;
 
+  viewCount?: number;
+  impressionCount?: number;
+  clickCount?: number;
+
   createdAt?: string;
   startsAt?: string | null;
   endsAt?: string | null;

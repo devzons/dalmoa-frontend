@@ -20,7 +20,7 @@ export async function trackAdEvent({
   }
 
   try {
-    await fetch(`${baseUrl}/wp-json/dalmoa/v1/ads/track`, {
+    const response = await fetch(`${baseUrl}/ads/track`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -34,7 +34,17 @@ export async function trackAdEvent({
       cache: "no-store",
       keepalive: true,
     });
-  } catch {
-    return;
+
+    const result = await response.json();
+
+    console.log("AD TRACK RESPONSE", {
+      status: response.status,
+      adId,
+      type,
+      placement,
+      result,
+    });
+  } catch (error) {
+    console.error("AD TRACK ERROR", error);
   }
 }

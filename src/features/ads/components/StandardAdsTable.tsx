@@ -1,5 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { MouseEvent } from "react";
 import type { AdItem } from "@/features/ads/types/ad";
+import { trackAdEvent } from "@/features/ads/api/trackAdEvent";
 
 export function StandardAdsTable({
   items = [],
@@ -8,37 +13,60 @@ export function StandardAdsTable({
   items?: AdItem[];
   locale: "ko" | "en";
 }) {
+  const router = useRouter();
+
   if (!items.length) return null;
+
+  const handleClick = async (
+    event: MouseEvent<HTMLAnchorElement>,
+    item: AdItem
+  ) => {
+    event.preventDefault();
+
+    await trackAdEvent({
+      adId: item.id,
+      type: "click",
+      placement: "listing_bottom",
+    });
+
+    router.push(`/${locale}/ads/${item.slug ?? item.id}`);
+  };
 
   return (
     <section className="space-y-4">
       <h2 className="text-xl font-bold text-neutral-900">
-        {locale === "en" ? "Standard Ads" : "일반 광고"}
+        {locale === "en" ? "Free Standard Ads" : "무료 일반 광고"}
       </h2>
 
       <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+        <div className="grid grid-cols-[2fr_4fr_100px] border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs font-semibold text-neutral-600">
+          <div>{locale === "en" ? "Title" : "제목"}</div>
+          <div>{locale === "en" ? "Content" : "내용"}</div>
+          <div className="text-right">
+            {locale === "en" ? "Clicks" : "클릭수"}
+          </div>
+        </div>
+
         {items.map((item) => (
           <Link
             key={item.id}
             href={`/${locale}/ads/${item.slug ?? item.id}`}
-            className="grid gap-3 border-b border-neutral-100 px-4 py-4 last:border-b-0 hover:bg-neutral-50 sm:grid-cols-[1fr_160px]"
+            onClick={(event) => handleClick(event, item)}
+            className="grid grid-cols-[2fr_4fr_100px] items-center gap-3 border-b border-neutral-100 px-4 py-3 text-sm last:border-b-0 hover:bg-neutral-50"
           >
-            <div>
-              <h3 className="line-clamp-1 text-sm font-semibold text-neutral-900">
-                {item.title ?? ""}
-              </h3>
-
-              {item.excerpt ? (
-                <p
-                  className="mt-1 line-clamp-2 text-sm text-neutral-500"
-                  dangerouslySetInnerHTML={{ __html: item.excerpt }}
-                />
-              ) : null}
+            <div className="truncate font-semibold text-neutral-900">
+              {item.title ?? ""}
             </div>
 
-            <div className="text-sm text-neutral-500">
-              {item.region ??
-                (locale === "en" ? "View details" : "자세히 보기")}
+            <div
+              className="truncate text-neutral-500"
+              dangerouslySetInnerHTML={{
+                __html: item.excerpt ?? "",
+              }}
+            />
+
+            <div className="text-right text-neutral-400">
+              {Number(item.clickCount ?? 0)}
             </div>
           </Link>
         ))}
