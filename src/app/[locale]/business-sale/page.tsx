@@ -1,13 +1,13 @@
 import { Container } from "@/components/base/Container";
 import { CreateListingEntry } from "@/components/common/CreateListingEntry";
-import FeaturedListingGrid from "@/components/listing/FeaturedListingGrid";
 import ListingRowItem from "@/components/listing/ListingRowItem";
+import { PageWithSidebar } from "@/components/layout/PageWithSidebar";
 import { getPaginatedBusinessSaleItems } from "@/features/business-sale/api";
 import { splitFeatured } from "@/features/listing/utils/splitFeatured";
 import { getFeaturedAds } from "@/features/ads/api/getFeaturedAds";
-import { injectAdsIntoList } from "@/features/ads/lib/injectAdsIntoList";
+import { FeaturedAdSection } from "@/features/ads/components/FeaturedAdSection";
+import type { AdItem } from "@/features/ads/types/ad";
 import { sortAdsByPriority } from "@/features/ads/lib/sortAdsByPriority";
-import { AdSlot } from "@/features/ads/components/AdSlot";
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
 import ListingEmptyState from "@/features/search/components/ListingEmptyState";
 import ListingFilters from "@/features/search/components/ListingFilters";
@@ -19,6 +19,26 @@ type Props = {
   params: Promise<{ locale: string }>;
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
+
+function isPremiumAd(item: AdItem) {
+  return (
+    item.adPlan === "premium" ||
+    item.adPlan === "premium_monthly" ||
+    item.priority === "premium"
+  );
+}
+
+function isFeaturedAd(item: AdItem) {
+  return (
+    item.adPlan === "featured" ||
+    item.adPlan === "featured_monthly" ||
+    item.priority === "featured"
+  );
+}
+
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 export default async function BusinessSalePage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -39,100 +59,104 @@ export default async function BusinessSalePage({ params, searchParams }: Props) 
   const totalPages = result?.totalPages ?? 1;
   const hasNextPage = currentPage < totalPages;
 
-  const { featured, regular } =
+  const { regular } =
     currentPage === 1 ? splitFeatured(items) : { featured: [], regular: items };
 
-  const mergedList = injectAdsIntoList({
-    listings: regular,
-    ads: sortAdsByPriority(ads),
-    interval: 6,
-  });
+  const sortedPaidAds = sortAdsByPriority(
+    (Array.isArray(ads) ? ads : []).filter(
+      (item) => isPremiumAd(item) || isFeaturedAd(item),
+    ),
+  );
+
+  const premiumAds = sortedPaidAds.filter(isPremiumAd);
+  const featuredAds = sortedPaidAds.filter(isFeaturedAd);
 
   return (
     <Container className="py-10">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {normalizedLocale === "en" ? "Business for Sale" : "사업체 매매"}
-          </h1>
-          <p className="mt-2 text-neutral-500">
-            {normalizedLocale === "en"
-              ? "Browse business sale listings."
-              : "등록된 사업체 매매 정보를 확인하세요."}
-          </p>
+      <PageWithSidebar locale={normalizedLocale}>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {normalizedLocale === "en" ? "Business for Sale" : "사업체 매매"}
+            </h1>
+            <p className="mt-2 text-neutral-500">
+              {normalizedLocale === "en"
+                ? "Browse business sale listings."
+                : "등록된 사업체 매매 정보를 확인하세요."}
+            </p>
+          </div>
+
+          <CreateListingEntry locale={normalizedLocale} category={domain} />
         </div>
 
-        <CreateListingEntry locale={normalizedLocale} category={domain} />
-      </div>
+        <div className="mb-6">
+          <ListingFilters domain={domain} initialFilters={filters} />
+        </div>
 
-      <div className="mb-6">
-        <ListingFilters domain={domain} initialFilters={filters} />
-      </div>
+        <div className="mb-6">
+          <ListingActiveFilters filters={filters} />
+        </div>
 
-      <div className="mb-6">
-        <ListingActiveFilters filters={filters} />
-      </div>
+        <ListingResultSummary
+          total={total}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          locale={normalizedLocale}
+        />
 
-      <ListingResultSummary
-        total={total}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        locale={normalizedLocale}
-      />
-
-      {items.length > 0 ? (
-        <div className="space-y-10">
-          {featured.length > 0 && (
-            <FeaturedListingGrid
-              items={featured}
-              locale={normalizedLocale}
-              domain={domain}
-            />
-          )}
-
-          {mergedList.length > 0 && (
-            <>
-              <div className="mb-2 grid grid-cols-[1fr_60px] gap-4 border-b bg-neutral-50 px-4 py-2 text-xs font-semibold text-neutral-500 sm:grid-cols-[2fr_3fr_1fr_80px]">
-                <div>{normalizedLocale === "en" ? "Title" : "제목"}</div>
-                <div className="hidden sm:block">
-                  {normalizedLocale === "en" ? "Content" : "내용"}
-                </div>
-                <div className="hidden sm:block">
-                  {normalizedLocale === "en" ? "Region" : "지역"}
-                </div>
-                <div className="text-right">
-                  {normalizedLocale === "en" ? "Views" : "조회수"}
-                </div>
-              </div>
-
-              {mergedList.map((item: any, index: number) =>
-                item?.adPlan ? (
-                  <AdSlot
-                    key={`ad-${item.id}-${index}`}
-                    item={item}
-                    locale={normalizedLocale}
-                    placement="listing_middle"
-                  />
-                ) : (
-                  <ListingRowItem
-                    key={item.id}
-                    item={item}
-                    locale={normalizedLocale}
-                    domain={domain}
-                  />
-                ),
-              )}
-            </>
-          )}
-
-          <ListingPagination
-            currentPage={currentPage}
-            hasNextPage={hasNextPage}
+        <div className="space-y-12">
+          <FeaturedAdSection
+            title={normalizedLocale === "en" ? "Premium Ads" : "프리미엄 광고"}
+            items={premiumAds}
+            locale={normalizedLocale}
+            placement="listing_top"
           />
+
+          <FeaturedAdSection
+            title={normalizedLocale === "en" ? "Featured Ads" : "추천 광고"}
+            items={featuredAds}
+            locale={normalizedLocale}
+            placement="listing_top"
+          />
+
+          {items.length > 0 ? (
+            <>
+              {regular.length > 0 && (
+                <div className="rounded-2xl border border-neutral-200 bg-white">
+                  <div className="grid grid-cols-[1fr_60px] gap-2 border-b bg-neutral-50 px-3 py-2 text-xs font-semibold text-neutral-500 sm:grid-cols-[2fr_3fr_1fr_80px]">
+                    <div>{normalizedLocale === "en" ? "Title" : "제목"}</div>
+                    <div className="hidden sm:block">
+                      {normalizedLocale === "en" ? "Content" : "내용"}
+                    </div>
+                    <div className="hidden sm:block">
+                      {normalizedLocale === "en" ? "Region" : "지역"}
+                    </div>
+                    <div className="text-right">
+                      {normalizedLocale === "en" ? "Views" : "조회수"}
+                    </div>
+                  </div>
+
+                  {regular.map((item: any) => (
+                    <ListingRowItem
+                      key={item.id ?? item.slug}
+                      item={item}
+                      locale={normalizedLocale}
+                      domain={domain}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <ListingPagination
+                currentPage={currentPage}
+                hasNextPage={hasNextPage}
+              />
+            </>
+          ) : (
+            <ListingEmptyState locale={normalizedLocale} />
+          )}
         </div>
-      ) : (
-        <ListingEmptyState locale={normalizedLocale} />
-      )}
+      </PageWithSidebar>
     </Container>
   );
 }

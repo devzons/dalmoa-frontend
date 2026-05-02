@@ -192,6 +192,13 @@ export default async function AdDetailPage({ params }: Props) {
               </Link>
             </div>
 
+            <Link
+              href={`/${normalizedLocale}/ads`}
+              className="inline-flex w-fit items-center justify-center rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-50"
+            >
+              {normalizedLocale === "en" ? "Back to ads" : "광고 목록으로 돌아가기"}
+            </Link>
+
             <AdPromotionPanel
               postId={ad.id}
               locale={normalizedLocale}
