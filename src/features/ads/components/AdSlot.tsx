@@ -11,11 +11,11 @@ export function AdSlot({
   locale: "ko" | "en";
   placement?: AdPlacement;
 }) {
-  if (!item) return null;
+  if (!item || !item.id) return null;
 
   return (
-    <div className="w-full">
-      <AdCard item={item} locale={locale} placement={placement} />
+    <div className="border-b border-neutral-100 last:border-b-0">
+      <AdCard item={item} locale={locale} placement={placement} variant="row" />
     </div>
   );
 }

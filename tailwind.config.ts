@@ -11,14 +11,16 @@ const config: Config = {
         secondary: "rgb(var(--color-secondary) / <alpha-value>)",
         "secondary-hover": "rgb(var(--color-secondary-hover) / <alpha-value>)",
 
-        premium: "rgb(var(--color-premium) / <alpha-value>)",
-        "premium-light": "rgb(var(--color-premium-light) / <alpha-value>)",
+        // Indigo 계열
+        premium: "#4f46e5",
+        "premium-light": "#e0e7ff",
+     
 
-        featured: "rgb(var(--color-featured) / <alpha-value>)",
-        "featured-light": "rgb(var(--color-featured-light) / <alpha-value>)",
+        featured: "#6366f1",
+        "featured-light": "#eef2ff",
 
-        sponsored: "rgb(var(--color-sponsored) / <alpha-value>)",
-        "sponsored-light": "rgb(var(--color-sponsored-light) / <alpha-value>)",
+        sponsored: "#818cf8",
+        "sponsored-light": "#eef2ff",
       },
     },
   },

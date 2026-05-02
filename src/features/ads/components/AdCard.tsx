@@ -2,11 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { Button } from "@/components/base/Button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/base/Card";
@@ -26,7 +24,9 @@ export function AdCard({
   const ref = useRef<HTMLDivElement | null>(null);
   const hasTracked = useRef(false);
 
-  const href = `/${locale}/ads/${item.slug}`;
+  if (!item || !item.id) return null;
+
+  const href = `/${locale}/ads/${item.slug ?? item.id}`;
   const variantId = item.abTest?.variantId;
 
   const isPremium =
@@ -38,6 +38,9 @@ export function AdCard({
     item.adPlan === "featured" ||
     item.adPlan === "featured_monthly" ||
     item.priority === "featured";
+
+  const shouldRenderAsRow =
+    placement === "listing_middle" || placement === "listing_bottom";
 
   useEffect(() => {
     const element = ref.current;
@@ -58,11 +61,10 @@ export function AdCard({
 
         observer.disconnect();
       },
-      { threshold: 0.5 },
+      { threshold: 0.5 }
     );
 
     observer.observe(element);
-
     return () => observer.disconnect();
   }, [item.id, placement, variantId]);
 
@@ -75,59 +77,72 @@ export function AdCard({
     });
   };
 
-  return (
-    <div ref={ref}>
-      <Card className="h-full overflow-hidden">
-        {item.thumbnailUrl ? (
-          <div className="h-52 w-full overflow-hidden bg-neutral-100">
-            <img
-              src={item.thumbnailUrl}
-              alt={item.title}
-              className="h-full w-full object-cover"
-            />
-          </div>
-        ) : (
-          <div className="flex h-52 w-full items-center justify-center bg-neutral-100 text-sm text-neutral-400">
-            {locale === "en" ? "No image" : "이미지 없음"}
-          </div>
-        )}
-
-        <CardHeader>
-          <div className="mb-2 flex flex-wrap gap-2">
-            {isPremium ? (
-              <span className="rounded-full bg-black px-2.5 py-1 text-xs font-medium text-white">
-                Premium
+  if (!shouldRenderAsRow) {
+    return (
+      <div ref={ref}>
+        <Card className="h-full overflow-hidden border-indigo-50 hover:bg-indigo-50">
+          <CardHeader>
+            <div className="mb-2 flex gap-2">
+              <span className="rounded-sm bg-indigo-600 px-2 py-0.5 text-xs font-bold text-white">
+                AD
               </span>
+
+              {isPremium ? (
+                <span className="rounded-sm bg-black px-2 py-0.5 text-xs text-white">
+                  Premium
+                </span>
+              ) : null}
+
+              {!isPremium && isFeatured ? (
+                <span className="rounded-sm bg-neutral-800 px-2 py-0.5 text-xs text-white">
+                  Featured
+                </span>
+              ) : null}
+            </div>
+
+            <CardTitle className="line-clamp-2">{item.title ?? ""}</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            {item.region ? (
+              <div className="text-sm text-neutral-500">{item.region}</div>
             ) : null}
 
-            {!isPremium && isFeatured ? (
-              <span className="rounded-full bg-neutral-800 px-2.5 py-1 text-xs font-medium text-white">
-                Featured
-              </span>
-            ) : null}
-          </div>
-
-          <CardTitle className="line-clamp-1">{item.title}</CardTitle>
-
-          {item.excerpt ? (
-            <CardDescription className="line-clamp-2">
-              {item.excerpt}
-            </CardDescription>
-          ) : null}
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          {item.region ? (
-            <div className="text-sm text-neutral-500">{item.region}</div>
-          ) : null}
-
-          <Link href={href} onClick={handleClick}>
-            <Button className="w-full" size="lg">
+            <Link
+              href={href}
+              onClick={handleClick}
+              className="mt-3 inline-block text-sm font-semibold text-indigo-700"
+            >
               {locale === "en" ? "View Details" : "자세히 보기"}
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={ref} className="border-b border-neutral-100">
+      <Link
+        href={href}
+        onClick={handleClick}
+        className="grid grid-cols-[1fr_60px] gap-2 bg-indigo-50 px-3 py-3 text-sm hover:bg-indigo-100 sm:grid-cols-[2fr_3fr_1fr_80px]"
+      >
+        <div className="font-semibold text-neutral-900">{item.title ?? ""}</div>
+
+        <div
+          className="hidden text-neutral-600 sm:block"
+          dangerouslySetInnerHTML={{
+            __html: item.excerpt ?? "",
+          }}
+        />
+
+        <div className="hidden text-neutral-500 sm:block">
+          {item.region ?? "-"}
+        </div>
+
+        <div className="text-right text-xs font-bold text-indigo-700">AD</div>
+      </Link>
     </div>
   );
 }

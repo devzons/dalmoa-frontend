@@ -36,13 +36,12 @@ export async function getDirectoryBySlug(
   slug: string,
   locale: "ko" | "en" = "ko"
 ) {
+  const normalizedSlug = decodeURIComponent(slug);
+
   return apiFetch<DirectoryItem>(
-    `${endpoints.directoryDetail(slug)}?locale=${locale}`,
+    `${endpoints.directoryDetail(normalizedSlug)}?locale=${locale}`,
     {
-      next: {
-        revalidate: 300,
-        tags: [cacheTags.directoryDetail(slug)],
-      },
+      cache: "no-store",
     }
   );
 }

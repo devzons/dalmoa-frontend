@@ -15,6 +15,7 @@ export type HomeCardItem = {
 
 export type HomeData = {
   featuredAds: AdItem[];
+  standardAds: AdItem[];
   featuredDirectory: HomeCardItem[];
   latestNews: HomeCardItem[];
   latestJobs: HomeCardItem[];

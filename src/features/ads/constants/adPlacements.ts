@@ -8,6 +8,7 @@ export const AD_PLACEMENTS: AdPlacement[] = [
   "listing_middle",
   "listing_bottom",
   "detail_sidebar",
+  "sidebar_right",
   "search_top",
   "search_middle",
 ];
@@ -20,6 +21,7 @@ export const AD_PLACEMENT_LABELS: Record<AdPlacement, string> = {
   listing_middle: "Listing Middle",
   listing_bottom: "Listing Bottom",
   detail_sidebar: "Detail Sidebar",
+  sidebar_right: "Sidebar Right",
   search_top: "Search Top",
   search_middle: "Search Middle",
 };

@@ -1,5 +1,3 @@
-// src/lib/api/client.ts
-
 export type ApiFetchOptions = RequestInit & {
   next?: {
     revalidate?: number;
@@ -60,8 +58,10 @@ export async function apiFetch<T = any>(
   }
 }
 
-export function normalizeMediaUrl(url?: string | null) {
-  if (!url) return null;
+export function normalizeMediaUrl(url?: string | null): string | null {
+  if (!url) {
+    return null;
+  }
 
   if (url.startsWith("http://") || url.startsWith("https://")) {
     return url;
@@ -69,7 +69,9 @@ export function normalizeMediaUrl(url?: string | null) {
 
   const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
 
-  if (!baseUrl) return url;
+  if (!baseUrl) {
+    return url;
+  }
 
   return `${baseUrl}${url.startsWith("/") ? url : `/${url}`}`;
 }

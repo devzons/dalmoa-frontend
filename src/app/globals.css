@@ -3,26 +3,6 @@
 :root {
   --background: 255 255 255;
   --foreground: 23 23 23;
-
-  /* PRIMARY */
-  --color-primary: 124 58 237;
-  --color-primary-hover: 109 40 217;
-
-  /* SECONDARY */
-  --color-secondary: 99 102 241;
-  --color-secondary-hover: 79 70 229;
-
-  /* PREMIUM */
-  --color-premium: 124 58 237;
-  --color-premium-light: 221 214 254;
-
-  /* FEATURED */
-  --color-featured: 139 92 246;
-  --color-featured-light: 237 233 254;
-
-  /* SPONSORED */
-  --color-sponsored: 167 139 250;
-  --color-sponsored-light: 245 243 255;
 }
 
 * {

@@ -16,6 +16,7 @@ export const endpoints = {
 
   adsList: `${API_PREFIX}/ads`,
   adsFeatured: `${API_PREFIX}/ads/featured`,
+  adsSidebar: `${API_PREFIX}/ads/sidebar`, // ✅ 추가
   adsDetail: (slug: string) =>
     `${API_PREFIX}/ads/${normalizeSlug(slug)}`,
 

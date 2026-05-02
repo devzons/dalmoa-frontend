@@ -1,22 +1,25 @@
 import type { AdItem } from "@/features/ads/types/ad";
+import type { AdPlacement } from "@/features/ads/types/adPlacement";
 import { AdRenderer } from "@/features/ads/components/AdRenderer";
 
 export function AdSection({
   title,
   description,
-  items,
+  items = [],
   locale,
+  placement = "listing_middle",
 }: {
   title?: string;
   description?: string;
-  items: AdItem[];
+  items?: AdItem[];
   locale: "ko" | "en";
+  placement?: AdPlacement;
 }) {
   if (!items.length) return null;
 
   return (
     <section className="space-y-4">
-      {(title || description) ? (
+      {title || description ? (
         <div className="space-y-1">
           {title ? (
             <h2 className="text-xl font-bold text-neutral-900">{title}</h2>
@@ -28,7 +31,7 @@ export function AdSection({
         </div>
       ) : null}
 
-      <AdRenderer items={items} locale={locale} />
+      <AdRenderer items={items} locale={locale} placement={placement} />
     </section>
   );
 }

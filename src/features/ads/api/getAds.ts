@@ -14,27 +14,36 @@ export async function getAds(locale: "ko" | "en") {
   });
 
   if (!data) {
-    return { featured: [], standard: [] };
+    return { featured: [], standard: [], sidebar: null, sidebars: [] };
   }
 
-  const items = Array.isArray(data) ? data : data.items ?? [];
+  const items = Array.isArray(data)
+    ? data
+    : Array.isArray(data.items)
+      ? data.items
+      : [];
 
   const mapItem = (item: any): AdItem => ({
-    id: Number(item.id),
-    slug: item.slug ?? String(item.id),
-    title: item.title ?? "",
-    excerpt: item.excerpt ?? null,
+    id: Number(item.id ?? 0),
+    slug: item.slug ?? String(item.id ?? ""),
+    title:
+      typeof item.title === "string" ? item.title : item.title?.rendered ?? "",
+    excerpt:
+      typeof item.excerpt === "string"
+        ? item.excerpt
+        : item.excerpt?.rendered ?? null,
     thumbnailUrl:
       item.thumbnailUrl ??
       item.thumbnail_url ??
       item.imageUrl ??
       item.image_url ??
+      item._embedded?.["wp:featuredmedia"]?.[0]?.source_url ??
       null,
     region: item.region ?? item.location ?? null,
     adPlan: item.adPlan ?? item.ad_plan ?? null,
     status: item.status ?? null,
     priority: item.priority ?? item.adPriority ?? null,
-    createdAt: item.createdAt ?? item.created_at,
+    createdAt: item.createdAt ?? item.created_at ?? null,
     startsAt:
       item.startsAt ??
       item.starts_at ??
@@ -49,20 +58,30 @@ export async function getAds(locale: "ko" | "en") {
       item.expiresAt ??
       item.expires_at ??
       null,
-    abTest: item.abTest ?? item.ab_test ?? null,
+    abTest: item.abTest ?? item.ad_test ?? item.ab_test ?? null,
+    isSidebarAd: Boolean(item.isSidebarAd ?? item.is_sidebar_ad ?? false),
   });
 
-  const mapped = items.map(mapItem);
+  const mapped = items.map(mapItem).filter((item) => item.id);
 
   const featured = mapped.filter(
     (item) =>
       item.adPlan === "premium" ||
+      item.adPlan === "premium_monthly" ||
       item.adPlan === "featured" ||
+      item.adPlan === "featured_monthly" ||
       item.priority === "premium" ||
       item.priority === "featured"
   );
 
   const standard = mapped.filter((item) => !featured.includes(item));
 
-  return { featured, standard };
+  const sidebars = mapped.filter((item) => item.isSidebarAd === true);
+
+  return {
+    featured,
+    standard,
+    sidebar: sidebars[0] ?? null,
+    sidebars,
+  };
 }

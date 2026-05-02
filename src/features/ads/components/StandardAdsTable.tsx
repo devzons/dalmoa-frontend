@@ -2,10 +2,10 @@ import Link from "next/link";
 import type { AdItem } from "@/features/ads/types/ad";
 
 export function StandardAdsTable({
-  items,
+  items = [],
   locale,
 }: {
-  items: AdItem[];
+  items?: AdItem[];
   locale: "ko" | "en";
 }) {
   if (!items.length) return null;
@@ -20,23 +20,25 @@ export function StandardAdsTable({
         {items.map((item) => (
           <Link
             key={item.id}
-            href={`/${locale}/ads/${item.slug}`}
+            href={`/${locale}/ads/${item.slug ?? item.id}`}
             className="grid gap-3 border-b border-neutral-100 px-4 py-4 last:border-b-0 hover:bg-neutral-50 sm:grid-cols-[1fr_160px]"
           >
             <div>
               <h3 className="line-clamp-1 text-sm font-semibold text-neutral-900">
-                {item.title}
+                {item.title ?? ""}
               </h3>
 
               {item.excerpt ? (
-                <p className="mt-1 line-clamp-2 text-sm text-neutral-500">
-                  {item.excerpt}
-                </p>
+                <p
+                  className="mt-1 line-clamp-2 text-sm text-neutral-500"
+                  dangerouslySetInnerHTML={{ __html: item.excerpt }}
+                />
               ) : null}
             </div>
 
             <div className="text-sm text-neutral-500">
-              {item.region ?? (locale === "en" ? "View details" : "자세히 보기")}
+              {item.region ??
+                (locale === "en" ? "View details" : "자세히 보기")}
             </div>
           </Link>
         ))}
