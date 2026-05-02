@@ -15,12 +15,10 @@ export async function trackAdEvent({
 }: TrackAdEventParams): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
 
-  if (!baseUrl || !adId) {
-    return;
-  }
+  if (!baseUrl || !adId) return;
 
   try {
-    const response = await fetch(`${baseUrl}/ads/track`, {
+    await fetch(`${baseUrl}/ads/track`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -31,20 +29,7 @@ export async function trackAdEvent({
         placement,
         ...(variantId ? { variantId } : {}),
       }),
-      cache: "no-store",
       keepalive: true,
     });
-
-    const result = await response.json();
-
-    console.log("AD TRACK RESPONSE", {
-      status: response.status,
-      adId,
-      type,
-      placement,
-      result,
-    });
-  } catch (error) {
-    console.error("AD TRACK ERROR", error);
-  }
+  } catch (_) {}
 }

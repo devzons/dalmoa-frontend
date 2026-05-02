@@ -48,6 +48,15 @@ export async function getSidebarAds(
     adPlan: item.adPlan ?? item.ad_plan ?? null,
     status: item.status ?? null,
     priority: item.priority ?? null,
+    viewCount: Number(
+      item.viewCount ??
+        item.view_count ??
+        item.impressionCount ??
+        item.impression_count ??
+        0
+    ),
+    impressionCount: Number(item.impressionCount ?? item.impression_count ?? 0),
+    clickCount: Number(item.clickCount ?? item.click_count ?? 0),
     createdAt: item.createdAt ?? item.created_at ?? null,
     startsAt:
       item.startsAt ??

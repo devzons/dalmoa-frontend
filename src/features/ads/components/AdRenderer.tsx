@@ -25,8 +25,17 @@ export function AdRenderer({
 
   const ordered = [...featured, ...rest];
 
+  // 🔥 inline placement은 grid 깨지지 않도록 1열 처리
+  const isInline = placement === "listing_inline";
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div
+      className={
+        isInline
+          ? "space-y-3"
+          : "grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+      }
+    >
       {ordered.map((item) => (
         <AdCard
           key={item.id}

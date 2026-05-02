@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { MouseEvent } from "react";
 import { useEffect, useRef } from "react";
 import {
   Card,
@@ -28,6 +29,8 @@ export function AdCard({
 
   const href = `/${locale}/ads/${item.slug ?? item.id}`;
   const variantId = item.abTest?.variantId;
+
+  const viewCount = Number(item.viewCount ?? item.impressionCount ?? 0);
   const clickCount = Number(item.clickCount ?? 0);
 
   const isPremium =
@@ -42,11 +45,23 @@ export function AdCard({
 
   const isSidebar = placement === "sidebar_right";
 
-  const shouldRenderAsRow =
-    !isSidebar &&
-    (placement === "listing_middle" || placement === "listing_bottom");
-
   useEffect(() => {
+    if (!item?.id) return;
+
+    if (isSidebar) {
+      if (!hasTracked.current) {
+        hasTracked.current = true;
+
+        void trackAdEvent({
+          adId: item.id,
+          type: "impression",
+          placement,
+          variantId,
+        });
+      }
+      return;
+    }
+
     const element = ref.current;
     if (!element) return;
 
@@ -70,88 +85,74 @@ export function AdCard({
 
     observer.observe(element);
     return () => observer.disconnect();
-  }, [item.id, placement, variantId]);
+  }, [item.id, placement, variantId, isSidebar]);
 
-  const handleClick = () => {
-    void trackAdEvent({
+  const handleClick = async (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      event.button !== 0
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    await trackAdEvent({
       adId: item.id,
       type: "click",
       placement,
       variantId,
     });
+
+    window.location.href = href;
   };
 
-  if (!shouldRenderAsRow) {
-    return (
-      <div ref={ref}>
-        <Card className="h-full overflow-hidden hover:bg-indigo-50">
-          <CardHeader>
-            <div className="mb-2 flex gap-2">
-              <span className="rounded-sm bg-indigo-600 px-2 py-0.5 text-xs font-bold text-white">
-                AD
-              </span>
-
-              {isPremium ? (
-                <span className="rounded-sm bg-black px-2 py-0.5 text-xs text-white">
-                  Premium
-                </span>
-              ) : null}
-
-              {!isPremium && isFeatured ? (
-                <span className="rounded-sm bg-neutral-800 px-2 py-0.5 text-xs text-white">
-                  Featured
-                </span>
-              ) : null}
-            </div>
-
-            <CardTitle className="line-clamp-2">{item.title ?? ""}</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <div className="space-y-1 text-sm text-neutral-500">
-              {item.region ? <div>{item.region}</div> : null}
-              <div>
-                {locale === "en" ? "Clicks" : "조회"} {clickCount}
-              </div>
-            </div>
-
-            <Link
-              href={href}
-              onClick={handleClick}
-              className="mt-3 inline-block text-sm font-semibold text-indigo-700"
-            >
-              {locale === "en" ? "View Details" : "자세히 보기"}
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div ref={ref} className="border-b border-neutral-100">
-      <Link
-        href={href}
-        onClick={handleClick}
-        className="grid grid-cols-[1fr_60px] gap-2 bg-indigo-50 px-3 py-3 text-sm hover:bg-indigo-100 sm:grid-cols-[2fr_3fr_1fr_80px]"
-      >
-        <div className="font-semibold text-neutral-900">{item.title ?? ""}</div>
+    <div ref={ref}>
+      <Card className="h-full overflow-hidden hover:bg-indigo-50">
+        <CardHeader>
+          <div className="mb-2 flex gap-2">
+            <span className="rounded-sm bg-indigo-600 px-2 py-0.5 text-xs font-bold text-white">
+              AD
+            </span>
 
-        <div
-          className="hidden text-neutral-600 sm:block"
-          dangerouslySetInnerHTML={{
-            __html: item.excerpt ?? "",
-          }}
-        />
+            {isPremium ? (
+              <span className="rounded-sm bg-black px-2 py-0.5 text-xs text-white">
+                Premium
+              </span>
+            ) : null}
 
-        <div className="hidden text-neutral-500 sm:block">
-          {item.region ?? "-"}
-        </div>
+            {!isPremium && isFeatured ? (
+              <span className="rounded-sm bg-neutral-800 px-2 py-0.5 text-xs text-white">
+                Featured
+              </span>
+            ) : null}
+          </div>
 
-        <div className="text-right text-xs font-bold text-indigo-700">
-          {clickCount}
-        </div>
-      </Link>
+          <CardTitle className="line-clamp-2">{item.title ?? ""}</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <div className="space-y-1 text-sm text-neutral-500">
+            {item.region ? <div>{item.region}</div> : null}
+            <div>
+              조회 {viewCount.toLocaleString()} · 방문{" "}
+              {clickCount.toLocaleString()}
+            </div>
+          </div>
+
+          <Link
+            href={href}
+            onClick={handleClick}
+            className="mt-3 inline-block text-sm font-semibold text-indigo-700"
+          >
+            자세히 보기
+          </Link>
+        </CardContent>
+      </Card>
     </div>
   );
 }

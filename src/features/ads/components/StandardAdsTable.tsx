@@ -43,7 +43,7 @@ export function StandardAdsTable({
           <div>{locale === "en" ? "Title" : "제목"}</div>
           <div>{locale === "en" ? "Content" : "내용"}</div>
           <div className="text-right">
-            {locale === "en" ? "Clicks" : "클릭수"}
+            {locale === "en" ? "Clicks" : "방문수"}
           </div>
         </div>
 

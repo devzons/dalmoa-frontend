@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect } from "react";
 import { Badge } from "@/components/base/Badge";
 import {
   Card,
@@ -14,7 +17,38 @@ import {
   hasDirectoryContent,
 } from "@/features/directory/utils";
 
+function normalizeViews(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
 export function DirectoryDetail({ item }: { item: DirectoryItem }) {
+  const listing = item as any;
+
+  const viewCount = normalizeViews(
+    listing.viewCount ??
+      listing.views ??
+      listing.view_count ??
+      listing.hitCount ??
+      0
+  );
+
+  useEffect(() => {
+    if (!item?.id || !item?.slug) return;
+
+    const key = `viewed-${item.id}`;
+    const alreadyViewed = sessionStorage.getItem(key);
+
+    if (alreadyViewed) return;
+
+    sessionStorage.setItem(key, "1");
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/directory/${item.slug}/view`, {
+      method: "POST",
+      cache: "no-store",
+    }).catch(() => {});
+  }, [item?.id, item?.slug]);
+
   return (
     <div className="bg-neutral-50 py-10">
       <Container>
@@ -44,55 +78,62 @@ export function DirectoryDetail({ item }: { item: DirectoryItem }) {
             ) : null}
           </CardHeader>
 
-          <CardContent className="grid gap-8 md:grid-cols-2">
-            <div className="space-y-3 text-sm text-neutral-700">
-              {hasDirectoryContact(item) ? (
-                <>
-                  {item.phone ? (
-                    <div>
-                      <strong className="mr-2 text-neutral-900">전화</strong>
-                      <span>{item.phone}</span>
-                    </div>
-                  ) : null}
+          <CardContent className="space-y-6">
+            {/* 🔥 조회수 추가 */}
+            <div className="flex justify-end text-sm text-neutral-500">
+              조회수 {viewCount.toLocaleString()}
+            </div>
 
-                  {item.email ? (
-                    <div>
-                      <strong className="mr-2 text-neutral-900">이메일</strong>
-                      <a href={`mailto:${item.email}`} className="underline">
-                        {item.email}
-                      </a>
-                    </div>
-                  ) : null}
+            <div className="grid gap-8 md:grid-cols-2">
+              <div className="space-y-3 text-sm text-neutral-700">
+                {hasDirectoryContact(item) ? (
+                  <>
+                    {item.phone ? (
+                      <div>
+                        <strong className="mr-2 text-neutral-900">전화</strong>
+                        <span>{item.phone}</span>
+                      </div>
+                    ) : null}
 
-                  {item.websiteUrl ? (
-                    <div>
-                      <strong className="mr-2 text-neutral-900">웹사이트</strong>
-                      <a
-                        href={item.websiteUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="break-all underline"
-                      >
-                        {item.websiteUrl}
-                      </a>
-                    </div>
-                  ) : null}
-                </>
-              ) : null}
+                    {item.email ? (
+                      <div>
+                        <strong className="mr-2 text-neutral-900">이메일</strong>
+                        <a href={`mailto:${item.email}`} className="underline">
+                          {item.email}
+                        </a>
+                      </div>
+                    ) : null}
 
-              {hasDirectoryAddress(item) ? (
-                <div>
-                  <strong className="mr-2 text-neutral-900">주소</strong>
-                  <span>{item.address}</span>
+                    {item.websiteUrl ? (
+                      <div>
+                        <strong className="mr-2 text-neutral-900">웹사이트</strong>
+                        <a
+                          href={item.websiteUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="break-all underline"
+                        >
+                          {item.websiteUrl}
+                        </a>
+                      </div>
+                    ) : null}
+                  </>
+                ) : null}
+
+                {hasDirectoryAddress(item) ? (
+                  <div>
+                    <strong className="mr-2 text-neutral-900">주소</strong>
+                    <span>{item.address}</span>
+                  </div>
+                ) : null}
+              </div>
+
+              {hasDirectoryContent(item) ? (
+                <div className="whitespace-pre-wrap text-sm leading-7 text-neutral-700">
+                  {item.content}
                 </div>
               ) : null}
             </div>
-
-            {hasDirectoryContent(item) ? (
-              <div className="whitespace-pre-wrap text-sm leading-7 text-neutral-700">
-                {item.content}
-              </div>
-            ) : null}
           </CardContent>
         </Card>
       </Container>

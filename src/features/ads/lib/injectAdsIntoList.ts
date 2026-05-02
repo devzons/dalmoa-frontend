@@ -4,20 +4,23 @@ export function injectAdsIntoList<T>({
   interval = 6,
   maxAds,
 }: {
-  listings: T[];
-  ads: T[];
+  listings?: T[];
+  ads?: T[];
   interval?: number;
   maxAds?: number;
 }): T[] {
-  if (!ads.length) return listings;
+  const safeListings = Array.isArray(listings) ? listings : [];
+  const safeAds = Array.isArray(ads) ? ads : [];
+
+  if (!safeAds.length) return safeListings;
 
   const safeInterval = Math.max(1, interval);
-  const adsToInject = ads.slice(0, maxAds ?? ads.length);
+  const adsToInject = safeAds.slice(0, maxAds ?? safeAds.length);
   const result: T[] = [];
 
   let adIndex = 0;
 
-  listings.forEach((listing, index) => {
+  safeListings.forEach((listing, index) => {
     result.push(listing);
 
     const shouldInjectAd =

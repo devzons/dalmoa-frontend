@@ -1,6 +1,5 @@
 import { apiFetch } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
-import { cacheTags } from "@/lib/cache/tags";
 import type { AdItem } from "@/features/ads/types/ad";
 
 type PaginatedApiResponse<T> = {
@@ -8,6 +7,21 @@ type PaginatedApiResponse<T> = {
 };
 
 type MaybePaginated<T> = T[] | PaginatedApiResponse<T>;
+
+function normalizeAdItem(item: any) {
+  return {
+    ...item,
+    viewCount: Number(
+      item.viewCount ??
+        item.view_count ??
+        item.impressionCount ??
+        item.impression_count ??
+        0
+    ),
+    impressionCount: Number(item.impressionCount ?? item.impression_count ?? 0),
+    clickCount: Number(item.clickCount ?? item.click_count ?? 0),
+  };
+}
 
 function unwrapItems<T>(data: MaybePaginated<T> | null | undefined): T[] {
   if (Array.isArray(data)) return data;
@@ -23,12 +37,9 @@ export async function getFeaturedAds(locale: "ko" | "en"): Promise<AdItem[]> {
   const data = await apiFetch<MaybePaginated<AdItem>>(
     `${endpoints.adsFeatured}?${searchParams.toString()}`,
     {
-      next: {
-        revalidate: 120,
-        tags: [cacheTags.adsFeatured],
-      },
-    },
+      cache: "no-store",
+    }
   );
 
-  return unwrapItems(data);
+  return unwrapItems(data).map(normalizeAdItem);
 }

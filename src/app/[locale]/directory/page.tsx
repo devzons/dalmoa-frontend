@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Container } from "@/components/base/Container";
-import FeaturedListingGrid from "@/components/listing/FeaturedListingGrid";
 import ListingRowItem from "@/components/listing/ListingRowItem";
 import { DirectoryFilterBar } from "@/features/directory/components/DirectoryFilterBar";
 import { getDirectories } from "@/features/directory/api";
@@ -8,6 +7,7 @@ import { getDirectoryCategories } from "@/features/directory/utils";
 import { splitFeatured } from "@/features/listing/utils/splitFeatured";
 import { getFeaturedAds } from "@/features/ads/api/getFeaturedAds";
 import { FeaturedAdSection } from "@/features/ads/components/FeaturedAdSection";
+import type { AdItem } from "@/features/ads/types/ad";
 import { sortAdsByPriority } from "@/features/ads/lib/sortAdsByPriority";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { PageWithSidebar } from "@/components/layout/PageWithSidebar";
@@ -21,6 +21,73 @@ type Props = {
     sort?: string;
   }>;
 };
+
+function normalizeAdItem(item: any): AdItem {
+  return {
+    id: Number(item.id ?? 0),
+    slug: item.slug ?? String(item.id ?? ""),
+    title:
+      typeof item.title === "string"
+        ? item.title
+        : item.title?.rendered ?? "",
+    excerpt:
+      typeof item.excerpt === "string"
+        ? item.excerpt
+        : item.excerpt?.rendered ?? null,
+    thumbnailUrl:
+      item.thumbnailUrl ??
+      item.thumbnail_url ??
+      item.imageUrl ??
+      item.image_url ??
+      item._embedded?.["wp:featuredmedia"]?.[0]?.source_url ??
+      null,
+    region: item.region ?? item.location ?? null,
+    adPlan: item.adPlan ?? item.ad_plan ?? null,
+    status: item.status ?? null,
+    priority: item.priority ?? null,
+    viewCount: Number(
+      item.viewCount ??
+        item.view_count ??
+        item.impressionCount ??
+        item.impression_count ??
+        0
+    ),
+    impressionCount: Number(item.impressionCount ?? item.impression_count ?? 0),
+    clickCount: Number(item.clickCount ?? item.click_count ?? 0),
+    createdAt: item.createdAt ?? item.created_at ?? undefined,
+    startsAt:
+      item.startsAt ??
+      item.starts_at ??
+      item.adStartsAt ??
+      item.ad_starts_at ??
+      null,
+    endsAt:
+      item.endsAt ??
+      item.ends_at ??
+      item.adEndsAt ??
+      item.ad_ends_at ??
+      item.expiresAt ??
+      item.expires_at ??
+      null,
+    abTest: item.abTest ?? item.ab_test ?? undefined,
+  };
+}
+
+function isPremiumAd(item: AdItem) {
+  return (
+    item.adPlan === "premium" ||
+    item.adPlan === "premium_monthly" ||
+    item.priority === "premium"
+  );
+}
+
+function isFeaturedAd(item: AdItem) {
+  return (
+    item.adPlan === "featured" ||
+    item.adPlan === "featured_monthly" ||
+    item.priority === "featured"
+  );
+}
 
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
@@ -37,6 +104,8 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export const revalidate = 0;
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 export default async function DirectoryPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -63,19 +132,14 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
       ? (result as any).items
       : [];
 
-  const sortedAds = sortAdsByPriority(Array.isArray(ads) ? ads : []);
+  const allAds = (Array.isArray(ads) ? ads : []).map(normalizeAdItem);
 
-  const premiumAds = sortedAds.filter(
-    (ad: any) =>
-      ad.adPlan === "premium" ||
-      ad.adPlan === "premium_monthly" ||
-      ad.adPlan === "featured" ||
-      ad.adPlan === "featured_monthly" ||
-      ad.priority === "premium" ||
-      ad.priority === "featured"
+  const sortedPaidAds = sortAdsByPriority(
+    allAds.filter((item) => isPremiumAd(item) || isFeaturedAd(item))
   );
 
-  const regularAds = sortedAds.filter((ad: any) => !premiumAds.includes(ad));
+  const premiumAds = sortedPaidAds.filter(isPremiumAd);
+  const featuredAds = sortedPaidAds.filter(isFeaturedAd);
 
   const categories = getDirectoryCategories(items, normalizedLocale);
   const { featured, regular } = splitFeatured(items);
@@ -135,22 +199,20 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
           </Link>
         </div>
 
-        <div className="mt-5 space-y-10">
-          {(premiumAds.length > 0 || regularAds.length > 0) && (
-            <FeaturedAdSection
-              items={[...premiumAds, ...regularAds]}
-              locale={normalizedLocale}
-              placement="listing_top"
-            />
-          )}
+        <div className="space-y-12">
+          <FeaturedAdSection
+            title={normalizedLocale === "en" ? "Premium Ads" : "프리미엄 광고"}
+            items={premiumAds}
+            locale={normalizedLocale}
+            placement="listing_top"
+          />
 
-          {featured.length > 0 && (
-            <FeaturedListingGrid
-              items={featured as any[]}
-              locale={normalizedLocale}
-              domain="directory"
-            />
-          )}
+          <FeaturedAdSection
+            title={normalizedLocale === "en" ? "Featured Ads" : "추천 광고"}
+            items={featuredAds}
+            locale={normalizedLocale}
+            placement="listing_top"
+          />
 
           {regular.length > 0 ? (
             <div className="rounded-2xl border border-neutral-200 bg-white">
@@ -163,7 +225,7 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
                   {normalizedLocale === "en" ? "Region" : "지역"}
                 </div>
                 <div className="text-right">
-                  {normalizedLocale === "en" ? "Views" : "조회수"}
+                  {normalizedLocale === "en" ? "Views" : "방문수"}
                 </div>
               </div>
 
