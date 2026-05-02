@@ -4,6 +4,7 @@ import { FeaturedAdSection } from "@/features/ads/components/FeaturedAdSection";
 import { StandardAdsTable } from "@/features/ads/components/StandardAdsTable";
 import { getAds } from "@/features/ads/api";
 import type { AdItem } from "@/features/ads/types/ad";
+import { sortAdsByPriority } from "@/features/ads/lib/sortAdsByPriority";
 import { buildMetadata } from "@/lib/seo/metadata";
 
 type Props = {
@@ -78,7 +79,7 @@ export default async function AdsPage({ params }: Props) {
   const data = await getAds(normalizedLocale);
 
   const allFeaturedAds = Array.isArray(data?.featured)
-    ? data.featured.map(normalizeAdItem)
+    ? sortAdsByPriority(data.featured.map(normalizeAdItem))
     : [];
 
   const premiumAds = allFeaturedAds.filter(
@@ -89,11 +90,11 @@ export default async function AdsPage({ params }: Props) {
   );
 
   const featuredAds = allFeaturedAds.filter(
-    (item) => !premiumAds.includes(item)
+    (item) => !premiumAds.some((premium) => premium.id === item.id)
   );
 
   const standardAds = Array.isArray(data?.standard)
-    ? data.standard.map(normalizeAdItem)
+    ? sortAdsByPriority(data.standard.map(normalizeAdItem))
     : [];
 
   return (

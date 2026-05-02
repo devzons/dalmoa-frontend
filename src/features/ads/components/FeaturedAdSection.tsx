@@ -1,7 +1,6 @@
 import type { AdItem } from "@/features/ads/types/ad";
 import type { AdPlacement } from "@/features/ads/types/adPlacement";
 import { AdRenderer } from "@/features/ads/components/AdRenderer";
-import { rotateAds } from "@/features/ads/lib/rotateAds";
 import { sortAdsByPriority } from "@/features/ads/lib/sortAdsByPriority";
 
 export function FeaturedAdSection({
@@ -22,9 +21,9 @@ export function FeaturedAdSection({
   if (!items.length) return null;
 
   const sorted = sortAdsByPriority(items);
-  const rotated = rotateAds(limit ? sorted.slice(0, limit) : sorted);
+  const limited = limit ? sorted.slice(0, limit) : sorted;
 
-  if (!rotated.length) return null;
+  if (!limited.length) return null;
 
   return (
     <section className="space-y-4">
@@ -40,7 +39,7 @@ export function FeaturedAdSection({
         </div>
       ) : null}
 
-      <AdRenderer items={rotated} locale={locale} placement={placement} />
+      <AdRenderer items={limited} locale={locale} placement={placement} />
     </section>
   );
 }

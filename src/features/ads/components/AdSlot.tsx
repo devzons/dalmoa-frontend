@@ -13,9 +13,17 @@ export function AdSlot({
 }) {
   if (!item || !item.id) return null;
 
+  const isSidebar = placement === "sidebar_right";
+
   return (
-    <div className="border-b border-neutral-100 last:border-b-0">
-      <AdCard item={item} locale={locale} placement={placement} variant="row" />
+    <div
+      className={
+        isSidebar
+          ? "bg-transparent"
+          : "border-b border-neutral-100 last:border-b-0"
+      }
+    >
+      <AdCard item={item} locale={locale} placement={placement} />
     </div>
   );
 }

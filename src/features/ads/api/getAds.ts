@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import type { AdItem } from "@/features/ads/types/ad";
+import { sortAdsByPriority } from "@/features/ads/lib/sortAdsByPriority";
 
 export async function getAds(locale: "ko" | "en") {
   const params = new URLSearchParams();
@@ -64,19 +65,25 @@ export async function getAds(locale: "ko" | "en") {
 
   const mapped = items.map(mapItem).filter((item) => item.id);
 
-  const featured = mapped.filter(
-    (item) =>
-      item.adPlan === "premium" ||
-      item.adPlan === "premium_monthly" ||
-      item.adPlan === "featured" ||
-      item.adPlan === "featured_monthly" ||
-      item.priority === "premium" ||
-      item.priority === "featured"
+  const featured = sortAdsByPriority(
+    mapped.filter(
+      (item) =>
+        item.adPlan === "premium" ||
+        item.adPlan === "premium_monthly" ||
+        item.adPlan === "featured" ||
+        item.adPlan === "featured_monthly" ||
+        item.priority === "premium" ||
+        item.priority === "featured"
+    )
   );
 
-  const standard = mapped.filter((item) => !featured.includes(item));
+  const standard = sortAdsByPriority(
+    mapped.filter((item) => !featured.some((featuredItem) => featuredItem.id === item.id))
+  );
 
-  const sidebars = mapped.filter((item) => item.isSidebarAd === true);
+  const sidebars = sortAdsByPriority(
+    mapped.filter((item) => item.isSidebarAd === true)
+  );
 
   return {
     featured,

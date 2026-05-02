@@ -39,8 +39,11 @@ export function AdCard({
     item.adPlan === "featured_monthly" ||
     item.priority === "featured";
 
+  const isSidebar = placement === "sidebar_right";
+
   const shouldRenderAsRow =
-    placement === "listing_middle" || placement === "listing_bottom";
+    !isSidebar &&
+    (placement === "listing_middle" || placement === "listing_bottom");
 
   useEffect(() => {
     const element = ref.current;
@@ -80,7 +83,7 @@ export function AdCard({
   if (!shouldRenderAsRow) {
     return (
       <div ref={ref}>
-        <Card className="h-full overflow-hidden border-indigo-50 hover:bg-indigo-50">
+        <Card className="h-full overflow-hidden hover:bg-indigo-50">
           <CardHeader>
             <div className="mb-2 flex gap-2">
               <span className="rounded-sm bg-indigo-600 px-2 py-0.5 text-xs font-bold text-white">

@@ -20,9 +20,13 @@ export async function getSidebarAds(
     }
   );
 
-  if (!Array.isArray(data?.items)) return [];
+  const items = Array.isArray(data?.items)
+    ? data.items
+    : Array.isArray(data)
+    ? data
+    : [];
 
-  return data.items.map((item: any) => ({
+  return items.map((item: any) => ({
     id: Number(item.id ?? 0),
     slug: item.slug ?? String(item.id ?? ""),
     title:
