@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { MouseEvent } from "react";
+import { useEffect, useRef } from "react";
 import { buildListingHref, type ListingDomain } from "./listingHref";
 
 type Item = {
@@ -42,6 +43,9 @@ function normalizeCount(value: unknown): number {
 }
 
 export default function ListingRowItem({ item, locale, domain }: Props) {
+  const rowRef = useRef<HTMLAnchorElement | null>(null);
+  const hasTrackedViewRef = useRef(false);
+
   const title =
     item.title ||
     item.name ||
@@ -70,6 +74,36 @@ export default function ListingRowItem({ item, locale, domain }: Props) {
     slug: item.slug,
   });
 
+  useEffect(() => {
+    const target = rowRef.current;
+
+    if (!target || !item.id || !domain || hasTrackedViewRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting || hasTrackedViewRef.current) return;
+
+        hasTrackedViewRef.current = true;
+
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/${domain}/${item.id}/view`, {
+          method: "POST",
+          cache: "no-store",
+        }).catch(() => {});
+
+        observer.disconnect();
+      },
+      {
+        threshold: 0.5,
+      }
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [item.id, domain]);
+
   const handleClick = async (event: MouseEvent<HTMLAnchorElement>) => {
     if (
       event.metaKey ||
@@ -94,6 +128,7 @@ export default function ListingRowItem({ item, locale, domain }: Props) {
 
   return (
     <Link
+      ref={rowRef}
       href={href}
       onClick={handleClick}
       className="mb-1 grid grid-cols-[1fr_60px] gap-1 border-b border-neutral-200 px-3 py-2 text-sm transition hover:bg-neutral-50 sm:grid-cols-[2fr_3fr_1fr_80px]"

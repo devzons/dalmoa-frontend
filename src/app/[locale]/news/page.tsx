@@ -58,12 +58,12 @@ export default async function NewsPage({ params }: Props) {
   ]);
 
   const items = Array.isArray(result?.items) ? result.items : [];
-  const { regular } = splitFeatured(items);
+  const displayItems = items;
 
   const sortedPaidAds = sortAdsByPriority(
     (Array.isArray(ads) ? ads : []).filter(
-      (item) => isPremiumAd(item) || isFeaturedAd(item),
-    ),
+      (item) => isPremiumAd(item) || isFeaturedAd(item)
+    )
   );
 
   const premiumAds = sortedPaidAds.filter(isPremiumAd);
@@ -98,7 +98,7 @@ export default async function NewsPage({ params }: Props) {
             placement="listing_top"
           />
 
-          {regular.length > 0 ? (
+          {displayItems.length > 0 ? (
             <div className="rounded-2xl border border-neutral-200 bg-white">
               <div className="grid grid-cols-[1fr_60px] gap-2 border-b bg-neutral-50 px-3 py-2 text-xs font-semibold text-neutral-500 sm:grid-cols-[2fr_3fr_1fr_80px]">
                 <div>{normalizedLocale === "en" ? "Title" : "제목"}</div>
@@ -109,11 +109,11 @@ export default async function NewsPage({ params }: Props) {
                   {normalizedLocale === "en" ? "Region" : "지역"}
                 </div>
                 <div className="text-right">
-                  {normalizedLocale === "en" ? "Views" : "조회수"}
+                  {normalizedLocale === "en" ? "Clicks" : "클릭수"}
                 </div>
               </div>
 
-              {regular.map((item: any) => (
+              {displayItems.map((item: any) => (
                 <ListingRowItem
                   key={item.id ?? item.slug}
                   item={item}
