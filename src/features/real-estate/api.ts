@@ -12,7 +12,8 @@ function buildSearchParams(
   filters?: ListingSearchFilters
 ) {
   const searchParams = new URLSearchParams();
-  searchParams.set("locale", locale);
+
+  searchParams.set("lang", locale);
 
   if (filters?.q) searchParams.set("q", filters.q);
   if (filters?.featured) searchParams.set("featured", "1");
@@ -29,7 +30,7 @@ function buildSearchParams(
 }
 
 function normalizePaginated<T>(
-  raw: T[] | PaginatedListResponse<T> | null,
+  raw: T[] | PaginatedListResponse<T> | any | null,
   fallbackPage: number
 ): PaginatedListResponse<T> {
   if (!raw) {
@@ -52,12 +53,22 @@ function normalizePaginated<T>(
     };
   }
 
+  const items = Array.isArray(raw.items) ? raw.items : [];
+  const total = Number(raw.total ?? raw.found ?? items.length ?? 0);
+  const page = Number(raw.page ?? raw.currentPage ?? fallbackPage);
+  const perPage = Number(raw.perPage ?? raw.per_page ?? items.length ?? 0);
+  const totalPages = Number(
+    raw.totalPages ??
+      raw.total_pages ??
+      (perPage > 0 ? Math.ceil(total / perPage) : 1)
+  );
+
   return {
-    items: Array.isArray(raw.items) ? raw.items : [],
-    total: typeof raw.total === "number" ? raw.total : 0,
-    page: typeof raw.page === "number" ? raw.page : fallbackPage,
-    perPage: typeof raw.perPage === "number" ? raw.perPage : 0,
-    totalPages: typeof raw.totalPages === "number" ? raw.totalPages : 1,
+    items,
+    total,
+    page,
+    perPage,
+    totalPages,
   };
 }
 
@@ -76,7 +87,9 @@ export async function getRealEstateItems(
     },
   });
 
-  return Array.isArray(raw) ? raw : raw?.items ?? [];
+  if (!raw) return [];
+
+  return Array.isArray(raw) ? raw : raw.items ?? [];
 }
 
 export async function getPaginatedRealEstateItems(
@@ -99,7 +112,7 @@ export async function getRealEstateItemBySlug(
   locale: "ko" | "en" = "ko"
 ) {
   return apiFetch<RealEstateItem>(
-    `${endpoints.realEstateDetail(slug)}?locale=${locale}`,
+    `${endpoints.realEstateDetail(slug)}?lang=${locale}`,
     {
       next: {
         revalidate: 120,

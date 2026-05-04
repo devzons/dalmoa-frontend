@@ -4,13 +4,17 @@ export type DirectoryItem = {
   title: string;
   excerpt?: string | null;
   content?: string | null;
+  thumbnailUrl?: string | null;
+
   businessCategory?: string | null;
   phone?: string | null;
   email?: string | null;
   websiteUrl?: string | null;
   address?: string | null;
-  thumbnailUrl?: string | null;
+
   isFeatured?: boolean;
+  clickCount?: number;
+  viewCount?: number;
 };
 
 export type DirectoryQueryParams = {

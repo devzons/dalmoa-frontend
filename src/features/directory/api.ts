@@ -11,7 +11,8 @@ function buildDirectoryQuery(
   params?: DirectoryQueryParams
 ) {
   const searchParams = new URLSearchParams();
-  searchParams.set("locale", locale);
+
+  searchParams.set("lang", locale);
 
   if (params?.q) searchParams.set("q", params.q);
   if (params?.category) searchParams.set("category", params.category);
@@ -39,7 +40,7 @@ export async function getDirectoryBySlug(
   const normalizedSlug = decodeURIComponent(slug);
 
   return apiFetch<DirectoryItem>(
-    `${endpoints.directoryDetail(normalizedSlug)}?locale=${locale}`,
+    `${endpoints.directoryDetail(normalizedSlug)}?lang=${locale}`,
     {
       cache: "no-store",
     }

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import type { MouseEvent } from "react";
-import { useEffect } from "react";
 import { buildListingHref, type ListingDomain } from "./listingHref";
 
 type Item = {
@@ -22,10 +21,6 @@ type Item = {
   region?: string | null;
   jobLocation?: string | null;
   price?: number | string | null;
-  views?: number | string | null;
-  viewCount?: number | string | null;
-  view_count?: number | string | null;
-  hitCount?: number | string | null;
   clickCount?: number | string | null;
   click_count?: number | string | null;
   clicks?: number | string | null;
@@ -65,8 +60,8 @@ export default function ListingRowItem({ item, locale, domain }: Props) {
 
   const region = item.region || item.jobLocation || item.address || "-";
 
-  const viewCount = normalizeCount(
-    item.viewCount ?? item.views ?? item.view_count ?? item.hitCount ?? 0
+  const clickCount = normalizeCount(
+    item.clickCount ?? item.click_count ?? item.clicks ?? 0
   );
 
   const href = buildListingHref({
@@ -74,15 +69,6 @@ export default function ListingRowItem({ item, locale, domain }: Props) {
     domain,
     slug: item.slug,
   });
-
-  useEffect(() => {
-    if (!item.id || !domain) return;
-
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/${domain}/${item.id}/view`, {
-      method: "POST",
-      cache: "no-store",
-    }).catch(() => {});
-  }, [item.id, domain]);
 
   const handleClick = async (event: MouseEvent<HTMLAnchorElement>) => {
     if (
@@ -118,7 +104,7 @@ export default function ListingRowItem({ item, locale, domain }: Props) {
 
       <div className="hidden truncate text-neutral-500 sm:block">{region}</div>
 
-      <div className="text-right text-neutral-400">{viewCount}</div>
+      <div className="text-right text-neutral-400">{clickCount}</div>
     </Link>
   );
 }

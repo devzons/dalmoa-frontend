@@ -1,16 +1,17 @@
 import { Container } from "@/components/base/Container";
+import { CreateListingEntry } from "@/components/common/CreateListingEntry";
 import ListingRowItem from "@/components/listing/ListingRowItem";
+import LoadMoreButton from "@/components/listing/LoadMoreButton";
 import { PageWithSidebar } from "@/components/layout/PageWithSidebar";
-import { splitFeatured } from "@/features/listing/utils/splitFeatured";
-import { getPaginatedMarketplaceItems } from "@/features/marketplace/api";
 import { getFeaturedAds } from "@/features/ads/api/getFeaturedAds";
 import { FeaturedAdSection } from "@/features/ads/components/FeaturedAdSection";
-import type { AdItem } from "@/features/ads/types/ad";
 import { sortAdsByPriority } from "@/features/ads/lib/sortAdsByPriority";
+import type { AdItem } from "@/features/ads/types/ad";
+import { splitFeatured } from "@/features/listing/utils/splitFeatured";
+import { getPaginatedMarketplaceItems } from "@/features/marketplace/api";
 import ListingActiveFilters from "@/features/search/components/ListingActiveFilters";
 import ListingEmptyState from "@/features/search/components/ListingEmptyState";
 import ListingFilters from "@/features/search/components/ListingFilters";
-import ListingPagination from "@/features/search/components/ListingPagination";
 import ListingResultSummary from "@/features/search/components/ListingResultSummary";
 import { parseListingSearchParams } from "@/features/search/url";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -20,20 +21,41 @@ type Props = {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
+const domain = "marketplace" as const;
+
+function normalizeAdItem(item: any): AdItem {
+  return {
+    id: Number(item.id ?? 0),
+    slug: item.slug ?? String(item.id ?? ""),
+    title: typeof item.title === "string" ? item.title : item.title?.rendered ?? "",
+    excerpt: typeof item.excerpt === "string" ? item.excerpt : item.excerpt?.rendered ?? null,
+    thumbnailUrl:
+      item.thumbnailUrl ??
+      item.thumbnail_url ??
+      item.imageUrl ??
+      item.image_url ??
+      item._embedded?.["wp:featuredmedia"]?.[0]?.source_url ??
+      null,
+    region: item.region ?? item.location ?? null,
+    adPlan: item.adPlan ?? item.ad_plan ?? null,
+    status: item.status ?? null,
+    priority: item.priority ?? null,
+    viewCount: Number(item.viewCount ?? item.view_count ?? item.impressionCount ?? item.impression_count ?? 0),
+    impressionCount: Number(item.impressionCount ?? item.impression_count ?? 0),
+    clickCount: Number(item.clickCount ?? item.click_count ?? 0),
+    createdAt: item.createdAt ?? item.created_at ?? undefined,
+    startsAt: item.startsAt ?? item.starts_at ?? item.adStartsAt ?? item.ad_starts_at ?? null,
+    endsAt: item.endsAt ?? item.ends_at ?? item.adEndsAt ?? item.ad_ends_at ?? item.expiresAt ?? item.expires_at ?? null,
+    abTest: item.abTest ?? item.ab_test ?? undefined,
+  };
+}
+
 function isPremiumAd(item: AdItem) {
-  return (
-    item.adPlan === "premium" ||
-    item.adPlan === "premium_monthly" ||
-    item.priority === "premium"
-  );
+  return item.adPlan === "premium" || item.adPlan === "premium_monthly" || item.priority === "premium";
 }
 
 function isFeaturedAd(item: AdItem) {
-  return (
-    item.adPlan === "featured" ||
-    item.adPlan === "featured_monthly" ||
-    item.priority === "featured"
-  );
+  return item.adPlan === "featured" || item.adPlan === "featured_monthly" || item.priority === "featured";
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -54,13 +76,9 @@ export const revalidate = 0;
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-export default async function MarketplacePage({
-  params,
-  searchParams,
-}: Props) {
+export default async function MarketplacePage({ params, searchParams }: Props) {
   const { locale } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
-  const domain = "marketplace";
 
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filters = parseListingSearchParams(resolvedSearchParams);
@@ -79,10 +97,10 @@ export default async function MarketplacePage({
   const { regular } =
     currentPage === 1 ? splitFeatured(items) : { featured: [], regular: items };
 
+  const allAds = (Array.isArray(ads) ? ads : []).map(normalizeAdItem);
+
   const sortedPaidAds = sortAdsByPriority(
-    (Array.isArray(ads) ? ads : []).filter(
-      (item) => isPremiumAd(item) || isFeaturedAd(item),
-    ),
+    allAds.filter((item) => isPremiumAd(item) || isFeaturedAd(item))
   );
 
   const premiumAds = sortedPaidAds.filter(isPremiumAd);
@@ -91,15 +109,19 @@ export default async function MarketplacePage({
   return (
     <Container className="py-10">
       <PageWithSidebar locale={normalizedLocale}>
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">
-            {normalizedLocale === "en" ? "Marketplace" : "사고팔기"}
-          </h1>
-          <p className="mt-2 text-neutral-500">
-            {normalizedLocale === "en"
-              ? "Buy and sell with the community."
-              : "커뮤니티에서 사고팔기 게시물을 확인하세요."}
-          </p>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {normalizedLocale === "en" ? "Marketplace" : "사고팔기"}
+            </h1>
+            <p className="mt-2 text-neutral-500">
+              {normalizedLocale === "en"
+                ? "Buy and sell with the community."
+                : "커뮤니티에서 사고팔기 게시물을 확인하세요."}
+            </p>
+          </div>
+
+          <CreateListingEntry locale={normalizedLocale} category={domain} />
         </div>
 
         <div className="mb-6">
@@ -145,7 +167,7 @@ export default async function MarketplacePage({
                       {normalizedLocale === "en" ? "Region" : "지역"}
                     </div>
                     <div className="text-right">
-                      {normalizedLocale === "en" ? "Views" : "조회수"}
+                      {normalizedLocale === "en" ? "Clicks" : "클릭수"}
                     </div>
                   </div>
 
@@ -160,9 +182,10 @@ export default async function MarketplacePage({
                 </div>
               )}
 
-              <ListingPagination
+              <LoadMoreButton
                 currentPage={currentPage}
                 hasNextPage={hasNextPage}
+                label={normalizedLocale === "en" ? "Load more" : "더 보기"}
               />
             </>
           ) : (

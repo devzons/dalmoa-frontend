@@ -5,8 +5,13 @@ export type NewsItem = {
   excerpt?: string | null;
   content?: string | null;
   thumbnailUrl?: string | null;
+
   sourceName?: string | null;
   sourceUrl?: string | null;
+
   publishedAt?: string | null;
+
   isFeatured?: boolean;
+  clickCount?: number;
+  viewCount?: number;
 };

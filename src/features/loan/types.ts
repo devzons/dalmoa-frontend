@@ -5,13 +5,19 @@ export type LoanItem = {
   excerpt?: string | null;
   content?: string | null;
   thumbnailUrl?: string | null;
+
   loanType?: string | null;
-  interestRate?: string | null;
-  loanAmount?: string | null;
+  interestRateLabel?: string | null;
+  loanAmountLabel?: string | null;
   location?: string | null;
+
   contactEmail?: string | null;
   contactPhone?: string | null;
   contactUrl?: string | null;
+
   publishedAt?: string | null;
+
   isFeatured?: boolean;
+  clickCount?: number;
+  viewCount?: number;
 };
