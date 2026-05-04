@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { Badge } from "@/components/base/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/base/Card";
 import { Container } from "@/components/base/Container";
 import AdPromotionPanel from "@/components/payment/AdPromotionPanel";
 import { getAdBySlug } from "@/features/ads/api";
 import { buildMetadata } from "@/lib/seo/metadata";
-import Link from "next/link";
 import { normalizeMediaUrl } from "@/lib/api/client";
 
 type Props = {
@@ -24,6 +24,37 @@ function getRemainingDays(adEndsAt?: string | null) {
   if (Number.isNaN(end.getTime())) return null;
 
   return Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+async function trackAdImpression(adId: number) {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
+
+  if (!baseUrl || !adId) return null;
+
+  try {
+    const response = await fetch(`${baseUrl}/ads/track`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: adId,
+        type: "impression",
+        placement: "ad_detail",
+      }),
+      cache: "no-store",
+    });
+
+    if (!response.ok) return null;
+
+    return (await response.json()) as {
+      ok?: boolean;
+      impressionCount?: number;
+      count?: number;
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -57,6 +88,7 @@ export default async function AdDetailPage({ params }: Props) {
   }
 
   const ad = item as any;
+  const tracked = ad.id ? await trackAdImpression(Number(ad.id)) : null;
 
   const adPlan = ad.adPlan ?? ad.ad_plan ?? null;
   const isPaid = Boolean(ad.isPaid ?? ad.is_paid ?? false);
@@ -72,7 +104,7 @@ export default async function AdDetailPage({ params }: Props) {
   const isExternal = Boolean(ad.isExternal ?? ad.is_external ?? false);
 
   const remainingDays = getRemainingDays(
-    ad.adEndsAt ?? ad.ad_ends_at ?? ad.expiresAt ?? ad.expires_at ?? null,
+    ad.adEndsAt ?? ad.ad_ends_at ?? ad.expiresAt ?? ad.expires_at ?? null
   );
 
   const isExpired =
@@ -81,8 +113,15 @@ export default async function AdDetailPage({ params }: Props) {
   const isExpiringSoon =
     remainingDays !== null && remainingDays > 0 && remainingDays <= 3;
 
+  const impressionCount = Number(
+    tracked?.impressionCount ??
+      tracked?.count ??
+      ad.impressionCount ??
+      ad.impression_count ??
+      0
+  );
+
   const clickCount = Number(ad.clickCount ?? ad.click_count ?? 0);
-  const impressionCount = Number(ad.impressionCount ?? ad.impression_count ?? 0);
 
   const ctr =
     impressionCount > 0
