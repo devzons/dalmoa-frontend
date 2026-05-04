@@ -16,7 +16,7 @@ export const endpoints = {
 
   adsList: `${API_PREFIX}/ads`,
   adsFeatured: `${API_PREFIX}/ads/featured`,
-  adsSidebar: `${API_PREFIX}/ads/sidebar`, // ✅ 추가
+  adsSidebar: `${API_PREFIX}/ads/sidebar`,
   adsDetail: (slug: string) =>
     `${API_PREFIX}/ads/${normalizeSlug(slug)}`,
 
@@ -35,6 +35,8 @@ export const endpoints = {
   jobsList: `${API_PREFIX}/jobs`,
   jobsDetail: (slug: string) =>
     `${API_PREFIX}/jobs/${normalizeSlug(slug)}`,
+  jobsClick: (id: number | string) =>
+    `${API_PREFIX}/jobs/${id}/click`,
 
   loanList: `${API_PREFIX}/loan`,
   loanDetail: (slug: string) =>

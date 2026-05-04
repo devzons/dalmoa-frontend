@@ -6,7 +6,7 @@ import { Container } from "@/components/base/Container";
 import { apiFetch } from "@/lib/api/client";
 import { type ListingDomain } from "@/components/listing/listingHref";
 import AdPromotionPanel from "@/components/payment/AdPromotionPanel";
-import ListingViewTracker from "@/features/listing/components/ListingViewTracker";
+import ListingMetricStats from "@/features/listing/components/ListingMetricsStats";
 
 type Props = {
   params: Promise<{
@@ -105,12 +105,14 @@ export default async function ListingDetailPage({ params, domain }: Props) {
     data.viewCount ?? data.views ?? data.view_count ?? data.hitCount ?? 0
   );
 
+  const clickCount = normalizeCount(
+    data.clickCount ?? data.click_count ?? data.clicks ?? 0
+  );
+
   const listHref = `/${normalizedLocale}/${domain}`;
 
   return (
     <div className="bg-neutral-50 py-10">
-      <ListingViewTracker id={data.id} slug={normalizedSlug} domain={domain} />
-
       <Container>
         <Card className="overflow-hidden">
           {data.thumbnailUrl ? (
@@ -158,10 +160,11 @@ export default async function ListingDetailPage({ params, domain }: Props) {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 gap-3 rounded-2xl border border-neutral-200 bg-white p-4 sm:grid-cols-3">
-              <StatBox
-                label={normalizedLocale === "en" ? "Views" : "조회수"}
-                value={viewCount.toLocaleString()}
+            <div className="grid grid-cols-1 gap-3 rounded-2xl border border-neutral-200 bg-white p-4 sm:grid-cols-4">
+              <ListingMetricStats
+                initialViewCount={viewCount}
+                initialClickCount={clickCount}
+                locale={normalizedLocale}
               />
 
               {data.region || data.jobLocation ? (

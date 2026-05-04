@@ -203,7 +203,7 @@ export default async function JobsPage({ params, searchParams }: Props) {
                       {normalizedLocale === "en" ? "Region" : "지역"}
                     </div>
                     <div className="text-right">
-                      {normalizedLocale === "en" ? "Views" : "방문수"}
+                      {normalizedLocale === "en" ? "Clicks" : "클릭수"}
                     </div>
                   </div>
 

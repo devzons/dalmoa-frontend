@@ -12,20 +12,21 @@ export default function ListingViewTracker({
   domain: string;
 }) {
   useEffect(() => {
-    if (!id || !slug) return;
+    if (!id || !domain) return;
 
     const key = `viewed-${domain}-${id}`;
-    const alreadyViewed = sessionStorage.getItem(key);
 
-    if (alreadyViewed) return;
+    if (sessionStorage.getItem(key)) return;
 
     sessionStorage.setItem(key, "1");
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/${domain}/${slug}/view`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/${domain}/${id}/view`, {
       method: "POST",
       cache: "no-store",
-    }).catch(() => {});
-  }, [id, slug, domain]);
+    }).catch(() => {
+      sessionStorage.removeItem(key);
+    });
+  }, [id, domain]);
 
   return null;
 }

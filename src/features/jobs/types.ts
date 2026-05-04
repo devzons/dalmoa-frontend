@@ -14,4 +14,5 @@ export type JobItem = {
   applyUrl?: string | null;
   publishedAt?: string | null;
   isFeatured?: boolean;
+  clickCount?: number;
 };

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import type { MouseEvent } from "react";
+import { useEffect } from "react";
 import { buildListingHref, type ListingDomain } from "./listingHref";
 
 type Item = {
@@ -22,8 +24,11 @@ type Item = {
   price?: number | string | null;
   views?: number | string | null;
   viewCount?: number | string | null;
-  hitCount?: number | string | null;
   view_count?: number | string | null;
+  hitCount?: number | string | null;
+  clickCount?: number | string | null;
+  click_count?: number | string | null;
+  clicks?: number | string | null;
   hero?: {
     title?: string | null;
     subtitle?: string | null;
@@ -36,7 +41,7 @@ type Props = {
   domain: ListingDomain;
 };
 
-function normalizeViews(value: unknown): number {
+function normalizeCount(value: unknown): number {
   const numeric = Number(value);
   return Number.isFinite(numeric) && numeric >= 0 ? numeric : 0;
 }
@@ -60,8 +65,8 @@ export default function ListingRowItem({ item, locale, domain }: Props) {
 
   const region = item.region || item.jobLocation || item.address || "-";
 
-  const views = normalizeViews(
-    item.views ?? item.viewCount ?? item.view_count ?? item.hitCount ?? 0
+  const viewCount = normalizeCount(
+    item.viewCount ?? item.views ?? item.view_count ?? item.hitCount ?? 0
   );
 
   const href = buildListingHref({
@@ -70,9 +75,41 @@ export default function ListingRowItem({ item, locale, domain }: Props) {
     slug: item.slug,
   });
 
+  useEffect(() => {
+    if (!item.id || !domain) return;
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/${domain}/${item.id}/view`, {
+      method: "POST",
+      cache: "no-store",
+    }).catch(() => {});
+  }, [item.id, domain]);
+
+  const handleClick = async (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      event.button !== 0 ||
+      !item.id
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${domain}/${item.id}/click`, {
+      method: "POST",
+      cache: "no-store",
+    }).catch(() => {});
+
+    window.location.href = href;
+  };
+
   return (
     <Link
       href={href}
+      onClick={handleClick}
       className="mb-1 grid grid-cols-[1fr_60px] gap-1 border-b border-neutral-200 px-3 py-2 text-sm transition hover:bg-neutral-50 sm:grid-cols-[2fr_3fr_1fr_80px]"
     >
       <div className="truncate font-semibold text-neutral-900">{title}</div>
@@ -81,7 +118,7 @@ export default function ListingRowItem({ item, locale, domain }: Props) {
 
       <div className="hidden truncate text-neutral-500 sm:block">{region}</div>
 
-      <div className="text-right text-neutral-400">{views}</div>
+      <div className="text-right text-neutral-400">{viewCount}</div>
     </Link>
   );
 }
