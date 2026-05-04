@@ -37,7 +37,9 @@ export async function CreateListingEntry({
   const user = await getSessionUser();
   const labels = copy[locale];
   const basePath = `/${locale}/${pathMap[category]}`;
-  const createPath = `${basePath}/new`;
+
+  // ✅ domain 자동 주입
+  const createPath = `${basePath}/new?target_domain=${category}`;
 
   if (user) {
     return (

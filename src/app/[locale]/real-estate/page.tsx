@@ -64,7 +64,7 @@ export default async function RealEstatePage({ params, searchParams }: Props) {
 
   const [result, ads] = await Promise.all([
     getPaginatedRealEstateItems(normalizedLocale, filters),
-    getFeaturedAds(normalizedLocale),
+    getFeaturedAds(normalizedLocale, domain),
   ]);
 
   const items = Array.isArray(result?.items) ? result.items : [];

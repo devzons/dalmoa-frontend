@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   createAdCheckoutSession,
   createListing,
@@ -43,8 +44,12 @@ const labels = {
 
 export default function AdCreateAndPayForm({ locale }: Props) {
   const t = labels[locale];
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
+
+  const targetDomain =
+    searchParams.get("target_domain") || searchParams.get("domain") || "all";
 
   const handleSubmit = async (formData: FormData) => {
     setError("");
@@ -55,6 +60,7 @@ export default function AdCreateAndPayForm({ locale }: Props) {
 
     formData.set("category", "ads");
     formData.set("adPlan", plan);
+    formData.set("target_domain", targetDomain);
 
     startTransition(async () => {
       try {
@@ -63,7 +69,8 @@ export default function AdCreateAndPayForm({ locale }: Props) {
         const checkout = await createAdCheckoutSession({
           postId: created.id,
           plan,
-        });
+          target_domain: targetDomain,
+        } as any);
 
         window.location.href = checkout.url;
       } catch (err) {
@@ -78,6 +85,8 @@ export default function AdCreateAndPayForm({ locale }: Props) {
       action={handleSubmit}
       className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm"
     >
+      <input type="hidden" name="target_domain" value={targetDomain} />
+
       <div className="border-b border-neutral-100 px-4 py-3">
         <h2 className="text-base font-bold text-neutral-950">
           {locale === "en" ? "Create Paid Ad" : "유료 광고 등록"}

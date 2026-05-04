@@ -2,7 +2,6 @@ import { Container } from "@/components/base/Container";
 import ListingRowItem from "@/components/listing/ListingRowItem";
 import { PageWithSidebar } from "@/components/layout/PageWithSidebar";
 import { getNews } from "@/features/news/api";
-import { splitFeatured } from "@/features/listing/utils/splitFeatured";
 import { getFeaturedAds } from "@/features/ads/api/getFeaturedAds";
 import { FeaturedAdSection } from "@/features/ads/components/FeaturedAdSection";
 import type { AdItem } from "@/features/ads/types/ad";
@@ -54,7 +53,7 @@ export default async function NewsPage({ params }: Props) {
 
   const [result, ads] = await Promise.all([
     getNews(normalizedLocale),
-    getFeaturedAds(normalizedLocale),
+    getFeaturedAds(normalizedLocale, domain),
   ]);
 
   const items = Array.isArray(result?.items) ? result.items : [];

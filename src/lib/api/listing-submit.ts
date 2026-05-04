@@ -38,13 +38,19 @@ export async function createListing(
 export async function createAdCheckoutSession({
   postId,
   plan,
+  target_domain,
 }: {
   postId: number;
   plan: "featured" | "premium";
+  target_domain?: string;
 }): Promise<{ url: string }> {
   const formData = new FormData();
   formData.set("postId", String(postId));
   formData.set("plan", plan);
+
+  if (target_domain) {
+    formData.set("target_domain", target_domain);
+  }
 
   const response = await fetch(
     `${env.NEXT_PUBLIC_API_URL}/payments/create-checkout-session`,

@@ -110,6 +110,7 @@ export const fetchCache = "force-no-store";
 export default async function DirectoryPage({ params, searchParams }: Props) {
   const { locale } = await params;
   const normalizedLocale = locale === "en" ? "en" : "ko";
+  const domain = "directory";
   const resolvedSearchParams = await searchParams;
 
   const currentSort = resolvedSearchParams.sort === "popular" ? "popular" : "";
@@ -123,7 +124,7 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
 
   const [result, ads] = await Promise.all([
     getDirectories(normalizedLocale, query),
-    getFeaturedAds(normalizedLocale),
+    getFeaturedAds(normalizedLocale, domain),
   ]);
 
   const items = Array.isArray(result)
@@ -235,7 +236,7 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
                   key={item.id ?? item.slug}
                   item={item}
                   locale={normalizedLocale}
-                  domain="directory"
+                  domain={domain}
                 />
               ))}
             </div>

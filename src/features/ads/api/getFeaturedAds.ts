@@ -29,9 +29,13 @@ function unwrapItems<T>(data: MaybePaginated<T> | null | undefined): T[] {
   return [];
 }
 
-export async function getFeaturedAds(locale: "ko" | "en"): Promise<AdItem[]> {
+export async function getFeaturedAds(
+  locale: "ko" | "en",
+  domain: string // ✅ 추가
+): Promise<AdItem[]> {
   const searchParams = new URLSearchParams({
     lang: locale,
+    domain, // ✅ 추가
   });
 
   const data = await apiFetch<MaybePaginated<AdItem>>(

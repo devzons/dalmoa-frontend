@@ -116,7 +116,7 @@ export default async function LoanPage({ params, searchParams }: Props) {
 
   const [result, ads] = await Promise.all([
     getPaginatedLoanItems(normalizedLocale, filters),
-    getFeaturedAds(normalizedLocale),
+    getFeaturedAds(normalizedLocale, domain),
   ]);
 
   const items = Array.isArray(result?.items) ? result.items : [];

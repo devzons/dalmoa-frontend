@@ -7,7 +7,22 @@ type Props = {
   searchParams: Promise<{
     post_id?: string;
     plan?: string;
+    target_domain?: string;
+    domain?: string;
   }>;
+};
+
+const domainPathMap: Record<string, string> = {
+  jobs: "jobs",
+  loan: "loan",
+  marketplace: "marketplace",
+  "real-estate": "real-estate",
+  directory: "directory",
+  news: "news",
+  "town-board": "town-board",
+  cars: "cars",
+  "business-sale": "business-sale",
+  all: "ads",
 };
 
 export default async function PaymentSuccessPage({
@@ -20,6 +35,9 @@ export default async function PaymentSuccessPage({
   const normalizedLocale = locale === "en" ? "en" : "ko";
   const postId = resolvedSearchParams.post_id;
   const plan = resolvedSearchParams.plan;
+  const targetDomain =
+    resolvedSearchParams.target_domain ?? resolvedSearchParams.domain ?? "all";
+  const adsListPath = `/${normalizedLocale}/${domainPathMap[targetDomain] ?? "ads"}`;
 
   return (
     <div className="flex min-h-[70vh] items-center justify-center bg-neutral-50 px-4">
@@ -55,10 +73,10 @@ export default async function PaymentSuccessPage({
 
           {postId ? (
             <Link
-              href={`/${normalizedLocale}/ads`}
+              href={adsListPath}
               className="block w-full rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-900"
             >
-              {normalizedLocale === "en" ? "View Ads" : "광고 목록 보기"}
+              {normalizedLocale === "en" ? "View Listings" : "목록 보기"}
             </Link>
           ) : null}
         </div>

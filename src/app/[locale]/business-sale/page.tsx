@@ -50,7 +50,7 @@ export default async function BusinessSalePage({ params, searchParams }: Props) 
 
   const [result, ads] = await Promise.all([
     getPaginatedBusinessSaleItems(normalizedLocale, filters),
-    getFeaturedAds(normalizedLocale),
+    getFeaturedAds(normalizedLocale, domain),
   ]);
 
   const items = Array.isArray(result?.items) ? result.items : [];

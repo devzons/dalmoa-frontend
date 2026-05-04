@@ -27,8 +27,14 @@ function normalizeAdItem(item: any): AdItem {
   return {
     id: Number(item.id ?? 0),
     slug: item.slug ?? String(item.id ?? ""),
-    title: typeof item.title === "string" ? item.title : item.title?.rendered ?? "",
-    excerpt: typeof item.excerpt === "string" ? item.excerpt : item.excerpt?.rendered ?? null,
+    title:
+      typeof item.title === "string"
+        ? item.title
+        : item.title?.rendered ?? "",
+    excerpt:
+      typeof item.excerpt === "string"
+        ? item.excerpt
+        : item.excerpt?.rendered ?? null,
     thumbnailUrl:
       item.thumbnailUrl ??
       item.thumbnail_url ??
@@ -40,22 +46,48 @@ function normalizeAdItem(item: any): AdItem {
     adPlan: item.adPlan ?? item.ad_plan ?? null,
     status: item.status ?? null,
     priority: item.priority ?? null,
-    viewCount: Number(item.viewCount ?? item.view_count ?? item.impressionCount ?? item.impression_count ?? 0),
+    viewCount: Number(
+      item.viewCount ??
+        item.view_count ??
+        item.impressionCount ??
+        item.impression_count ??
+        0
+    ),
     impressionCount: Number(item.impressionCount ?? item.impression_count ?? 0),
     clickCount: Number(item.clickCount ?? item.click_count ?? 0),
     createdAt: item.createdAt ?? item.created_at ?? undefined,
-    startsAt: item.startsAt ?? item.starts_at ?? item.adStartsAt ?? item.ad_starts_at ?? null,
-    endsAt: item.endsAt ?? item.ends_at ?? item.adEndsAt ?? item.ad_ends_at ?? item.expiresAt ?? item.expires_at ?? null,
+    startsAt:
+      item.startsAt ??
+      item.starts_at ??
+      item.adStartsAt ??
+      item.ad_starts_at ??
+      null,
+    endsAt:
+      item.endsAt ??
+      item.ends_at ??
+      item.adEndsAt ??
+      item.ad_ends_at ??
+      item.expiresAt ??
+      item.expires_at ??
+      null,
     abTest: item.abTest ?? item.ab_test ?? undefined,
   };
 }
 
 function isPremiumAd(item: AdItem) {
-  return item.adPlan === "premium" || item.adPlan === "premium_monthly" || item.priority === "premium";
+  return (
+    item.adPlan === "premium" ||
+    item.adPlan === "premium_monthly" ||
+    item.priority === "premium"
+  );
 }
 
 function isFeaturedAd(item: AdItem) {
-  return item.adPlan === "featured" || item.adPlan === "featured_monthly" || item.priority === "featured";
+  return (
+    item.adPlan === "featured" ||
+    item.adPlan === "featured_monthly" ||
+    item.priority === "featured"
+  );
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -85,7 +117,7 @@ export default async function MarketplacePage({ params, searchParams }: Props) {
 
   const [result, ads] = await Promise.all([
     getPaginatedMarketplaceItems(normalizedLocale, filters),
-    getFeaturedAds(normalizedLocale),
+    getFeaturedAds(normalizedLocale, domain),
   ]);
 
   const items = Array.isArray(result?.items) ? result.items : [];

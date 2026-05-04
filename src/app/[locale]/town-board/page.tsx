@@ -54,7 +54,7 @@ export default async function TownBoardPage({ params }: Props) {
 
   const [result, ads] = await Promise.all([
     getTownBoardItems(normalizedLocale),
-    getFeaturedAds(normalizedLocale),
+    getFeaturedAds(normalizedLocale, domain),
   ]);
 
   const items = Array.isArray(result?.items) ? result.items : [];

@@ -121,7 +121,7 @@ export default async function JobsPage({ params, searchParams }: Props) {
 
   const [result, ads] = await Promise.all([
     getPaginatedJobs(normalizedLocale, filters),
-    getFeaturedAds(normalizedLocale),
+    getFeaturedAds(normalizedLocale, domain),
   ]);
 
   const items = Array.isArray(result?.items) ? result.items : [];
@@ -212,7 +212,7 @@ export default async function JobsPage({ params, searchParams }: Props) {
                       key={item.id ?? item.slug}
                       item={item}
                       locale={normalizedLocale}
-                      domain="jobs"
+                      domain={domain}
                     />
                   ))}
                 </div>
