@@ -142,7 +142,8 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
   const featuredAds = sortedPaidAds.filter(isFeaturedAd);
 
   const categories = getDirectoryCategories(items, normalizedLocale);
-  const { featured, regular } = splitFeatured(items);
+  const { regular } = splitFeatured(items);
+  const displayItems = regular.length > 0 ? regular : items;
 
   const baseParams = new URLSearchParams();
 
@@ -214,7 +215,7 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
             placement="listing_top"
           />
 
-          {regular.length > 0 ? (
+          {displayItems.length > 0 ? (
             <div className="rounded-2xl border border-neutral-200 bg-white">
               <div className="grid grid-cols-[1fr_60px] gap-2 border-b bg-neutral-50 px-3 py-2 text-xs font-semibold text-neutral-500 sm:grid-cols-[2fr_3fr_1fr_80px]">
                 <div>{normalizedLocale === "en" ? "Title" : "제목"}</div>
@@ -225,11 +226,11 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
                   {normalizedLocale === "en" ? "Region" : "지역"}
                 </div>
                 <div className="text-right">
-                  {normalizedLocale === "en" ? "Views" : "방문수"}
+                  {normalizedLocale === "en" ? "Clicks" : "클릭수"}
                 </div>
               </div>
 
-              {regular.map((item: any) => (
+              {displayItems.map((item: any) => (
                 <ListingRowItem
                   key={item.id ?? item.slug}
                   item={item}
@@ -241,8 +242,8 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
           ) : (
             <div className="rounded-2xl border border-neutral-200 bg-white p-6 text-sm text-neutral-500">
               {normalizedLocale === "en"
-                ? "No regular directory listings found."
-                : "일반 업소 목록이 없습니다."}
+                ? "No directory listings found."
+                : "등록된 업소가 없습니다."}
             </div>
           )}
         </div>

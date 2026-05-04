@@ -1,9 +1,11 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { DirectoryDetail } from "@/features/directory/components/DirectoryDetail";
+import Link from "next/link";
+import { Container } from "@/components/base/Container";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/base/Card";
+import { Badge } from "@/components/base/Badge";
+import AdPromotionPanel from "@/components/payment/AdPromotionPanel";
 import { getDirectoryBySlug } from "@/features/directory/api";
 import { buildMetadata } from "@/lib/seo/metadata";
-import AdPromotionPanel from "@/components/payment/AdPromotionPanel";
 
 type Props = {
   params: Promise<{
@@ -27,8 +29,6 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export const revalidate = 0;
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
 
 export default async function DirectoryDetailPage({ params }: Props) {
   const { locale, slug } = await params;
@@ -42,36 +42,70 @@ export default async function DirectoryDetailPage({ params }: Props) {
     notFound();
   }
 
-  if (!item) {
-    notFound();
-  }
+  if (!item) notFound();
 
   const listing = item as any;
 
+  const title = listing.title ?? "";
+  const content = listing.content ?? listing.excerpt ?? null;
+
+  const clickCount = Number(listing.clickCount ?? listing.click_count ?? 0);
+  const viewCount = Number(listing.viewCount ?? listing.view_count ?? 0);
+
   return (
-    <>
-      <DirectoryDetail item={item} locale={normalizedLocale} />
+    <div className="bg-neutral-50 py-10">
+      <Container>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">{title}</CardTitle>
+          </CardHeader>
 
-      <div className="mx-auto max-w-3xl space-y-4 px-4 pb-10">
-        <Link
-          href={`/${normalizedLocale}/directory`}
-          className="inline-flex w-fit items-center justify-center rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-50"
-        >
-          {normalizedLocale === "en"
-            ? "Back to directory"
-            : "업소록 목록으로 돌아가기"}
-        </Link>
+          <CardContent className="space-y-6">
+            {content && (
+              <p className="text-sm text-neutral-600">{content}</p>
+            )}
 
-        <AdPromotionPanel
-          postId={listing.id}
-          locale={normalizedLocale}
-          adPlan={listing.adPlan ?? listing.ad_plan ?? null}
-          isPaid={Boolean(listing.isPaid ?? listing.is_paid ?? false)}
-          isFeatured={Boolean(listing.isFeatured ?? listing.is_featured ?? false)}
-          isAdActive={Boolean(listing.isAdActive ?? listing.is_active ?? true)}
-          enableSubscription={false}
-        />
-      </div>
-    </>
+            <div className="grid grid-cols-2 gap-3 rounded-2xl border border-neutral-200 bg-white p-4">
+              <StatBox
+                label={normalizedLocale === "en" ? "Views" : "조회"}
+                value={viewCount.toLocaleString()}
+              />
+              <StatBox
+                label={normalizedLocale === "en" ? "Clicks" : "클릭"}
+                value={clickCount.toLocaleString()}
+              />
+            </div>
+
+            <Link
+              href={`/${normalizedLocale}/directory`}
+              className="inline-flex w-fit rounded-xl border px-4 py-2 text-sm"
+            >
+              {normalizedLocale === "en"
+                ? "Back to directory"
+                : "업소록으로 돌아가기"}
+            </Link>
+
+            <AdPromotionPanel
+              postId={listing.id}
+              locale={normalizedLocale}
+              adPlan={listing.adPlan ?? null}
+              isPaid={Boolean(listing.isPaid ?? false)}
+              isFeatured={Boolean(listing.isFeatured ?? false)}
+              isAdActive={Boolean(listing.isAdActive ?? true)}
+              enableSubscription={false}
+            />
+          </CardContent>
+        </Card>
+      </Container>
+    </div>
+  );
+}
+
+function StatBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-neutral-50 p-3">
+      <div className="text-xs text-neutral-500">{label}</div>
+      <div className="text-lg font-bold">{value}</div>
+    </div>
   );
 }
