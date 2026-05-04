@@ -1,58 +1,59 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { login } from "@/features/auth/api";
+import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "../hooks/useAuth";
 
-type Props = {
-  locale: "ko" | "en";
-};
-
-export function LoginForm({ locale }: Props) {
+export default function LoginForm() {
   const router = useRouter();
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") || "/";
 
-  async function handleSubmit(formData: FormData) {
-    setError("");
+  const { login } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
-      await login({
-        username: String(formData.get("username") ?? ""),
-        password: String(formData.get("password") ?? ""),
-      });
-
-      window.dispatchEvent(new Event("storage"));
-      router.replace(`/${locale}`);
+      await login(email, password, true);
+      router.push(next);
       router.refresh();
-    } catch {
-      setError(locale === "en" ? "Login failed" : "로그인에 실패했습니다.");
+    } catch (err: any) {
+      setError(err.message ?? "로그인 실패");
+    } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <form
-      action={handleSubmit}
-      className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
-    >
+    <form onSubmit={handleSubmit}>
       <input
-        name="username"
-        placeholder={locale === "en" ? "username" : "아이디"}
-        className="w-full rounded-xl border border-neutral-300 p-3"
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
       />
+
       <input
-        name="password"
         type="password"
-        placeholder={locale === "en" ? "password" : "비밀번호"}
-        className="w-full rounded-xl border border-neutral-300 p-3"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
       />
 
-      {error ? <div className="text-sm text-red-500">{error}</div> : null}
+      {error && <p>{error}</p>}
 
-      <button className="rounded-xl bg-black px-4 py-2 text-white">
-        {loading ? "..." : locale === "en" ? "Login" : "로그인"}
+      <button type="submit" disabled={loading}>
+        {loading ? "Loading..." : "Login"}
       </button>
     </form>
   );

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getSessionUser } from "@/lib/api/auth";
+import { getSessionUser } from "@/features/auth/server";
 import type { SubmitCategory } from "@/lib/api/listing-submit";
 
 type Props = {
@@ -37,33 +37,23 @@ export async function CreateListingEntry({
   const user = await getSessionUser();
   const labels = copy[locale];
   const basePath = `/${locale}/${pathMap[category]}`;
-
-  // ✅ domain 자동 주입
   const createPath = `${basePath}/new?target_domain=${category}`;
-
-  if (user) {
-    return (
-      <Link
-        href={createPath}
-        className={[
-          "inline-flex h-11 items-center justify-center rounded-xl bg-neutral-900 px-4 text-sm font-semibold text-white transition hover:opacity-90",
-          className ?? "",
-        ].join(" ")}
-      >
-        {labels.create}
-      </Link>
-    );
-  }
 
   return (
     <Link
-      href={`/${locale}/login?next=${encodeURIComponent(createPath)}`}
+      href={
+        user
+          ? createPath
+          : `/${locale}/login?next=${encodeURIComponent(createPath)}`
+      }
       className={[
-        "inline-flex h-11 items-center justify-center rounded-xl border border-neutral-300 px-4 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-50",
+        user
+          ? "inline-flex h-11 items-center justify-center rounded-xl bg-neutral-900 px-4 text-sm font-semibold text-white transition hover:opacity-90"
+          : "inline-flex h-11 items-center justify-center rounded-xl border border-neutral-300 px-4 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-50",
         className ?? "",
       ].join(" ")}
     >
-      {labels.login}
+      {user ? labels.create : labels.login}
     </Link>
   );
 }

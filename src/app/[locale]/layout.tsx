@@ -1,28 +1,18 @@
-import { notFound } from "next/navigation";
-import { SiteFooter } from "@/components/layout/SiteFooter";
-import { SiteHeader } from "@/components/layout/SiteHeader";
+import { getSessionUser } from "@/features/auth/server";
+import { AuthProvider } from "@/features/auth";
 
-const locales = ["ko", "en"] as const;
-
-export default async function LocaleLayout({
-  children,
-  params,
-}: {
+type Props = {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
-  const normalizedLocale = locale === "en" ? "en" : locale === "ko" ? "ko" : null;
+};
 
-  if (!normalizedLocale || !locales.includes(normalizedLocale)) {
-    notFound();
-  }
+export default async function LocaleLayout({ children, params }: Props) {
+  const { locale } = await params;
+  const user = await getSessionUser();
 
   return (
-    <>
-      <SiteHeader locale={normalizedLocale} />
-      <main>{children}</main>
-      <SiteFooter />
-    </>
+    <AuthProvider initialUser={user}>
+      {children}
+    </AuthProvider>
   );
 }
